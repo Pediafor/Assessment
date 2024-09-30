@@ -1,0 +1,197 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Assessment {
+  id          String            @id @default(cuid())
+  title       String
+  description String?
+  instructions String?
+  createdBy   String            // User ID from gateway headers
+  status      AssessmentStatus  @default(DRAFT)
+  settings    Json?             // Assessment configuration
+  
+  // Timestamps
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  isActive    Boolean           @default(true)
+  
+  // Relations
+  questionSets QuestionSet[]
+  
+  // Indexes
+  @@index([createdBy, status])
+  @@index([status, isActive])
+  @@index([createdAt])
+  @@map("assessments")
+}
+
+model QuestionSet {
+  id              String      @id @default(cuid())
+  assessmentId    String
+  setNumber       Int
+  name            String
+  description     String?
+  instructions    String?
+  timeLimit       Int?        // minutes per set
+  selectionConfig Json?       // Randomization strategy
+  displayOrder    Int         @default(0)
+  
+  // Timestamps
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  isActive        Boolean     @default(true)
+  
+  // Relations
+  assessment      Assessment  @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  questions       Question[]
+  
+  // Constraints
+  @@unique([assessmentId, setNumber])
+  @@index([assessmentId, displayOrder])
+  @@map("question_sets")
+}
+
+model Question {
+  id              String            @id @default(cuid())
+  questionSetId   String
+  type            QuestionType
+  title           String?
+  content         String
+  points          Float             @default(1.0)
+  negativeMarking Float?            // Points deducted for wrong answer
+  difficulty      Difficulty        @default(MEDIUM)
+  tags            String[]
+  hints           String[]
+  explanation     String?
+  timeLimit       Int?              // seconds for individual question
+  metadata        Json?
+  displayOrder    Int               @default(0)
+  
+  // Timestamps
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  isActive        Boolean           @default(true)
+  
+  // Relations
+  questionSet     QuestionSet       @relation(fields: [questionSetId], references: [id], onDelete: Cascade)
+  mediaItems      QuestionMedia[]
+  options         QuestionOption[]
+  
+  // Indexes
+  @@index([questionSetId, displayOrder])
+  @@index([type, difficulty])
+  @@index([tags])
+  @@map("questions")
+}
+
+model QuestionMedia {
+  id           String      @id @default(cuid())
+  questionId   String
+  type         MediaType
+  filename     String
+  originalName String
+  mimeType     String
+  size         Int
+  url          String
+  altText      String?
+  caption      String?
+  displayOrder Int         @default(0)
+  
+  // Timestamps
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  
+  // Relations
+  question     Question    @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  
+  // Indexes
+  @@index([questionId, displayOrder])
+  @@map("question_media")
+}
+
+model QuestionOption {
+  id           String        @id @default(cuid())
+  questionId   String
+  optionText   String
+  isCorrect    Boolean       @default(false)
+  explanation  String?
+  displayOrder Int           @default(0)
+  
+  // Timestamps
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  
+  // Relations
+  question     Question      @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  mediaItems   OptionMedia[]
+  
+  // Indexes
+  @@index([questionId, displayOrder])
+  @@map("question_options")
+}
+
+model OptionMedia {
+  id           String         @id @default(cuid())
+  optionId     String
+  type         MediaType
+  filename     String
+  originalName String
+  mimeType     String
+  size         Int
+  url          String
+  altText      String?
+  caption      String?
+  displayOrder Int            @default(0)
+  
+  // Timestamps
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  
+  // Relations
+  option       QuestionOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
+  
+  // Indexes
+  @@index([optionId, displayOrder])
+  @@map("option_media")
+}
+
+// Enums
+enum AssessmentStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+  SCHEDULED
+}
+
+enum QuestionType {
+  MULTIPLE_CHOICE
+  MULTIPLE_SELECT
+  TRUE_FALSE
+  SHORT_ANSWER
+  LONG_ANSWER
+  FILL_BLANKS
+  MATCHING
+  ORDERING
+  NUMERIC
+  FILE_UPLOAD
+}
+
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+  EXPERT
+}
+
+enum MediaType {
+  IMAGE
+  AUDIO
+  VIDEO
+  DOCUMENT
+}
