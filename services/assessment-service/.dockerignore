@@ -1,0 +1,42 @@
+# Node modules
+node_modules
+npm-debug.log*
+
+# Build outputs
+dist
+build
+
+# Test files
+tests
+coverage
+jest.config.js
+tsconfig.test.json
+
+# Development files
+.env.local
+.env.development
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode
+.idea
+*.swp
+*.swo
+
+# Git
+.git
+.gitignore
+
+# Documentation
+README.md
+docs
+
+# Prisma migrations (keep schema.prisma)
+prisma/migrations
+
+# Uploads (will be volume mounted)
+uploads
