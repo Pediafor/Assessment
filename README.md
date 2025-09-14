@@ -58,8 +58,8 @@ The application is built on a modern microservices architecture to ensure scalab
 ### **Clone the repo**
 
 ```
-git clone https://github.com/pediafor/assessment-app.git
-cd assessment-app
+git clone https://github.com/pediafor/Assessment.git
+cd Assessment
 ```
 
 ### **Install dependencies**
