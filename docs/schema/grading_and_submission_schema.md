@@ -1,20 +1,21 @@
-# 📊 Submission & Grade Schemas (Initial Release)
+# � Submission & Grade Schemas (Initial Release)
 
-This document outlines the Submission Schema and Grade Schema for the Pediafor Assessment & Evaluation platform.
-They are designed to be extensible, analytics-ready, and AI-friendly, forming the backbone of our grading and reporting system.
+This document defines the **Submission** and **Grade** schemas for the Pediafor Assessment & Evaluation platform.  
+They are designed to be **extensible, analytics-friendly, and AI-ready**, enabling both core assessment workflows and advanced reporting.  
 
-Future versions of these schemas can evolve with new technologies, best practices, and academic needs.
+These schemas are **version 1** and may evolve with future releases to incorporate emerging technologies, grading strategies, and best practices.
 
 ---
 
-## 📝 Submission Schema
+## 📝 Submission Schema (v1)
 
-### JSON Structure
 ```json
 {
 	"submission_id": "sub-uuid-123",
 	"assessment_id": "assess-uuid-456",
 	"user_id": "u-uuid-789",
+	"attempt_number": 1,
+	"session_id": "sess-uuid-321",
 	"submitted_at": "2024-09-17T10:00:00Z",
 	"answers": [
 		{
@@ -27,7 +28,13 @@ Future versions of these schemas can evolve with new technologies, best practice
 			"question_id": "q-uuid-456",
 			"type": "long_answer",
 			"submitted_answer": "In eukaryotic cells, the mitochondria are...",
-			"time_spent_seconds": 180
+			"time_spent_seconds": 180,
+			"attachments": [
+				{
+					"file_url": "https://pediafor.com/uploads/u-uuid-789/essay-doc.pdf",
+					"file_type": "application/pdf"
+				}
+			]
 		}
 	],
 	"metadata": {
@@ -35,38 +42,34 @@ Future versions of these schemas can evolve with new technologies, best practice
 		"user_agent": "Mozilla/5.0...",
 		"device_type": "desktop",
 		"total_time_spent_seconds": 215,
-		"completion_status": "complete"
+		"completion_status": "complete",
+		"auto_saved_at": [
+			"2024-09-17T09:45:00Z",
+			"2024-09-17T09:55:00Z"
+		]
 	}
 }
 ```
 
-### Explanation of Fields
-
-- **submission_id**: Unique identifier for the submission.
-- **assessment_id**: Links the submission to a specific assessment.
-- **user_id**: Identifies which learner submitted this.
-- **submitted_at**: Timestamp of submission.
-- **answers[]**
-	- **question_id**: The question being answered.
-	- **type**: Type of question (multiple-choice, essay, coding, etc.).
-	- **submitted_answer**: The student’s answer.
-	- **time_spent_seconds**: Time spent on this question – critical for analytics.
-- **metadata**
-	- **ip_address**, **user_agent**, **device_type** → Enables basic proctoring and device-level analytics.
-	- **total_time_spent_seconds** → Measures exam duration.
-	- **completion_status** → Values: "complete", "incomplete", "abandoned".
+### 🔑 Key Notes
+- **attempt_number** → Tracks if this is the 1st, 2nd, etc., attempt.
+- **session_id** → Helps reconnect and correlate across devices or network drops.
+- **attachments** → Allows file-based answers (e.g., coding assignments, essays).
+- **auto_saved_at[]** → Supports partial saves for resilience.
+- **answers[].time_spent_seconds** → Useful for analytics (question difficulty, pacing).
 
 ---
 
-## 🎯 Grade Schema
+## 🏆 Grade Schema (v1)
 
-### JSON Structure
 ```json
 {
 	"grade_id": "gr-uuid-123",
 	"submission_id": "sub-uuid-123",
 	"assessment_id": "assess-uuid-456",
 	"user_id": "u-uuid-789",
+	"grader_type": "ai",
+	"rubric_version": "2024-v1",
 	"final_score": 85,
 	"max_score": 100,
 	"graded_at": "2024-09-17T10:05:00Z",
@@ -92,14 +95,16 @@ Future versions of these schemas can evolve with new technologies, best practice
 					"clarity": 4,
 					"completeness": 3
 				},
-				"plagiarism_score": 0.15
+				"plagiarism_score": 0.15,
+				"confidence_score": 0.92
 			}
 		}
 	],
 	"grading_details": {
 		"pass_fail_status": "pass",
 		"relative_rank": 0.85,
-		"grade_distribution_percentile": 85
+		"grade_distribution_percentile": 85,
+		"appeal_status": "pending"
 	},
 	"metadata": {
 		"grading_engine_version": "v1.2.0",
@@ -108,36 +113,30 @@ Future versions of these schemas can evolve with new technologies, best practice
 }
 ```
 
-### Explanation of Fields
-
-- **grade_id**: Unique identifier for a grading record.
-- **submission_id**, **assessment_id**, **user_id** → References the submission, assessment, and user.
-- **final_score** / **max_score**: Total performance of the learner.
-- **graded_at**: Timestamp of grading.
-- **results[]**
-	- **question_id**: Which question is being graded.
-	- **score** / **max_score**: Points awarded.
-	- **feedback**: Human/AI-generated feedback.
-	- **analytics**:
-		- **correct_in_first_try**: Boolean for MCQs.
-		- **is_difficult**: Set by system based on metrics like time or low global accuracy.
-		- **hint_used**: Whether hints were used.
-		- **ai_score_breakdown**: AI-driven rubric breakdown (clarity, completeness, etc.).
-		- **plagiarism_score**: Integrity measure (0–1 scale).
-- **grading_details**
-	- **pass_fail_status**: "pass" or "fail".
-	- **relative_rank**: Learner’s position relative to peers (0–1 scale).
-	- **grade_distribution_percentile**: Percentile in grade distribution.
-- **metadata**
-	- **grading_engine_version**: Tracks version of grading logic/AI model.
-	- **total_grading_time_ms**: Performance metric for grading service.
+### 🔑 Key Notes
+- **grader_type** → "ai", "human", "hybrid" for transparency.
+- **rubric_version** → Ensures fairness if rubrics evolve.
+- **confidence_score** → Useful for flagging low-confidence AI grading for human review.
+- **appeal_status** → Tracks if a grade is under dispute.
+- **analytics fields** → Enable question-level insights, e.g., difficulty, plagiarism detection.
 
 ---
 
-## 🚀 Why This Design?
+## 🎯 Why This Matters
 
-- **Granularity** → Per-question analytics unlock deep insights into performance.
-- **AI-Centric** → The analytics block allows AI-based grading, plagiarism detection, and future rubric expansions.
-- **Proctoring Support** → Metadata captures environment and integrity signals.
-- **Scalability** → Fields are versioned and extensible for future updates.
-- **Future-Proofing** → As technology evolves, more dimensions (e.g., adaptive learning signals, emotional state tracking, etc.) can be added without breaking existing integrations.
+These schemas support AI-first grading while leaving room for human oversight.
+
+Designed for future-proofing: appeal handling, multiple attempts, hybrid grading.
+
+Enables granular analytics to drive insights into student learning patterns, assessment fairness, and difficulty calibration.
+
+---
+
+## 🔮 Future Evolution
+
+Planned enhancements for later schema versions:
+
+- Audit trails (who/what graded and when).
+- Normalized storage for very large submissions.
+- Cross-linking with proctoring data (webcam, keystroke dynamics).
+- Adaptive grading logic for dynamic exams.
