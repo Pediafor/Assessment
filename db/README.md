@@ -84,22 +84,22 @@ The `docker-compose.yml` lives in the root of the repo (not in `/db`):
 ```yaml
 version: "3.9"
 services:
-	db:
-		image: postgres:15
-		container_name: pediafor-db
-		restart: always
-		environment:
-			POSTGRES_USER: pediafor
-			POSTGRES_PASSWORD: pediafor
-			POSTGRES_DB: pediafor
-		ports:
-			- "5432:5432"
-		volumes:
-			- pgdata:/var/lib/postgresql/data
+  db:
+    image: postgres:15
+    container_name: pediafor-db
+    restart: always
+    environment:
+      POSTGRES_USER: pediafor
+      POSTGRES_PASSWORD: pediafor
+      POSTGRES_DB: pediafor
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
 
 volumes:
-	pgdata:
-		driver: local
+  pgdata:
+    driver: local
 ```
 
 ### Start DB
@@ -119,8 +119,8 @@ Confirm that `schema.prisma` uses the env:
 
 ```prisma
 datasource db {
-	provider = "postgresql"
-	url      = env("DATABASE_URL")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 ```
 
