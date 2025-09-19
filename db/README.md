@@ -1,166 +1,91 @@
-# 📂 Database Setup Guide (/db)
+# 🗄️ Database Setup for Pediafor
 
-This directory contains everything related to database structure and migrations for the Pediafor platform.
-
-We support two complementary approaches:
-
-- **Prisma ORM + Migrations** (recommended, declarative, schema-driven)
-- **Raw SQL Initialization** (manual setup, debugging, or quick resets)
-
-## 📁 Folder Structure
-
-```
-/db
-├── prisma/
-│   ├── schema.prisma   # Prisma schema (source of truth for models/tables)
-│   ├── migrations/     # Auto-generated + manual migration files
-│   └── README.md       # Guide to working with Prisma migrations
-├── init.sql            # Hardcoded SQL DDL (manual DB bootstrap if needed)
-└── README.md           # ← (this file)
-```
+This guide explains how to set up and work with the Postgres database in a containerized environment, using Prisma as the primary migration tool.
+We also provide an optional raw SQL bootstrap for contributors who want to work directly with Postgres.
 
 ---
 
-## ⚙️ Option 1: Prisma-Driven Setup (default)
-
-Prisma is our primary ORM and migration tool.
-It ensures schema evolution is reproducible across environments and avoids “drift” between dev and prod.
-
-### Initial Setup
+## 📦 1. Start Postgres with Docker
 ```bash
-cd db/prisma
-npm install
+docker-compose up -d
 ```
 
-### Generate Client
+This starts Postgres in a container with persistent storage mounted at `./db` (on your host).
+All database files are safely stored there, even if you remove the container.
+
+---
+
+## ⚡ 2. Schema Setup Options
+
+We support two ways of creating the schema.
+Pick one depending on your workflow:
+
+### ✅ Option A (Recommended) – Prisma Migrations
+
+This is the source of truth for schema changes.
+
+Generate the Prisma client:
 ```bash
 npx prisma generate
 ```
 
-### Run Migrations (Dev DB)
+Run the initial migration:
 ```bash
 npx prisma migrate dev --name init
 ```
 
-This will:
+This creates all tables defined in `schema.prisma`.
 
-- Create tables from schema.prisma
-- Apply migrations in migrations/
-- Keep a history of applied changes
+---
 
-### Deploy to Production
+### 🛠️ Option B (Optional) – Raw SQL Bootstrap
+
+We also ship an `init.sql` bootstrap (`db/init.sql`) that can create the schema in one shot.
+This is useful if:
+
+- You want to set up the DB without installing Node/Prisma.
+- You’re debugging or resetting the database directly in Postgres.
+
+Run inside the container:
 ```bash
-npx prisma migrate deploy
+docker exec -i pediafor-db psql -U postgres -d pediafor < /app/db/init.sql
+```
+⚠️ Note: If you use this method, avoid running Prisma migrations on top.
+They may conflict or drift from the SQL schema.
+
+---
+
+## 📊 3. Applying Custom Indexes
+
+Prisma does not support all PostgreSQL features (e.g., pgvector, GIN/ivfflat indexes).
+We provide a raw SQL migration for these optimizations:
+
+```bash
+docker exec -i pediafor-db psql -U postgres -d pediafor < /app/db/migrations/20250918_indexes/migration.sql
 ```
 
 ---
 
-## ⚙️ Option 2: Raw SQL Bootstrap (init.sql)
+## 📤 4. Exporting Data from Persistent Storage
 
-For cases where Prisma isn’t available (e.g., debugging, running directly on Postgres), you can initialize the schema with the pure SQL file:
-
-```bash
-psql -U <user> -d <database> -f db/init.sql
-```
-
-This:
-
-- Creates all tables, indexes, and constraints in one go
-- Mirrors the schema defined in schema.prisma
-- Useful for inspection or quick DB resets
-
-> **Warning:**
-> Do not mix init.sql and Prisma migrations in the same environment without care.
-> Prefer Prisma migrations in dev/prod for consistency.
-
----
-
-## 🐳 Running Postgres with Docker (recommended)
-
-We use Docker for local development to avoid installing Postgres manually.
-
-The `docker-compose.yml` lives in the root of the repo (not in `/db`):
-
-```yaml
-version: "3.9"
-services:
-  db:
-    image: postgres:15
-    container_name: pediafor-db
-    restart: always
-    environment:
-      POSTGRES_USER: pediafor
-      POSTGRES_PASSWORD: pediafor
-      POSTGRES_DB: pediafor
-    ports:
-      - "5432:5432"
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-
-volumes:
-  pgdata:
-    driver: local
-```
-
-### Start DB
-```bash
-docker compose up -d
-```
-
-### Connect Prisma
-
-Update your `.env` file:
-
-```env
-DATABASE_URL="postgresql://pediafor:pediafor@localhost:5432/pediafor?schema=public"
-```
-
-Confirm that `schema.prisma` uses the env:
-
-```prisma
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-}
-```
-
-Then run:
+All database files are stored in the mounted `./db` folder.
+You can back up or export data using:
 
 ```bash
-npx prisma migrate dev
+docker exec -t pediafor-db pg_dump -U postgres -d pediafor > backup.sql
+```
+
+This creates a SQL dump that can be restored later with:
+
+```bash
+psql -U postgres -d pediafor < backup.sql
 ```
 
 ---
 
-## 🧩 Indexes & Advanced Features
+## 🔍 Summary – Which Path Should I Use?
 
-- Standard indexes and constraints are defined in `schema.prisma` (`@@index`, `@@unique`).
-- Advanced indexes (GIN, ivfflat for embeddings, JSONB ops) are not auto-generated by Prisma.
-- These live in manual migrations, e.g., `prisma/migrations/*_indexes/migration.sql`.
-- Run them manually once, then mark as resolved:
+- I’m a contributor writing code → Use Prisma migrations (Option A).
+- I’m debugging Postgres directly / no Prisma → Use raw SQL bootstrap (Option B).
 
-```bash
-npx prisma migrate resolve --applied 20250918_indexes
-```
-
----
-
-## 🔑 Contributor Notes
-
-- Source of Truth → `schema.prisma`
-- Do not edit `init.sql` unless schema changes are finalized and synced with Prisma.
-
-### Migrations Flow
-
-1. Modify `schema.prisma`
-2. Run `npx prisma migrate dev --name <change>`
-3. Commit both `schema.prisma` and new `migrations/` folder
-4. Add manual migration SQL if advanced indexes are required
-
----
-
-## 📚 Resources
-
-- [Prisma Migrate Docs](https://www.prisma.io/docs/concepts/components/prisma-migrate)
-- [Postgres JSONB Indexing](https://www.postgresql.org/docs/current/datatype-json.html)
-- [pgvector](https://github.com/pgvector/pgvector)
+Prisma = schema changes, SQL = optional setup/debugging.
