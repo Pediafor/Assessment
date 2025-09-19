@@ -16,7 +16,7 @@ services:
       - pediafor_db_data:/var/lib/postgresql/data
 
       # Mount db folder into container so SQL files can be run easily
-      - ./db:/app/db
+      - ./:/app/db
 
     # Optional but recommended: healthcheck ensures DB is ready before Prisma connects
     healthcheck:
