@@ -16,11 +16,11 @@ datasource db {
 // USERS
 // ==================================================
 model User {
-  user_id       String   @id @default(uuid()) @db.Uuid
+  user_id       String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   username      String   @unique @db.VarChar(100)
   email         String   @unique @db.VarChar(255)
   password_hash String?  @db.Text
-  roles         String[] @default([])
+  roles         String[] @default("{}") @db.TextArray
   profile       Json     @default("{}")
   settings      Json     @default("{}")
   mfa_enabled   Boolean  @default(false)
@@ -45,7 +45,7 @@ model User {
 // ASSESSMENTS
 // ==================================================
 model Assessment {
-  assessment_id String   @id @default(uuid()) @db.Uuid
+  assessment_id String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   title         String   @db.VarChar(512)
   description   String?  @db.Text
   status        String   @default("draft") @db.VarChar(50)
@@ -69,7 +69,7 @@ model Assessment {
 // SECTIONS
 // ==================================================
 model AssessmentSection {
-  section_id    String   @id @default(uuid()) @db.Uuid
+  section_id    String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   assessment_id String   @db.Uuid
   title         String   @db.VarChar(255)
   description   String?  @db.Text
@@ -90,20 +90,20 @@ model AssessmentSection {
 // QUESTIONS
 // ==================================================
 model Question {
-  question_id   String   @id @default(uuid()) @db.Uuid
+  question_id   String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   schema_version String? @default("v1") @db.VarChar(32)
   version       Int?     @default(1)
   bank_id       String?  @db.Uuid
   section_id    String?  @db.Uuid
   type          String   @db.VarChar(50)
   difficulty    String?  @db.VarChar(32)
-  tags          String[] @default([])
+  tags          String[] @default("{}") @db.TextArray
   content       Json
   answer        Json     @default("{}")
   points        Int?     @default(1)
   grading       Json     @default("{}")
   metadata      Json     @default("{}")
-  // embedding     Bytes?
+  embedding     Bytes?   @db.Vector(1536)
   created_at    DateTime @default(now()) @db.Timestamptz
   updated_at    DateTime @default(now()) @db.Timestamptz
 
@@ -117,7 +117,7 @@ model Question {
 // SUBMISSIONS
 // ==================================================
 model Submission {
-  submission_id String   @id @default(uuid()) @db.Uuid
+  submission_id String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   assessment_id String   @db.Uuid
   user_id       String   @db.Uuid
   attempt_number Int?    @default(1)
@@ -144,7 +144,7 @@ model Submission {
 // GRADES
 // ==================================================
 model Grade {
-  grade_id        String   @id @default(uuid()) @db.Uuid
+  grade_id        String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   submission_id   String   @db.Uuid
   assessment_id   String   @db.Uuid
   user_id         String   @db.Uuid
@@ -172,7 +172,7 @@ model Grade {
 // ANALYTICS EVENTS
 // ==================================================
 model AnalyticsEvent {
-  event_id      String   @id @default(uuid()) @db.Uuid
+  event_id      String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   tenant_id     String?  @db.Uuid
   event_type    String   @db.VarChar(128)
   user_id       String?  @db.Uuid
@@ -196,7 +196,7 @@ model UserAnalytics {
   user_id                  String   @id @db.Uuid
   registered_at            DateTime? @db.Timestamptz
   last_login_at            DateTime? @db.Timestamptz
-  roles                    String[] @default([])
+  roles                    String[] @default("{}") @db.TextArray
   institution_id           String?  @db.Uuid
   assessments_attempted    Int?     @default(0)
   assessments_passed       Int?     @default(0)
