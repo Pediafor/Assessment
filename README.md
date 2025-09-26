@@ -29,13 +29,13 @@ Our approach is built on a few core principles:
 | Feature                          | Status       | Notes |
 |----------------------------------|--------------|-------|
 | Question Bank (MCQ, subjective)  | ✅ Available | Initial DB schema & CRUD APIs ready |
-| AI-Generated Questions           | 📝 Planne | NLP-powered question generation |
+| AI-Generated Questions           | 🚧 In Progress | NLP-powered question generation |
 | Adaptive Testing Engine          | 📝 Planned   | Dynamic difficulty adjustment |
 | Automated Grading (MCQ)          | 🚧 In Progress | Accurate & scalable |
-| Automated Grading (Essays)       | 📝 Planne | Leveraging LLM evaluation + rubrics |
+| Automated Grading (Essays)       | 🚧 In Progress | Leveraging LLM evaluation + rubrics |
 | Peer Review System               | 📝 Planned   | Community-driven grading |
 | Analytics Dashboard              | 🚧 In Progress | Institution + student performance |
-| API for Integration              | 📝 Planne | For LMS & external apps |
+| API for Integration              | 🚧 In Progress | For LMS & external apps |
 | Multi-language Support           | 📝 Planned   | i18n support for inclusivity |
 | Offline Mode                     | 📝 Planned   | Key for low-connectivity regions |
 
