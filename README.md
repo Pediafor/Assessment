@@ -3,116 +3,117 @@
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 ![Status](https://img.shields.io/badge/Status-Under%20Development-orange)
 ![Contributions Welcome](https://img.shields.io/badge/Contributions-Welcome-brightgreen)
-![Built with FastAPI](https://img.shields.io/badge/Backend-FastAPI-009688?logo=fastapi)
+![Built with Node.js](https://img.shields.io/badge/Backend-Node.js%20%26%20TypeScript-339933?logo=nodedotjs)
 ![Built with React](https://img.shields.io/badge/Frontend-React-61DAFB?logo=react)
-![TypeScript](https://img.shields.io/badge/Language-TypeScript-3178C6?logo=typescript)
-![Python](https://img.shields.io/badge/Language-Python-3776AB?logo=python)
+![Python](https://img.shields.io/badge/AI%20Services-Python%20%2F%20FastAPI-3776AB?logo=python)
 ![Postgres](https://img.shields.io/badge/Database-PostgreSQL-336791?logo=postgresql)
 ![Docker](https://img.shields.io/badge/Container-Docker-2496ED?logo=docker)
 
 -----
 
-## 📖 Overview
+## 📖 Overview & Philosophy 🧠
 
-The **Pediafor Assessment & Evaluation** application is the first product wedge in our mission to build open, AI-centric education infrastructure. It aims to solve one of the most critical gaps in education today: providing a robust, fair, and accessible assessment platform that isn't locked behind high costs or proprietary systems.
+The **Pediafor Assessment & Evaluation** application is the first product wedge in our mission to build **open, AI-centric education infrastructure**. It aims to solve one of the most critical gaps in education today: providing a robust, fair, and accessible assessment platform that isn't locked behind high costs or proprietary systems.
 
-Our approach is built on a few core principles:
+Our approach and **core principles** define the project's direction:
 
-  * **AI-Driven**: We're designing a platform to integrate AI from the ground up for features like automated grading, intelligent feedback, and adaptive testing.
-  * **Open Infrastructure**: The core framework is designed to be extensible and interoperable, allowing institutions to integrate with their existing tools.
-  * **Equitable**: By building in the open, we aim to make powerful education technology accessible to schools and institutions of all sizes, regardless of their budget.
-
------
-
-## ✨ Features & Status
-
-| Feature                          | Status       | Notes |
-|----------------------------------|--------------|-------|
-| Question Bank (MCQ, subjective)  | ✅ Available | Initial DB schema & CRUD APIs ready |
-| AI-Generated Questions           | 🚧 In Progress | NLP-powered question generation |
-| Adaptive Testing Engine          | 📝 Planned   | Dynamic difficulty adjustment |
-| Automated Grading (MCQ)          | 🚧 In Progress | Accurate & scalable |
-| Automated Grading (Essays)       | 🚧 In Progress | Leveraging LLM evaluation + rubrics |
-| Peer Review System               | 📝 Planned   | Community-driven grading |
-| Analytics Dashboard              | 🚧 In Progress | Institution + student performance |
-| API for Integration              | 🚧 In Progress | For LMS & external apps |
-| Multi-language Support           | 📝 Planned   | i18n support for inclusivity |
-| Offline Mode                     | 📝 Planned   | Key for low-connectivity regions |
+* **AI-Driven**: We are designing a platform to integrate Artificial Intelligence from the ground up for features like automated grading, intelligent feedback, and adaptive testing.
+* **Open Infrastructure**: The core framework is designed to be extensible and interoperable, allowing institutions to integrate with their existing tools (LMS, SIS). By being open-source, we ensure the platform can evolve with community needs.
+* **Equitable**: By building in the open and focusing on efficiency, we aim to make powerful education technology accessible to schools and institutions of all sizes, regardless of their budget.
+* **Fast & Secure**: Designed with low-latency microservices, token-based security (**Paseto**), and efficient, asynchronous workflows.
 
 ---
 
-## Technology Stack
+## ✨ Features & Status 🚀
 
-The application is built on a modern microservices architecture to ensure scalability and maintainability.
+The application is structured as a set of interoperable services built for scalability and maintainability.
 
-  * **Backend**: Python with FastAPI for building the core APIs.
-  * **Frontend**: A single-page application built with React and TypeScript.
-  * **Database**: PostgreSQL, leveraging the `pgvector` extension for future AI-related features.
-  * **Message Broker**: RabbitMQ for handling asynchronous tasks like auto-grading submissions.
-  * **Containerization**: Docker for consistent local development and deployment.
+| Feature | Status | Notes |
+| :--- | :--- | :--- |
+| **User Management & Auth** (Paseto) | ✅ Available | Secure authentication with gateway validation. |
+| **Question Bank** (MCQ, Subjective) | ✅ Available | Initial database schema & CRUD APIs ready. |
+| Assessment Service | 🚧 In Progress | Handles exam lifecycle, rules, and timing. |
+| Submission Service | 🚧 In Progress | Records answers, manages submission flow. |
+| **Automated Grading (MCQ)** | 🚧 In Progress | Accurate & scalable evaluation of multiple-choice responses. |
+| **AI-Generated Questions** | 🚧 In Progress | NLP-powered question generation from source material. |
+| **Automated Grading (Essays)** | 🚧 In Progress | Leveraging LLM evaluation + rubrics for subjective grading. |
+| Analytics Dashboard | 🚧 In Progress | Institution-level and student performance reports and live statistics. |
+| API for Integration | 🚧 In Progress | For seamless connection with external apps (LMS). |
+| Adaptive Testing Engine | 📝 Planned | Intelligent difficulty adjustment based on student performance. |
+| Peer Review System | 📝 Planned | Community-driven grading and feedback mechanisms. |
+| Offline Mode | 📝 Planned | Key for low-connectivity regions. |
+
+---
+
+## 🛠 Technology Stack ⚙️
+
+The application leverages a modern, polyglot **microservices architecture** built for performance, security, and maintainability. We prioritize **TypeScript/Node.js** for application logic and **Python** for specialized AI tasks.
+
+| Component | Technology | Notes |
+| :--- | :--- | :--- |
+| **Backend (Core Services)** | **Node.js, TypeScript, Express/NestJS** | Used for most microservices (Auth, Assessment, Submission, Notifications). |
+| **Backend (AI Services)** | **Python (FastAPI)** | Reserved for AI/ML, NLP, and heavy data processing (e.g., Grading, Question Gen). |
+| **Frontend** | **React, TypeScript, Tailwind CSS, shadcn/ui** | Modern, responsive single-page application. |
+| **Database** | **PostgreSQL** (Prisma ORM) | Robust and scalable, with `pgvector` for future AI features. |
+| **Message Broker** | **RabbitMQ** | For event-driven communication and asynchronous tasks. |
+| **Security** | **Paseto Tokens** | Secure, stateless, tamper-proof authentication. |
+| **Containerization** | **Docker** | For consistent local development. |
+| **CI/CD & Infra** | GitHub Actions (CI/CD), Kubernetes (future), ArgoCD (future) | For automated testing, deployment, and scalability. |
 
 -----
 
-## 💻 Getting Started (Contributors)
+## 💻 Getting Started (Contributors) 🧑‍💻
 
-### **Clone the repo**
+### **1. Clone the repo**
 
-```
+```bash
 git clone https://github.com/pediafor/assessment-app.git
 cd assessment-app
 ```
 
-### **Install dependencies**
+### **2. Setup Environment**
 
+The project uses Docker for consistency. Ensure Docker and Docker Compose are installed.
+
+- **Setup Environment Files**: Create `.env` files for each service (frontend, backend, database), using the respective `.env.example` as a template.
+- **Install Dependencies**: Follow the instructions in the service-specific directories (e.g., `/services/user-service`, `/services/assessment-service`) to install any necessary package dependencies (e.g., `npm install`).
+
+### **3. Run Locally**
+
+Start the entire application stack using the main Docker Compose file:
+
+```bash
+docker-compose up --build
 ```
-npm install
-```
 
-### **Setup environment**
-
-Create a `.env` file and use `.env.example` as a template.
-
-### **Run locally**
-
-```
-npm run dev
-```
-
------
-
-## 🧑‍💻 Coding Standards
-
-  * **Languages**: TypeScript (frontend), Python (AI services)
-  * **Code Style**:
-      * ESLint + Prettier for JS/TS
-      * Black + Flake8 for Python
-  * **Commits**: Follow Conventional Commits.
-  * **Branches**:
-      * `main` for stable releases
-      * `dev` for active development
-      * `feature/xyz` for new features
-
------
+---
 
 ## 📜 License
 
-This project is licensed under the **Apache License 2.0**—a permissive license that ensures:
+This project is licensed under the **Apache License 2.0**, a permissive license that ensures:
 
-  * Freedom to use, modify, and distribute
-  * Protection for contributors and users
-  * Commercial and open-source compatibility
+- Freedom to use, modify, and distribute.
+- Protection for contributors and users.
+- Commercial and open-source compatibility.
 
-See the `LICENSE` file for full details.
+See the [LICENSE](LICENSE) file for full details.
 
------
+---
 
 ## 🌐 Links
 
-  * **Website** → [pediafor.com](http://pediafor.com)
-  * **GitHub Org** → [github.com/pediafor](https://www.google.com/search?q=https://github.com/pediafor)
+- **Website** → [pediafor.com](https://pediafor.com)
+- **GitHub Organization** → [github.com/pediafor](https://github.com/pediafor)
 
------
+---
 
-## Contribution
+## 🤝 Contributing
 
-We welcome contributions of all kinds\! If you're looking for a good place to start, check our issue tracker for issues tagged with "**good first issue**."
+We welcome contributions of all kinds! Please check the [CONTRIBUTING.md](CONTRIBUTING.md) file for detailed guidelines on:
+
+- Setting up your development environment
+- Making changes to specific microservices
+- Coding standards and best practices
+- Submitting pull requests
+
+**Looking for a good place to start?** Check our [issue tracker](https://github.com/pediafor/assessment/issues) for issues tagged with [`good first issue`](https://github.com/pediafor/assessment/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22).
