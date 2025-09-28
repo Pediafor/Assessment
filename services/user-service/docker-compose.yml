@@ -18,7 +18,7 @@ services:
 
   user-service:
     build:
-      context: ./user-service
+      context: .
       dockerfile: Dockerfile
     container_name: userservice
     restart: always
@@ -27,7 +27,7 @@ services:
     ports:
       - "${PORT}:${PORT}"
     env_file:
-      - ./user-service/.env
+      - ./.env
     networks:
       - pediafor-network
 

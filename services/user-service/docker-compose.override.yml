@@ -1,15 +1,14 @@
-version: "3.9"
-
 services:
   user-service:
     volumes:
-      - ./user-service:/usr/src/app          # Mount source code for live updates
-      - /usr/src/app/node_modules            # Keep node_modules inside container
-    command: >
-      sh -c "npx prisma generate &&
-             npx tsc --watch &
-             node dist/server.js"
+      - ./src:/usr/src/app/src          # Mount only source files
+      - ./prisma:/usr/src/app/prisma    # Mount prisma schema
+      - ./tsconfig.json:/usr/src/app/tsconfig.json
+      - /usr/src/app/node_modules       # Keep container node_modules
     environment:
       - NODE_ENV=development
+    command: >
+      sh -c "npx prisma generate &&
+             npx ts-node-dev --respawn --transpile-only src/server.ts"
     ports:
-      - "4000:4000"
+      - "3001:3000"

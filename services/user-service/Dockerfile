@@ -4,23 +4,24 @@ FROM node:18-alpine AS build
 WORKDIR /usr/src/app
 
 COPY package*.json ./
-
 RUN npm ci
 
-COPY . .
+COPY tsconfig.json ./
+COPY src ./src
+COPY prisma ./prisma
 
-# Build TypeScript (only used for prod)
+RUN npx prisma generate
 RUN npm run build
 
-# Stage 2: Run
-FROM node:18-alpine
+# Stage 2: Production image
+FROM node:18-alpine AS prod
 
 WORKDIR /usr/src/app
 
-COPY --from=build /usr/src/app/node_modules ./node_modules
-COPY --from=build /usr/src/app/prisma ./prisma
-COPY --from=build /usr/src/app/dist ./dist
+COPY package*.json ./
+RUN npm ci --omit=dev
 
-EXPOSE 4000
+COPY --from=build /usr/src/app/dist ./dist
+COPY --from=build /usr/src/app/prisma ./prisma
 
 CMD ["node", "dist/server.js"]
