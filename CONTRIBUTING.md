@@ -1,45 +1,43 @@
 # 🤝 Contributing to Pediafor - The Assessment App
 
-First of all, thank you for considering contributing to **Pediafor** 💙
-This project is the first wedge in our mission to build open-source, AI-centric education infrastructure.
-We welcome contributions from developers, educators, researchers, designers, and anyone who wants to reshape education.
+First of all, **thank you** for considering contributing to Pediafor! 💙 This project is the first wedge in our mission to build open-source, AI-centric education infrastructure. We welcome contributions from developers, educators, researchers, designers, and anyone who wants to reshape education.
 
 ---
 
 ## 🧭 How to Contribute
 
-1. **Fork the repository**
+### 1. Fork the repository
 
-2. **Clone your fork**
+### 2. Clone your fork
 
-   ```bash
-   git clone https://github.com/Pediafor/Assessment.git
-   cd assessment-app
-   ```
+```bash
+git clone https://github.com/YOUR_USERNAME/assessment-app.git
+cd assessment-app
+```
 
-3. **Create a feature branch**
+### 3. Create a feature branch
 
-   ```bash
-   git checkout -b feat/your-feature-name
-   ```
+```bash
+git checkout -b feat/your-feature-name
+```
 
-4. **Make your changes**
-   Write clean, tested, and documented code.
+### 4. Make your changes
+Write clean, tested, and documented code.
 
-5. **Commit using conventional commits**
+### 5. Commit using conventional commits
 
-   ```bash
-   git commit -m "feat: add adaptive testing engine"
-   ```
+```bash
+git commit -m "feat: add submission tracking"
+```
 
-6. **Push to your fork**
+### 6. Push to your fork
 
-   ```bash
-   git push origin feat/your-feature-name
-   ```
+```bash
+git push origin feat/your-feature-name
+```
 
-7. **Open a Pull Request (PR)**
-   Describe your changes clearly.
+### 7. Open a Pull Request (PR)
+Describe your changes clearly.
 
 ---
 
@@ -47,10 +45,10 @@ We welcome contributions from developers, educators, researchers, designers, and
 
 ### Branch Naming
 
-* `feat/xyz` → New features
-* `fix/xyz` → Bug fixes
-* `docs/xyz` → Documentation changes
-* `chore/xyz` → Tooling or infrastructure updates
+- `feat/xyz` → New features
+- `fix/xyz` → Bug fixes  
+- `docs/xyz` → Documentation changes
+- `chore/xyz` → Tooling or infrastructure updates
 
 ### Commit Messages
 
@@ -60,17 +58,14 @@ Follow [Conventional Commits](https://www.conventionalcommits.org/).
 
 ## 🧑‍💻 Code Standards
 
-**Languages**
+### Languages
 
-* TypeScript (frontend)
-* Python (AI services)
+- **TypeScript** (all v1 services: user, assessment, submission, grading, gateway)
 
-**Linters & Formatters**
+### Linters & Formatters
 
-* JavaScript & TypeScript → ESLint + Prettier
-* Python → Black + Flake8
-
-**Run checks locally before pushing**
+- **ESLint + Prettier** for code quality and formatting
+- Run checks locally before pushing:
 
 ```bash
 npm run lint
@@ -81,47 +76,56 @@ npm run test
 
 ## ✅ Development Setup
 
-1. **Install dependencies**
+### Install dependencies
 
-   ```bash
-   npm install
-   ```
+```bash
+npm install
+```
 
-2. **Setup environment**
-   Copy `.env.example` → `.env` and configure your values.
+### Setup environment
+Copy `.env.example` → `.env` and configure your values.
 
-3. **Run local dev server**
+### Run local dev servers
 
-   ```bash
-   npm run dev
-   ```
+**Start an individual service:**
 
-4. **Run backend (if separate service)**
+```bash
+cd services/user-service
+npm run dev
+```
 
-   ```bash
-   npm run start:server
-   ```
+**Or start everything with Docker Compose:**
+
+```bash
+docker-compose up
+```
 
 ---
 
 ## 📊 Feature Status
 
-Check the [README.md](./README.md) for the feature roadmap and development status.
-👉 If you want to work on something, please open an **Issue** first to avoid overlap.
+Check the [README.md](README.md) for the feature roadmap and development status.
+
+👉 **If you want to work on something, please open an Issue first to avoid overlap.**
 
 ---
 
 ## 🧪 Testing
 
-* Write unit tests for new features (Jest, Pytest).
-* Run tests locally before opening a PR.
+- Use **Jest** for unit and integration tests
+- Write tests for new features
+- Run tests locally before opening a PR:
+
+```bash
+npm run test
+```
 
 ---
 
 ## 📝 Documentation
 
-* Keep code **self-documented** with clear naming.
-* Update documentation files when features change.
+- Keep code self-documented with clear names and comments
+- Update `docs/` or `README.md` when features change
 
 ---
 
