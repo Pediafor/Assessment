@@ -101,33 +101,69 @@ src/
 - Node.js 18+
 - Docker & Docker Compose
 - PostgreSQL (containerized)
-- `.env` file with:
+
+### Setting up Environment Variables
+
+Copy the example file:
+
+```bash
+cp user-service/.env.example user-service/.env
+```
+
+Edit `.env` with your own values:
 
 ```env
-DATABASE_URL=postgresql://user:password@db:5432/userservice
-PASETO_SECRET=your-secret-key
+POSTGRES_USER=your_db_user
+POSTGRES_PASSWORD=your_db_password
+POSTGRES_DB=userservice
+DATABASE_URL=postgresql://your_db_user:your_db_password@db:5432/userservice
+PASETO_SECRET=your_super_secret_key_here
 PORT=4000
 ```
 
-### Build & Run
+- Use strong secrets for `PASETO_SECRET`
+- Ensure the `.env` file is not committed to the repo
+
+Start the development environment:
 
 ```bash
-# Build docker container
-docker build -t pediafor-user-service .
-
-# Run with docker-compose
-docker-compose up -d
+docker-compose up
 ```
 
-### Prisma Setup
+- Automatically mounts source code
+- Runs Prisma generate
+- Starts TypeScript in watch mode
+- Runs Node server
+
+### Build & Run (Production)
+
+```bash
+docker-compose -f docker-compose.yml up --build -d
+```
+
+- Builds production-ready images with precompiled TypeScript and Prisma client.
+- No volume mounts or watch processes; optimized for performance.
+
+### Prisma Setup (Production)
 
 ```bash
 # Generate Prisma client
 npx prisma generate
 
 # Run migrations
-npx prisma migrate dev --name init_user_service
+npx prisma migrate deploy
 ```
+
+## Development Setup
+
+- **Hot reload**: Changes to `/user-service/src` are compiled automatically
+- **Prisma migrations**:
+  ```bash
+  docker-compose exec user-service npx prisma migrate dev --name <migration_name>
+  ```
+- **Environment separation**:
+  - Dev: `.env` in `/user-service`
+  - Prod: Secrets managed via CI/CD or Docker secrets
 
 ## API Endpoints
 
@@ -175,11 +211,14 @@ npm test
 
 ## Environment Variables
 
-| Variable      | Description                      |
-|---------------|----------------------------------|
-| DATABASE_URL  | Postgres connection string       |
-| PASETO_SECRET | Symmetric key for token signing  |
-| PORT          | Port for the service to run      |
+| Variable          | Description                      |
+|-------------------|----------------------------------|
+| POSTGRES_USER     | Database user                    |
+| POSTGRES_PASSWORD | Database password                |
+| POSTGRES_DB       | Database name                    |
+| DATABASE_URL      | Postgres connection string       |
+| PASETO_SECRET     | Symmetric key for token signing  |
+| PORT              | Port for the service to run      |
 
 ## Future Enhancements
 
