@@ -1,0 +1,33 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                 String    @id @default(uuid())
+  email              String    @unique
+  passwordHash       String
+  firstName          String?
+  lastName           String?
+  role               UserRole  @default(STUDENT)
+  isActive           Boolean   @default(true)
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  lastLogin          DateTime?
+  profilePicture     String?
+  metadata           Json?
+  resetPasswordToken String?
+  resetTokenExpiry   DateTime?
+  refreshToken       String?   // Stored for refresh workflow
+  // Optional: track issued access token identifiers if needed for revocation
+}
+
+enum UserRole {
+  STUDENT
+  TEACHER
+  ADMIN
+}
