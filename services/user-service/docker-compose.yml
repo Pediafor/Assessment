@@ -1,7 +1,7 @@
 version: "3.9"
 
 services:
-  db:
+  user-db:   # renamed from db
     image: postgres:15
     container_name: userservice-db
     restart: always
@@ -23,7 +23,7 @@ services:
     container_name: userservice
     restart: always
     depends_on:
-      - db
+      - user-db   # renamed
     ports:
       - "${PORT}:${PORT}"
     env_file:
