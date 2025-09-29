@@ -4,31 +4,36 @@
 
 UserService is a core microservice in the Pediafor Assessment Platform. It manages:
 
-- User authentication and authorization
-- Role management (STUDENT, TEACHER, ADMIN)
-- CRUD operations for user profiles
-- Token issuance and management using PASETO tokens
-- Multi-service data ownership via user IDs
+- **Secure Authentication**: PASETO V4 tokens with Ed25519 cryptography
+- **User Registration**: Email validation, password hashing, role assignment
+- **Role Management**: STUDENT, TEACHER, ADMIN with permission-based access
+- **User Profile CRUD**: Complete user lifecycle management
+- **Session Security**: httpOnly cookies, refresh token rotation, XSS protection
+- **Multi-service Integration**: Distributed token verification across services
 
-This service is fully containerized and interacts with the GatewayService and other downstream services in the platform.
+This service implements security-first design patterns and is fully containerized for production deployment.
 
 ## Architecture
 
 ```
 [Client] --> [GatewayService] --> [UserService] --> [PostgreSQL DB]
-                    |                   |
-                    |<-- Access Token --|
+     |              |                   |                |
+     |<-- Access ---|                   |<-- Session --->|
+     |    Token     |                   |    Cookie      |
+     |              |                   |                |
+     [httpOnly Cookie for Refresh]      [Token Rotation] |
 ```
 
-- **Client**: Receives access and refresh tokens upon login.
-- **GatewayService**: Validates incoming requests using access tokens.
-- **UserService**: Issues PASETO access/refresh tokens, performs user CRUD, and manages roles.
+- **Client**: Receives only access tokens, session managed via httpOnly cookies
+- **GatewayService**: Validates requests using PASETO public key verification  
+- **UserService**: Issues secure tokens, manages sessions, performs user operations
+- **Database**: Stores refresh tokens, user profiles, and authentication state
 
-### Token Workflow:
-1. Login request → UserService
-2. UserService generates access + refresh tokens
-3. Access token validated by Gateway for every request
-4. Refresh token stored in DB for token renewal
+### Secure Token Workflow:
+1. **Login**: Email/password → Access token + httpOnly session cookie
+2. **API Requests**: Access token in Authorization header for validation
+3. **Token Refresh**: Automatic via session cookie (client never sees refresh token)
+4. **Logout**: Clears session cookie + invalidates refresh token in DB
 
 ## Key Features
 
@@ -73,19 +78,21 @@ enum UserRole {
 ## Current Implementation Status
 
 ### ✅ **Completed Features**
-- PASETO V4 token system with Ed25519 cryptography
-- Argon2 password hashing utilities  
-- Prisma database client integration
-- Basic authentication endpoints (login, refresh)
-- Docker containerization with multi-stage builds
-- Environment configuration for public/private keys
-- API root endpoint with service information
+- **Authentication System**: Secure login with email/password validation
+- **User Registration**: Complete registration with role assignment and validation
+- **PASETO V4 Tokens**: Ed25519 cryptography with 15min access/7day refresh tokens
+- **Security Implementation**: httpOnly cookies, token rotation, XSS/CSRF protection
+- **Password Security**: Argon2 hashing with secure verification
+- **User CRUD Operations**: Create, read, update, delete, and list users
+- **Database Integration**: Prisma ORM with PostgreSQL, proper error handling
+- **Docker Production**: Multi-stage builds, optimized containers
+- **Session Management**: Secure logout, token invalidation
 
-### 🔄 **In Development**
-- User registration endpoint
-- Complete user CRUD operations
-- Input validation and error handling
-- Role-based access control
+### 🔄 **Next Phase**
+- PASETO middleware for route protection
+- Role-based access control (RBAC)
+- Input validation and sanitization
+- Rate limiting and security headers
 
 ## Folder Structure
 
@@ -208,19 +215,19 @@ npx prisma migrate deploy
 
 | Method | Endpoint      | Description                               | Status |
 |--------|---------------|-------------------------------------------|--------|
-| POST   | /auth/login   | Login user with userId (temp), issue tokens | ✅ |
-| POST   | /auth/refresh | Refresh access token using refresh token | ✅ |
-| POST   | /auth/logout  | Invalidate refresh token                  | 🔄 |
+| POST   | /auth/login   | Login with email/password, returns access token + session | ✅ |
+| POST   | /auth/refresh | Refresh access token using httpOnly session cookie | ✅ |
+| POST   | /auth/logout  | Invalidate session and clear refresh token | ✅ |
 
 ### User Routes:
 
-| Method | Endpoint    | Description    | Status |
-|--------|-------------|----------------|--------|
-| POST   | /users      | Create user    | 🔄 |
-| GET    | /users/:id  | Get user by ID | 🔄 |
-| PUT    | /users/:id  | Update user    | 🔄 |
-| DELETE | /users/:id  | Delete user    | 🔄 |
-| GET    | /users      | List users     | 🔄 |
+| Method | Endpoint        | Description                    | Status |
+|--------|-----------------|--------------------------------|--------|
+| POST   | /users/register | Register new user with validation | ✅ |
+| GET    | /users/:id      | Get user profile by ID         | ✅ |
+| PUT    | /users/:id      | Update user profile            | ✅ |
+| DELETE | /users/:id      | Delete user account            | ✅ |
+| GET    | /users          | List all users (paginated)     | ✅ |
 
 **Legend:** ✅ = Implemented, 🔄 = In Development, ❌ = Not Started
 
@@ -236,16 +243,19 @@ UserService (Private Key)    Other Services (Public Key)
 ```
 
 ### **Token Specifications**
-- **Access Token**: 15 minutes, Ed25519 signed, stateless
-- **Refresh Token**: 7 days, stored in database, rotation-based
+- **Access Token**: 15 minutes, Ed25519 signed, stateless, sent to client
+- **Refresh Token**: 7 days, stored in database only, automatic rotation
+- **Session Management**: httpOnly cookies with SameSite=Strict protection
 - **Algorithm**: PASETO V4 with Ed25519 public key cryptography
 - **Claims**: `iss`, `aud`, `iat`, `exp`, `userId`, custom payload
 
 ### **Security Benefits**
-- **Distributed Verification**: Other services can verify tokens without UserService
-- **Non-repudiation**: Only UserService can create authentic tokens
-- **Key Rotation**: Public/private keys can be rotated independently
-- **No Shared Secrets**: Public key can be safely distributed
+- **XSS Protection**: Refresh tokens never exposed to client JavaScript
+- **CSRF Protection**: SameSite=Strict cookie policy prevents cross-site attacks
+- **Token Rotation**: New refresh token generated on each use
+- **Distributed Verification**: Other services verify tokens using public key
+- **Session Security**: Clean logout with token invalidation
+- **No Shared Secrets**: Public key distribution without compromise
 
 ## Why PASETO over JWT?
 
@@ -286,6 +296,72 @@ const payload = await V4.verify(token, publicKey);
 
 **Bottom Line**: PASETO eliminates entire classes of security vulnerabilities that have plagued JWT implementations for years.
 
+## Security Implementation
+
+### **Authentication Flow**
+
+```bash
+# 1. User Registration
+curl -X POST http://localhost:4000/users/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "user@example.com",
+    "password": "SecurePassword123!",
+    "firstName": "John",
+    "lastName": "Doe",
+    "role": "STUDENT"
+  }'
+
+# 2. Secure Login (returns access token + sets httpOnly cookie)
+curl -X POST http://localhost:4000/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email": "user@example.com", "password": "SecurePassword123!"}' \
+  -c cookies.txt
+
+# 3. Access Protected Route (with access token)
+curl -X GET http://localhost:4000/users/123 \
+  -H "Authorization: Bearer <access_token>"
+
+# 4. Refresh Access Token (using session cookie)
+curl -X POST http://localhost:4000/auth/refresh \
+  -b cookies.txt
+
+# 5. Secure Logout (clears session + invalidates refresh token)
+curl -X POST http://localhost:4000/auth/logout \
+  -b cookies.txt
+```
+
+### **Security Features**
+
+| Feature | Implementation | Benefit |
+|---------|----------------|---------|
+| **Password Hashing** | Argon2 with salt | Prevents rainbow table attacks |
+| **Token Security** | PASETO V4 + Ed25519 | Modern cryptography, no algorithm confusion |
+| **Session Management** | httpOnly + SameSite cookies | XSS/CSRF protection |
+| **Token Rotation** | New refresh token on each use | Limits compromise window |
+| **Input Validation** | Email format + password strength | Prevents malicious input |
+| **Database Security** | Parameterized queries via Prisma | SQL injection protection |
+| **Environment Isolation** | Docker containers + env vars | Secure deployment practices |
+
+### **Testing the Implementation**
+
+```powershell
+# Test secure login flow
+$response = Invoke-WebRequest -Uri "http://localhost:4000/auth/login" -Method POST -ContentType "application/json" -Body '{"email":"test@example.com","password":"TestPassword123!"}' -SessionVariable session
+
+# Verify only access token returned (no refresh token)
+$response.Content | ConvertFrom-Json | Select-Object accessToken
+
+# Verify httpOnly cookie set
+$response.Headers['Set-Cookie']
+
+# Test token refresh using session
+Invoke-WebRequest -Uri "http://localhost:4000/auth/refresh" -Method POST -WebSession $session
+
+# Test logout invalidation
+Invoke-WebRequest -Uri "http://localhost:4000/auth/logout" -Method POST -WebSession $session
+```
+
 ## Contributing
 
 1. Fork the repo
@@ -308,10 +384,11 @@ npm test
 
 ### **Runtime Dependencies**
 - **Express 5.1.0**: Modern HTTP server framework
-- **Prisma 6.16.2**: Type-safe database ORM  
-- **PASETO 3.1.4**: Secure token implementation
-- **Argon2 0.44.0**: Advanced password hashing
-- **Node.js 18+**: JavaScript runtime
+- **Prisma 6.16.2**: Type-safe database ORM with PostgreSQL
+- **PASETO 3.1.4**: Secure token implementation with Ed25519
+- **Argon2 0.44.0**: Advanced password hashing algorithm
+- **cookie-parser**: Secure httpOnly cookie handling
+- **Node.js 18+**: JavaScript runtime with modern features
 
 ### **Development Dependencies**  
 - **TypeScript 5.9.2**: Type safety and modern JavaScript
@@ -332,13 +409,15 @@ npm test
 
 ## Development Roadmap
 
-### **Phase 1: Core Authentication (Current)**
-- [x] PASETO V4 token system
-- [x] Argon2 password hashing
-- [x] Basic login/refresh endpoints
-- [x] Docker containerization
-- [ ] Complete user registration
-- [ ] Email/password login validation
+### **Phase 1: Core Authentication ✅ COMPLETED**
+- [x] PASETO V4 token system with Ed25519 cryptography
+- [x] Argon2 password hashing and verification
+- [x] Secure authentication endpoints (login/refresh/logout)
+- [x] User registration with email validation and role assignment
+- [x] Complete user CRUD operations with database integration
+- [x] httpOnly cookie session management
+- [x] Refresh token rotation and security
+- [x] Docker production containerization
 
 ### **Phase 2: Security & Validation**
 - [ ] PASETO middleware for route protection
@@ -365,18 +444,43 @@ npm test
 
 ### **Common Issues**
 
-1. **"Cannot GET /" Error**
-   - Solution: Visit `http://localhost:4000/` for service info
-   - Root route now provides API documentation
+1. **Authentication Failures**
+   - **Invalid email/password**: Check user exists via `GET /users`
+   - **Token expired**: Use refresh endpoint or login again
+   - **Missing session cookie**: Ensure cookies enabled in client
 
 2. **PASETO Key Errors**
    - Run: `node scripts/generate-keys.js`
-   - Copy keys to `.env` file with proper formatting
+   - Copy keys to `.env` with proper PEM formatting
+   - Verify private key matches public key
 
 3. **Database Connection Issues**
-   - Ensure PostgreSQL container is running
+   - Ensure PostgreSQL container is running: `docker ps`
    - Check `DATABASE_URL` format in `.env`
+   - Run migrations: `npx prisma migrate deploy`
 
 4. **Docker Build Failures**
-   - Run: `docker-compose down && docker-compose up --build`
-   - Clear Docker cache if needed
+   - Clean rebuild: `docker-compose down && docker-compose up --build`
+   - Clear Docker cache: `docker system prune -f`
+   - Check logs: `docker logs userservice`
+
+5. **Cookie/Session Issues**
+   - **No session cookie**: Check `Set-Cookie` header in login response
+   - **Refresh fails**: Ensure httpOnly cookie sent with request
+   - **CORS problems**: Configure proper CORS headers for cookies
+
+### **Debugging Commands**
+
+```bash
+# Check service status
+curl http://localhost:4000/health
+
+# View container logs
+docker logs userservice -f
+
+# Check database connection
+docker exec -it userservice-db psql -U admin -d userservice -c "\dt"
+
+# Verify PASETO keys
+node -e "console.log(process.env.PASETO_PUBLIC_KEY)"
+```
