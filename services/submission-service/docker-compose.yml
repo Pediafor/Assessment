@@ -1,0 +1,57 @@
+version: "3.9"
+
+services:
+  # Submission Service Database
+  submission-db:
+    image: postgres:15-alpine
+    container_name: submission-service-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-submissionservice}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-submissionpass123}
+      POSTGRES_DB: ${POSTGRES_DB:-submission_service_db}
+    ports:
+      - "5434:5432"  # Different port to avoid conflicts
+    volumes:
+      - submission_service_data:/var/lib/postgresql/data
+      - ./prisma/init:/docker-entrypoint-initdb.d
+    networks:
+      - submission-service-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-submissionservice} -d ${POSTGRES_DB:-submission_service_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Submission Service Application
+  submission-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: submission-service
+    restart: unless-stopped
+    depends_on:
+      submission-db:
+        condition: service_healthy
+    ports:
+      - "4002:4002"
+    environment:
+      - NODE_ENV=production
+      - PORT=4002
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-submissionservice}:${POSTGRES_PASSWORD:-submissionpass123}@submission-db:5432/${POSTGRES_DB:-submission_service_db}
+    networks:
+      - submission-service-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:4002/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  submission_service_data:
+    driver: local
+
+networks:
+  submission-service-network:
+    driver: bridge
+    name: submission-service-network

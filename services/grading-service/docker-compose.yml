@@ -1,0 +1,57 @@
+version: "3.9"
+
+services:
+  # Grading Service Database
+  grading-db:
+    image: postgres:15-alpine
+    container_name: grading-service-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-gradingservice}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-gradingpass123}
+      POSTGRES_DB: ${POSTGRES_DB:-grading_service_db}
+    ports:
+      - "5435:5432"  # Different port to avoid conflicts
+    volumes:
+      - grading_service_data:/var/lib/postgresql/data
+      - ./prisma/init:/docker-entrypoint-initdb.d
+    networks:
+      - grading-service-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-gradingservice} -d ${POSTGRES_DB:-grading_service_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Grading Service Application
+  grading-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: grading-service
+    restart: unless-stopped
+    depends_on:
+      grading-db:
+        condition: service_healthy
+    ports:
+      - "4003:4003"
+    environment:
+      - NODE_ENV=production
+      - PORT=4003
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-gradingservice}:${POSTGRES_PASSWORD:-gradingpass123}@grading-db:5432/${POSTGRES_DB:-grading_service_db}
+    networks:
+      - grading-service-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:4003/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  grading_service_data:
+    driver: local
+
+networks:
+  grading-service-network:
+    driver: bridge
+    name: grading-service-network

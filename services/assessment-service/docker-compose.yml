@@ -1,0 +1,57 @@
+version: "3.9"
+
+services:
+  # Assessment Service Database
+  assessment-db:
+    image: postgres:15-alpine
+    container_name: assessment-service-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-assessmentservice}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-assessmentpass123}
+      POSTGRES_DB: ${POSTGRES_DB:-assessment_service_db}
+    ports:
+      - "5433:5432"  # Different port to avoid conflicts
+    volumes:
+      - assessment_service_data:/var/lib/postgresql/data
+      - ./prisma/init:/docker-entrypoint-initdb.d
+    networks:
+      - assessment-service-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-assessmentservice} -d ${POSTGRES_DB:-assessment_service_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Assessment Service Application
+  assessment-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: assessment-service
+    restart: unless-stopped
+    depends_on:
+      assessment-db:
+        condition: service_healthy
+    ports:
+      - "4001:4001"
+    environment:
+      - NODE_ENV=production
+      - PORT=4001
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-assessmentservice}:${POSTGRES_PASSWORD:-assessmentpass123}@assessment-db:5432/${POSTGRES_DB:-assessment_service_db}
+    networks:
+      - assessment-service-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:4001/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  assessment_service_data:
+    driver: local
+
+networks:
+  assessment-service-network:
+    driver: bridge
+    name: assessment-service-network
