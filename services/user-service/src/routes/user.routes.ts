@@ -1,6 +1,7 @@
 import express from "express";
 import { registerUser, getUserById, updateUser, deleteUser, getAllUsers } from "../services/user.service";
 import { hashPassword } from "../utils/hash";
+import { authenticateToken, requireRole, requireOwnership, injectUserContext } from "../middleware/auth.middleware";
 
 const router = express.Router();
 
@@ -75,8 +76,8 @@ router.post("/register", async (req, res) => {
   }
 });
 
-// Get user by ID
-router.get("/:id", async (req, res) => {
+// Get user by ID - Protected: users can only access their own profile, admins can access any
+router.get("/:id", authenticateToken, injectUserContext, requireOwnership, async (req, res) => {
   try {
     const { id } = req.params;
     const user = await getUserById(id);
@@ -99,8 +100,8 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-// Update user
-router.put("/:id", async (req, res) => {
+// Update user - Protected: users can only update their own profile, admins can update any
+router.put("/:id", authenticateToken, injectUserContext, requireOwnership, async (req, res) => {
   try {
     const { id } = req.params;
     const { firstName, lastName, profilePicture, metadata } = req.body;
@@ -133,8 +134,8 @@ router.put("/:id", async (req, res) => {
   }
 });
 
-// Delete user (soft delete by setting isActive = false)
-router.delete("/:id", async (req, res) => {
+// Delete user (soft delete by setting isActive = false) - Protected: users can only delete their own account, admins can delete any
+router.delete("/:id", authenticateToken, injectUserContext, requireOwnership, async (req, res) => {
   try {
     const { id } = req.params;
     
@@ -158,8 +159,8 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
-// Get all users (admin functionality)
-router.get("/", async (req, res) => {
+// Get all users (admin functionality) - Protected: only admins can list all users
+router.get("/", authenticateToken, injectUserContext, requireRole(['ADMIN']), async (req, res) => {
   try {
     const { page = 1, limit = 10, role } = req.query;
     
