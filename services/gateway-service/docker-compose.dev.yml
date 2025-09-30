@@ -1,0 +1,31 @@
+version: "3.9"
+
+# Development overrides for gateway-service
+services:
+  gateway-service:
+    build:
+      target: build  # Use build stage for development
+    environment:
+      - NODE_ENV=development
+      - USER_SERVICE_URL=http://host.docker.internal:4000
+      - ASSESSMENT_SERVICE_URL=http://host.docker.internal:4001
+      - SUBMISSION_SERVICE_URL=http://host.docker.internal:4002
+      - GRADING_SERVICE_URL=http://host.docker.internal:4003
+    volumes:
+      - ./src:/app/src:ro
+      - ./tests:/app/tests:ro
+    command: ["npm", "run", "dev"]
+
+  # Development tools
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: gateway-redis-commander
+    restart: unless-stopped
+    depends_on:
+      - redis
+    ports:
+      - "8081:8081"
+    networks:
+      - gateway-network
+    environment:
+      REDIS_HOSTS: local:redis:6379

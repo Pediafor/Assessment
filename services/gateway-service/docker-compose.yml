@@ -1,0 +1,55 @@
+version: "3.9"
+
+services:
+  # Gateway Service
+  gateway-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: gateway-service
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - PASETO_PUBLIC_KEY=MCowBQYDK2VwAyEAMSnxVl9HDU/a8MTM7ZjVr4stDU0pgXo6IL68tdjxFk0=
+      - GATEWAY_SECRET=my-super-secret-gateway-key-for-header-signing
+      - ALLOWED_ORIGINS=http://localhost:3000,http://localhost:3001
+      - USER_SERVICE_URL=http://host.docker.internal:4000
+      - ASSESSMENT_SERVICE_URL=http://host.docker.internal:4001
+      - SUBMISSION_SERVICE_URL=http://host.docker.internal:4002
+      - GRADING_SERVICE_URL=http://host.docker.internal:4003
+    ports:
+      - "3000:3000"
+    networks:
+      - gateway-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Redis for Gateway caching (optional)
+  redis:
+    image: redis:7-alpine
+    container_name: gateway-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - gateway-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  redis_data:
+    driver: local
+
+networks:
+  gateway-network:
+    driver: bridge
+    name: gateway-network
