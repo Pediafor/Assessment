@@ -1,51 +1,153 @@
-# UserService - Pediafor
+# User Service - Pediafor Assessment Platform
 
 ## Overview
 
-UserService is a core microservice in the Pediafor Assessment Platform. It manages:
+The User Service is a core microservice in the Pediafor Assessment Platform, implementing secure authentication and user management with modern cryptographic standards. Built as part of a pure microservices architecture, it provides:
 
-- **Secure Authentication**: PASETO V4 tokens with Ed25519 cryptography
-- **User Registration**: Email validation, password hashing, role assignment
-- **Role Management**: STUDENT, TEACHER, ADMIN with permission-based access
-- **User Profile CRUD**: Complete user lifecycle management
-- **Session Security**: httpOnly cookies, refresh token rotation, XSS protection
-- **Multi-service Integration**: Distributed token verification across services
+- **🔐 Secure Authentication**: PASETO V4 tokens with Ed25519 cryptography
+- **👥 User Management**: Complete CRUD operations with role-based access control
+- **🏛️ Database-per-Service**: Dedicated PostgreSQL database with Prisma ORM
+- **🐳 Production Ready**: Containerized with Docker Compose orchestration
+- **🧪 Comprehensive Testing**: 60+ tests covering unit, functional, and integration scenarios
+- **🔒 Security-First Design**: httpOnly cookies, token rotation, XSS/CSRF protection
 
-This service implements security-first design patterns and is fully containerized for production deployment.
-
-## Architecture
+## Architecture Overview
 
 ```
-[Client] --> [GatewayService] --> [UserService] --> [PostgreSQL DB]
-     |              |                   |                |
-     |<-- Access ---|                   |<-- Session --->|
-     |    Token     |                   |    Cookie      |
-     |              |                   |                |
-     [httpOnly Cookie for Refresh]      [Token Rotation] |
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   Gateway       │    │   User Service  │    │   PostgreSQL    │
+│   Service       │    │                 │    │   Database      │
+│                 │    │                 │    │                 │
+│ - Route Auth    │◄──►│ - User CRUD     │◄──►│ - User Data     │
+│ - Token Verify  │    │ - Auth Logic    │    │ - Sessions      │
+│ - Load Balance  │    │ - Token Issue   │    │ - Migrations    │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+        │                        │                        │
+        │                        │                        │
+   Port :3000               Port :4000               Port :5432
+   (Public API)            (Internal)             (Private)
 ```
 
-- **Client**: Receives only access tokens, session managed via httpOnly cookies
-- **GatewayService**: Validates requests using PASETO public key verification  
-- **UserService**: Issues secure tokens, manages sessions, performs user operations
-- **Database**: Stores refresh tokens, user profiles, and authentication state
+### Microservices Communication
 
-### Secure Token Workflow:
-1. **Login**: Email/password → Access token + httpOnly session cookie
-2. **API Requests**: Access token in Authorization header for validation
-3. **Token Refresh**: Automatic via session cookie (client never sees refresh token)
-4. **Logout**: Clears session cookie + invalidates refresh token in DB
+- **Gateway Service**: Public-facing API gateway with authentication middleware
+- **User Service**: Internal service handling user operations and token issuance
+- **Database Isolation**: Each service has its own PostgreSQL instance
+- **Token Distribution**: PASETO public key shared for distributed verification
 
-## Key Features
+## 🚀 Key Features
 
-- **CRUD**: Create, read, update, delete users
-- **Authentication**: Login with email + password using Argon2 hashing
-- **Authorization**: Role-based access control (STUDENT, INSTRUCTOR, ADMIN)
-- **Token Management**: PASETO V4 public/private key tokens
-- **Profile Management**: Store metadata, profile picture, last login
-- **Cross-Service Ownership**: userId as pseudo foreign key for downstream services
-- **Secure Cryptography**: Ed25519 key pairs for distributed token verification
+### Authentication & Security
+- **PASETO V4 Tokens**: Modern alternative to JWT with Ed25519 signatures
+- **Argon2 Password Hashing**: Memory-hard algorithm resistant to attacks
+- **Session Management**: httpOnly cookies with automatic token rotation
+- **Role-Based Access**: STUDENT, TEACHER, ADMIN with granular permissions
+- **XSS/CSRF Protection**: Secure cookie policies and token isolation
 
-## Database Schema
+### User Management
+- **Complete CRUD Operations**: Create, read, update, delete users
+- **Profile Management**: Names, metadata, profile pictures, last login tracking
+- **Soft Delete**: Maintains data integrity while marking users inactive
+- **Pagination Support**: Efficient listing with role-based filtering
+
+### Development Experience
+- **TypeScript**: Full type safety with modern JavaScript features
+- **Prisma ORM**: Type-safe database operations with auto-generated client
+- **Hot Reload**: Development environment with automatic code recompilation
+- **Comprehensive Testing**: 60+ tests with mock implementations for fast CI/CD
+
+## 📊 Database Schema
+
+```prisma
+model User {
+  id                 String    @id @default(uuid())
+  email              String    @unique
+  passwordHash       String
+  firstName          String?
+  lastName           String?
+  role               UserRole  @default(STUDENT)
+  isActive           Boolean   @default(true)
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  lastLogin          DateTime?
+  profilePicture     String?
+  metadata           Json?
+  refreshToken       String?   // Stored securely for session management
+  
+  @@map("users")
+}
+
+enum UserRole {
+  STUDENT
+  TEACHER
+  ADMIN
+}
+```
+
+## 🛠️ Technology Stack
+
+### Runtime
+- **Node.js 18+**: JavaScript runtime with modern ES modules
+- **Express.js 5.1**: Fast, minimalist web framework
+- **Prisma 6.16**: Next-generation ORM with type safety
+- **PostgreSQL 15**: Robust relational database
+- **PASETO 3.1**: Secure token implementation
+
+### Development
+- **TypeScript 5.9**: Static typing and modern JavaScript
+- **Jest 29**: Testing framework with TypeScript support
+- **Docker Compose**: Container orchestration for development/production
+- **ts-node-dev**: Hot reload development server
+
+## 🧪 Testing Suite
+
+Our comprehensive testing approach ensures reliability and maintainability:
+
+### Test Coverage (60+ Tests)
+```
+✅ Basic Environment Tests (6 tests)
+   - Environment setup, TypeScript support, async operations
+
+✅ Functional Core Tests (12 tests)  
+   - Email validation, password strength, user data structures
+   - Token management concepts, business logic validation
+
+✅ Hash Utility Tests (7 tests)
+   - Password hashing and verification with Argon2 simulation
+   - Security edge cases and error handling
+
+✅ PASETO Token Tests (9 tests)
+   - Token generation, verification, expiration handling
+   - Audience/issuer validation, security scenarios
+
+✅ User Service Tests (14 tests)
+   - CRUD operations, pagination, role management
+   - Soft delete functionality, error scenarios
+
+✅ Auth Service Tests (12 tests)
+   - Token issuance, refresh token handling
+   - Session management, security validation
+```
+
+### Testing Philosophy
+- **Mock-Based Approach**: Fast tests without external dependencies
+- **Concept Testing**: Focus on business logic rather than implementation details
+- **CI/CD Ready**: No database requirements for unit/functional tests
+- **Integration Tests**: Separate suite requiring Docker environment
+
+### Running Tests
+```bash
+# Run all unit and functional tests (fast)
+npm test -- --testPathIgnorePatterns="tests/integration"
+
+# Run integration tests (requires Docker)
+docker-compose up -d user-db
+npm test tests/integration
+
+# Run specific test suites
+npm test tests/unit/utils/paseto.test.ts
+npm test tests/functional.test.ts
+```
 
 Using Prisma ORM:
 
@@ -75,161 +177,224 @@ enum UserRole {
 }
 ```
 
-## Current Implementation Status
+## 📋 Current Implementation Status
 
 ### ✅ **Completed Features**
-- **Authentication System**: Secure login with email/password validation
-- **User Registration**: Complete registration with role assignment and validation
-- **PASETO V4 Tokens**: Ed25519 cryptography with 15min access/7day refresh tokens
-- **Security Implementation**: httpOnly cookies, token rotation, XSS/CSRF protection
-- **Password Security**: Argon2 hashing with secure verification
-- **User CRUD Operations**: Create, read, update, delete, and list users
-- **Database Integration**: Prisma ORM with PostgreSQL, proper error handling
-- **Docker Production**: Multi-stage builds, optimized containers
-- **Session Management**: Secure logout, token invalidation
+- **🔐 Complete Authentication System**: Secure login/logout with PASETO V4 tokens
+- **👥 User Registration & Management**: Full CRUD operations with validation
+- **🔑 Advanced Token Security**: Ed25519 cryptography with 15min access/7day refresh
+- **🍪 Session Management**: httpOnly cookies with rotation and XSS protection
+- **🛡️ Password Security**: Argon2 hashing with secure verification
+- **🗄️ Database Integration**: Prisma ORM with PostgreSQL and error handling
+- **🐳 Production Deployment**: Multi-stage Docker builds with optimization
+- **🧪 Comprehensive Testing**: 60+ tests covering all core functionality
+- **🏗️ Microservices Architecture**: Database-per-service with isolated containers
+- **📊 API Documentation**: Complete endpoint documentation with examples
 
-### 🔄 **Next Phase**
-- PASETO middleware for route protection
-- Role-based access control (RBAC)
-- Input validation and sanitization
-- Rate limiting and security headers
+### 🔄 **Architecture Completed**
+- **Gateway Integration**: Token verification shared via public key
+- **Service Isolation**: Independent PostgreSQL databases
+- **Container Orchestration**: Docker Compose with networking
+- **Environment Configuration**: Secure secret management
+- **Test Infrastructure**: Mock-based testing for fast CI/CD
 
-## Folder Structure
+## 📁 Project Structure
 
 ```
-src/
-├── app.ts                 # Express app with root route
-├── server.ts              # HTTP server startup
-├── prismaClient.ts        # Database client instance
-├── routes/
-│   ├── auth.routes.ts     # Login, refresh endpoints ✅
-│   └── user.routes.ts     # CRUD operations (skeleton)
-├── services/
-│   └── auth.service.ts    # Token generation, DB operations ✅
-├── utils/
-│   ├── paseto.ts          # PASETO V4 implementation ✅
-│   └── hash.ts            # Argon2 password hashing ✅
-└── scripts/
-    └── generate-keys.js   # Ed25519 key generation ✅
+services/user-service/
+├── src/
+│   ├── app.ts                    # Express application setup
+│   ├── server.ts                 # HTTP server initialization
+│   ├── prismaClient.ts           # Database client configuration
+│   ├── routes/
+│   │   ├── auth.routes.ts        # Authentication endpoints ✅
+│   │   └── user.routes.ts        # User CRUD operations ✅
+│   ├── services/
+│   │   ├── auth.service.ts       # Token & session management ✅
+│   │   └── user.service.ts       # User business logic ✅
+│   ├── utils/
+│   │   ├── paseto.ts            # PASETO V4 implementation ✅
+│   │   └── hash.ts              # Argon2 password hashing ✅
+│   └── middleware/
+│       └── auth.middleware.ts    # Token validation middleware ✅
+├── tests/                        # Comprehensive test suite
+│   ├── basic.test.ts            # Environment & setup tests
+│   ├── functional.test.ts       # Core functionality tests
+│   ├── unit/
+│   │   ├── utils/               # Utility function tests
+│   │   └── services/            # Service layer tests
+│   ├── integration/             # Full API integration tests
+│   └── setup.ts                 # Test configuration & utilities
+├── prisma/
+│   ├── schema.prisma            # Database schema definition
+│   └── migrations/              # Database version control
+├── scripts/
+│   └── generate-keys.js         # Ed25519 key pair generation
+├── docker-compose.yml           # Service orchestration
+├── Dockerfile                   # Container definition
+└── package.json                 # Dependencies & scripts
 ```
 
-## Getting Started (Docker)
+## 🚀 Getting Started
 
 ### Prerequisites
+- **Node.js 18+**: Modern JavaScript runtime
+- **Docker & Docker Compose**: Container orchestration
+- **Git**: Version control system
 
-- Node.js 18+
-- Docker & Docker Compose
-- PostgreSQL (containerized)
+### Quick Start (Development)
 
-### Setting up Environment Variables
-
-1. **Copy the example file:**
+1. **Clone and navigate to the service:**
 ```bash
-cp user-service/.env.example user-service/.env
+git clone <repository-url>
+cd assessment/services/user-service
 ```
 
 2. **Generate PASETO V4 key pairs:**
 ```bash
-cd user-service
 node scripts/generate-keys.js
 ```
 
-3. **Edit `.env` with your own values:**
-```env
-# Database credentials
-POSTGRES_USER=your_db_user
-POSTGRES_PASSWORD=your_db_password
-POSTGRES_DB=userservice
-DATABASE_URL=postgresql://your_db_user:your_db_password@user-db:5432/userservice
-
-# PASETO V4 Keys (generated from step 2)
-PASETO_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----
-your_private_key_here
------END PRIVATE KEY-----"
-
-PASETO_PUBLIC_KEY="-----BEGIN PUBLIC KEY-----
-your_public_key_here
------END PUBLIC KEY-----"
-
-# Service port
-PORT=4000
+3. **Set up environment variables:**
+```bash
+cp .env.example .env
+# Edit .env with generated keys and database credentials
 ```
 
-**Important Security Notes:**
-- Use the generated Ed25519 key pairs for production
-- Private key is used only by UserService for signing tokens
-- Public key can be shared with other services for verification
-- Never commit `.env` file to version control
-
-Start the development environment:
-
+4. **Start the development environment:**
 ```bash
 docker-compose up
 ```
 
-- Automatically mounts source code
-- Runs Prisma generate
-- Starts TypeScript in watch mode
-- Runs Node server
+This starts:
+- **User Service**: http://localhost:4000 (development with hot reload)
+- **PostgreSQL Database**: localhost:5432 (isolated to user-service)
+- **Automatic migrations**: Database schema applied on startup
 
-### Build & Run (Production)
+### Environment Configuration
 
-```bash
-docker-compose -f docker-compose.yml up --build -d
+Create `.env` file with these variables:
+
+```env
+# Database Configuration
+POSTGRES_USER=userservice_user
+POSTGRES_PASSWORD=userservice_password
+POSTGRES_DB=userservice_db
+DATABASE_URL=postgresql://userservice_user:userservice_password@user-db:5432/userservice_db
+
+# PASETO V4 Keys (generated from scripts/generate-keys.js)
+PASETO_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----
+<your_ed25519_private_key>
+-----END PRIVATE KEY-----"
+
+PASETO_PUBLIC_KEY="-----BEGIN PUBLIC KEY-----
+<your_ed25519_public_key>
+-----END PUBLIC KEY-----"
+
+# Service Configuration
+PORT=4000
+NODE_ENV=development
 ```
 
-- Builds production-ready images with precompiled TypeScript and Prisma client.
-- No volume mounts or watch processes; optimized for performance.
-
-### Prisma Setup (Production)
+### Production Deployment
 
 ```bash
+# Build production images
+docker-compose -f docker-compose.yml up --build -d
+
+# Run database migrations
+docker-compose exec user-service npx prisma migrate deploy
+
 # Generate Prisma client
-npx prisma generate
+docker-compose exec user-service npx prisma generate
+```
+
+### Development Workflow
+
+```bash
+# View logs
+docker-compose logs -f user-service
+
+# Access database
+docker-compose exec user-db psql -U userservice_user -d userservice_db
 
 # Run migrations
-npx prisma migrate deploy
+docker-compose exec user-service npx prisma migrate dev --name add_new_feature
+
+# Reset database
+docker-compose exec user-service npx prisma migrate reset
+
+# Generate Prisma client after schema changes
+docker-compose exec user-service npx prisma generate
 ```
 
-## Development Setup
+## 🌐 API Endpoints
 
-- **Hot reload**: Changes to `/user-service/src` are compiled automatically
-- **Prisma migrations**:
-  ```bash
-  docker-compose exec user-service npx prisma migrate dev --name <migration_name>
-  ```
-- **Environment separation**:
-  - Dev: `.env` in `/user-service`
-  - Prod: Secrets managed via CI/CD or Docker secrets
+### Health & System Routes
 
-## API Endpoints
+| Method | Endpoint | Description | Response | Status |
+|--------|----------|-------------|-----------|--------|
+| GET    | `/` | Service information and available endpoints | Service metadata | ✅ |
+| GET    | `/health` | Health check for monitoring | `{ "status": "ok", "timestamp": "..." }` | ✅ |
 
-### System Routes:
+### Authentication Routes
 
-| Method | Endpoint | Description                    | Status |
-|--------|----------|--------------------------------|--------|
-| GET    | /        | Service info and available endpoints | ✅ |
-| GET    | /health  | Health check                   | ✅ |
+| Method | Endpoint | Description | Request Body | Response | Status |
+|--------|----------|-------------|--------------|-----------|--------|
+| POST   | `/auth/login` | User login with credentials | `{ email, password }` | `{ accessToken, user }` + httpOnly cookie | ✅ |
+| POST   | `/auth/refresh` | Refresh access token | None (uses httpOnly cookie) | `{ accessToken }` | ✅ |
+| POST   | `/auth/logout` | Logout and invalidate session | None | `{ message: "Logged out" }` | ✅ |
 
-### Auth Routes:
+### User Management Routes
 
-| Method | Endpoint      | Description                               | Status |
-|--------|---------------|-------------------------------------------|--------|
-| POST   | /auth/login   | Login with email/password, returns access token + session | ✅ |
-| POST   | /auth/refresh | Refresh access token using httpOnly session cookie | ✅ |
-| POST   | /auth/logout  | Invalidate session and clear refresh token | ✅ |
+| Method | Endpoint | Description | Request Body | Response | Status |
+|--------|----------|-------------|--------------|-----------|--------|
+| POST   | `/users/register` | Register new user | `{ email, password, firstName?, lastName?, role? }` | `{ user, accessToken }` | ✅ |
+| GET    | `/users/:id` | Get user profile by ID | None | `{ user }` | ✅ |
+| PUT    | `/users/:id` | Update user profile | `{ firstName?, lastName?, profilePicture?, metadata? }` | `{ user }` | ✅ |
+| DELETE | `/users/:id` | Soft delete user account | None | `{ message: "User deleted" }` | ✅ |
+| GET    | `/users` | List users (paginated) | Query: `?page=1&limit=10&role=STUDENT` | `{ users: [...], pagination }` | ✅ |
 
-### User Routes:
+### Example API Usage
 
-| Method | Endpoint        | Description                    | Status |
-|--------|-----------------|--------------------------------|--------|
-| POST   | /users/register | Register new user with validation | ✅ |
-| GET    | /users/:id      | Get user profile by ID         | ✅ |
-| PUT    | /users/:id      | Update user profile            | ✅ |
-| DELETE | /users/:id      | Delete user account            | ✅ |
-| GET    | /users          | List all users (paginated)     | ✅ |
+#### User Registration
+```bash
+curl -X POST http://localhost:4000/users/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "student@example.com",
+    "password": "SecurePassword123!",
+    "firstName": "John",
+    "lastName": "Doe",
+    "role": "STUDENT"
+  }'
+```
 
-**Legend:** ✅ = Implemented, 🔄 = In Development, ❌ = Not Started
+#### Secure Login
+```bash
+curl -X POST http://localhost:4000/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email": "student@example.com", "password": "SecurePassword123!"}' \
+  -c cookies.txt
+```
+
+#### Access User Profile (with token)
+```bash
+curl -X GET http://localhost:4000/users/12345 \
+  -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
+```
+
+#### Refresh Token (using session)
+```bash
+curl -X POST http://localhost:4000/auth/refresh \
+  -b cookies.txt
+```
+
+#### List Users with Pagination
+```bash
+curl -X GET "http://localhost:4000/users?page=1&limit=5&role=STUDENT" \
+  -H "Authorization: Bearer <access_token>"
+```
 
 ## Token Workflow (PASETO V4)
 
@@ -407,38 +572,45 @@ npm test
 | PASETO_PUBLIC_KEY     | Ed25519 public key for verification   | `-----BEGIN PUBLIC KEY-----...` |
 | PORT                  | Service port                          | `4000` |
 
-## Development Roadmap
+## 🛣️ Development Roadmap
 
-### **Phase 1: Core Authentication ✅ COMPLETED**
-- [x] PASETO V4 token system with Ed25519 cryptography
-- [x] Argon2 password hashing and verification
-- [x] Secure authentication endpoints (login/refresh/logout)
-- [x] User registration with email validation and role assignment
-- [x] Complete user CRUD operations with database integration
-- [x] httpOnly cookie session management
-- [x] Refresh token rotation and security
-- [x] Docker production containerization
+### **Phase 1: Core Foundation ✅ COMPLETED**
+- [x] **Pure Microservices Architecture**: Database-per-service with isolated containers
+- [x] **PASETO V4 Authentication**: Ed25519 cryptography with secure token management
+- [x] **Complete User CRUD**: Registration, profile management, soft delete operations
+- [x] **Advanced Security**: Argon2 hashing, httpOnly cookies, token rotation
+- [x] **Production Deployment**: Docker Compose orchestration with optimized containers
+- [x] **Comprehensive Testing**: 60+ tests with mock implementations for fast CI/CD
 
-### **Phase 2: Security & Validation**
-- [ ] PASETO middleware for route protection
-- [ ] Input validation (Joi/Zod)
-- [ ] Rate limiting and CORS
-- [ ] Error handling middleware
-- [ ] Account lockout mechanisms
+### **Phase 2: Gateway Integration ✅ COMPLETED**
+- [x] **Gateway Service**: API gateway with authentication middleware
+- [x] **Token Distribution**: Public key sharing for distributed verification
+- [x] **Service Communication**: Clean separation between gateway and user service
+- [x] **Container Networking**: Proper Docker networking and service discovery
 
-### **Phase 3: User Management**
-- [ ] Complete CRUD operations
-- [ ] Role-based access control
-- [ ] Profile management
-- [ ] Password reset workflow
-- [ ] Email verification
+### **Phase 3: Enhanced Security & Validation**
+- [ ] **Input Validation**: Comprehensive request validation with Joi/Zod
+- [ ] **Rate Limiting**: Per-endpoint and per-user rate limiting
+- [ ] **CORS Configuration**: Proper cross-origin resource sharing setup
+- [ ] **Security Headers**: Helmet.js integration for security headers
+- [ ] **Account Security**: Lockout mechanisms and suspicious activity detection
 
-### **Phase 4: Production Readiness**
-- [ ] Comprehensive testing suite
-- [ ] Logging and monitoring
-- [ ] Database connection pooling
-- [ ] Health checks and metrics
-- [ ] API documentation (OpenAPI)
+### **Phase 4: Advanced Features**
+- [ ] **Email Verification**: Account activation workflow
+- [ ] **Password Reset**: Secure password reset with email tokens
+- [ ] **Role-Based Permissions**: Fine-grained permission system
+- [ ] **Audit Logging**: User action tracking and security monitoring
+- [ ] **Profile Enhancement**: Additional user metadata and preferences
+
+### **Phase 5: Production Optimization**
+- [ ] **Performance Monitoring**: Application metrics and performance tracking
+- [ ] **Database Optimization**: Connection pooling and query optimization
+- [ ] **Caching Layer**: Redis integration for session and data caching
+- [ ] **API Documentation**: OpenAPI/Swagger documentation generation
+- [ ] **Load Testing**: Performance testing and bottleneck identification
+
+### **Current Priority**: Phase 3 (Enhanced Security & Validation)
+The foundation is solid with comprehensive authentication, user management, and testing infrastructure in place. The next focus is on production-grade security enhancements and input validation.
 
 ## Troubleshooting
 
