@@ -1,39 +1,63 @@
 version: "3.9"
 
 services:
-  user-db:   # renamed from db
-    image: postgres:15
-    container_name: userservice-db
-    restart: always
+  # User Service Database
+  user-db:
+    image: postgres:15-alpine
+    container_name: user-service-db
+    restart: unless-stopped
     environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER:-userservice}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-userpass123}
+      POSTGRES_DB: ${POSTGRES_DB:-user_service_db}
     ports:
       - "5432:5432"
     volumes:
-      - userservice-data:/var/lib/postgresql/data
+      - user_service_data:/var/lib/postgresql/data
+      - ./prisma/init:/docker-entrypoint-initdb.d
     networks:
-      - pediafor-network
+      - user-service-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-userservice} -d ${POSTGRES_DB:-user_service_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
+  # User Service Application
   user-service:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: userservice
-    restart: always
+    container_name: user-service
+    restart: unless-stopped
     depends_on:
-      - user-db   # renamed
+      user-db:
+        condition: service_healthy
     ports:
-      - "${PORT}:${PORT}"
+      - "${PORT:-4000}:${PORT:-4000}"
+    environment:
+      - NODE_ENV=production
+      - PORT=${PORT:-4000}
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-userservice}:${POSTGRES_PASSWORD:-userpass123}@user-db:5432/${POSTGRES_DB:-user_service_db}
+      - PASETO_PRIVATE_KEY=${PASETO_PRIVATE_KEY}
+      - PASETO_PUBLIC_KEY=${PASETO_PUBLIC_KEY}
+      - JWT_SECRET=${JWT_SECRET}
+      - BCRYPT_ROUNDS=${BCRYPT_ROUNDS:-12}
     env_file:
       - ./.env
     networks:
-      - pediafor-network
+      - user-service-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:${PORT:-4000}/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
 volumes:
-  userservice-data:
+  user_service_data:
+    driver: local
 
 networks:
-  pediafor-network:
+  user-service-network:
     driver: bridge
+    name: user-service-network
