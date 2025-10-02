@@ -172,11 +172,13 @@ app.use((error: any, req: express.Request, res: express.Response, next: express.
 
 // Start server
 if (process.env.NODE_ENV !== 'test') {
-  app.listen(PORT, () => {
-    console.log(`🚀 Assessment Service running on port ${PORT}`);
+  const port = Number(PORT);
+  app.listen(port, '0.0.0.0', () => {
+    console.log(`🚀 Assessment Service running on port ${port}`);
     console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
-    console.log(`🏥 Health check: http://localhost:${PORT}/health`);
-    console.log(`📖 Service info: http://localhost:${PORT}/`);
+    console.log(`🏥 Health check: http://localhost:${port}/health`);
+    console.log(`📖 Service info: http://localhost:${port}/`);
+    console.log(`📡 Listening on all interfaces (0.0.0.0:${port})`);
   });
 }
 

@@ -2,10 +2,10 @@
   "name": "assessment-service",
   "version": "1.0.0",
   "description": "Assessment management microservice for Pediafor platform",
-  "main": "dist/server.js",
+  "main": "dist/src/server.js",
   "scripts": {
     "build": "tsc",
-    "start": "node dist/server.js",
+    "start": "node dist/src/server.js",
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
     "test": "jest",
     "test:watch": "jest --watch",
