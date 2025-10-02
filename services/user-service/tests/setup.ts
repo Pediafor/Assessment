@@ -5,6 +5,9 @@ process.env.NODE_ENV = 'test';
 process.env.PASETO_PRIVATE_KEY = process.env.PASETO_PRIVATE_KEY || 'MC4CAQAwBQYDK2VwBCIEIDEp8VZfRw1P2vDEzO2Y1a+LLQ1NKYF6OiC+vLXY8RZN';
 process.env.PASETO_PUBLIC_KEY = process.env.PASETO_PUBLIC_KEY || 'MCowBQYDK2VwAyEAMSnxVl9HDU/a8MTM7ZjVr4stDU0pgXo6IL68tdjxFk0=';
 
+// Use localhost for tests instead of Docker hostname
+process.env.TEST_DATABASE_URL = 'postgresql://userservice:userpass123@localhost:5432/user_service_db';
+
 // Global test setup
 let prisma: PrismaClient;
 
@@ -43,7 +46,6 @@ global.testUtils = {
       passwordHash: '$argon2id$v=19$m=65536,t=3,p=4$test', // Mock hash
       role: 'STUDENT' as any,
       isActive: true,
-      isEmailVerified: false,
       ...overrides
     };
     
