@@ -32,7 +32,7 @@ The application is structured as a set of interoperable services built for scala
 | :--- | :--- | :--- |
 | **User Management & Auth** (Paseto) | ✅ Available | Secure authentication with gateway validation. |
 | **Question Bank** (MCQ, Subjective) | ✅ Available | Initial database schema & CRUD APIs ready. |
-| Assessment Service | 🚧 In Progress | Handles exam lifecycle, rules, and timing. |
+| **Assessment Service** | ✅ **Enhanced** | **Comprehensive CRUD operations, media support, role-based access control, and robust testing infrastructure.** |
 | Submission Service | 🚧 In Progress | Records answers, manages submission flow. |
 | **Automated Grading (MCQ)** | 🚧 In Progress | Accurate & scalable evaluation of multiple-choice responses. |
 | **AI-Generated Questions** | 🚧 In Progress | NLP-powered question generation from source material. |
@@ -45,7 +45,44 @@ The application is structured as a set of interoperable services built for scala
 
 ---
 
-## 🛠 Technology Stack ⚙️
+## � Recent Updates & Enhancements
+
+### **Assessment Service - Major Improvements (October 2025)**
+
+The Assessment Service has undergone significant enhancement with a focus on **production readiness**, **security**, and **developer experience**:
+
+#### **🏗️ Architecture & Security**
+- **Gateway-First Security**: Simplified authentication architecture with trusted gateway headers (`x-user-id`, `x-user-role`, `x-user-email`)
+- **Role-Based Access Control**: Comprehensive RBAC with STUDENT, TEACHER, and ADMIN roles
+- **Streamlined Middleware**: Removed unnecessary signature verification complexity for better performance
+
+#### **🎯 Core Features**
+- **Complete CRUD Operations**: Full assessment lifecycle management (create, read, update, delete, publish, duplicate)
+- **Rich Media Support**: Image, audio, video, and PDF file uploads with automatic thumbnail generation
+- **Advanced Assessment Configuration**: Randomization settings, timer management, grade level targeting
+- **Question Set Management**: Hierarchical question organization with difficulty levels and point allocation
+
+#### **🧪 Testing & Quality**
+- **Comprehensive Test Suite**: 87 automated tests covering unit, integration, and API scenarios
+- **Mock Infrastructure**: Robust testing utilities and helpers for reliable test execution
+- **API Validation**: Extensive endpoint testing with proper authentication flows
+- **Documentation**: Detailed README files for both main service and testing procedures
+
+#### **🔧 Developer Experience**
+- **Docker Integration**: Fully containerized with PostgreSQL database setup
+- **Hot Reload Development**: TypeScript with ts-node-dev for efficient development workflow
+- **Standardized Documentation**: Consistent README structure following project conventions
+- **Clean Codebase**: Removed obsolete files and implemented proper .gitignore patterns
+
+#### **📊 Database Schema**
+- **Prisma ORM Integration**: Type-safe database operations with comprehensive schema
+- **Relational Design**: Proper foreign key relationships between assessments, question sets, and questions
+- **Flexible Question Types**: Support for multiple choice, true/false, short answer, and essay questions
+- **Media File Management**: Dedicated file storage with path tracking and metadata
+
+---
+
+## �🛠 Technology Stack ⚙️
 
 The application leverages a modern, polyglot **microservices architecture** built for performance, security, and maintainability. We prioritize **TypeScript/Node.js** for application logic and **Python** for specialized AI tasks.
 
@@ -84,6 +121,48 @@ Start the entire application stack using the main Docker Compose file:
 
 ```bash
 docker-compose up --build
+```
+
+#### **Assessment Service Development**
+
+For focused development on the Assessment Service:
+
+```bash
+# Navigate to assessment service
+cd services/assessment-service
+
+# Install dependencies
+npm install
+
+# Start PostgreSQL database
+docker-compose up assessment-db -d
+
+# Run database migrations
+npx prisma migrate dev
+
+# Start development server with hot reload
+npm run dev
+
+# Run tests
+npm test
+
+# Build for production
+npm run build
+```
+
+**Assessment Service Endpoints:**
+- **Health Check**: `GET http://localhost:4001/health`
+- **Service Info**: `GET http://localhost:4001/`
+- **Assessments API**: `http://localhost:4001/assessments`
+- **Media Upload**: `http://localhost:4001/media`
+
+**Testing with Authentication Headers:**
+```bash
+# Teacher/Admin actions require headers:
+curl -H "x-user-id: teacher-123" \
+     -H "x-user-role: TEACHER" \
+     -H "x-user-email: teacher@example.com" \
+     http://localhost:4001/assessments
 ```
 
 ---
