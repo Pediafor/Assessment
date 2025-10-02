@@ -192,7 +192,6 @@ const testUtils = {
 process.env.NODE_ENV = 'test';
 process.env.DATABASE_URL = 'postgresql://test:test@localhost:5432/test_db';
 process.env.PORT = '4001';
-process.env.VERIFY_GATEWAY_SIGNATURE = 'false';
 
 // Global setup
 beforeAll(async () => {

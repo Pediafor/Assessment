@@ -12,7 +12,7 @@ declare global {
 
 /**
  * Middleware to extract user context from gateway headers
- * Gateway injects user data via signed headers after authentication
+ * Gateway provides authenticated user data via trusted headers
  */
 export const extractUserContext = (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -22,16 +22,16 @@ export const extractUserContext = (req: Request, res: Response, next: NextFuncti
     const userRole = req.headers['x-user-role'] as string;
     const userFirstName = req.headers['x-user-first-name'] as string;
     const userLastName = req.headers['x-user-last-name'] as string;
-    const gatewaySignature = req.headers['x-gateway-signature'] as string;
 
     // Validate required headers
     if (!userId || !userEmail || !userRole) {
       throw new UnauthorizedError('Missing user context headers from gateway');
     }
 
-    // Validate gateway signature (optional security check)
-    if (process.env.VERIFY_GATEWAY_SIGNATURE === 'true' && !gatewaySignature) {
-      throw new UnauthorizedError('Missing gateway signature');
+    // Validate role is one of the expected values
+    const validRoles = ['STUDENT', 'TEACHER', 'ADMIN'];
+    if (!validRoles.includes(userRole)) {
+      throw new UnauthorizedError(`Invalid user role: ${userRole}`);
     }
 
     // Create user context
