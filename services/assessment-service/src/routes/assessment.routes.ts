@@ -40,6 +40,14 @@ router.post(
       .optional()
       .isLength({ max: 2000 })
       .withMessage('Instructions must not exceed 2000 characters'),
+    body('settings.duration')
+      .optional()
+      .isInt({ min: 1 })
+      .withMessage('Duration must be a positive integer'),
+    body('settings.maxAttempts')
+      .optional()
+      .isInt({ min: 1 })
+      .withMessage('Max attempts must be a positive integer'),
   ],
   handleValidationErrors,
   async (req: Request, res: Response) => {
@@ -102,9 +110,8 @@ router.get(
   requireTeacherOrAdmin,
   [
     param('id')
-      .isString()
-      .notEmpty()
-      .withMessage('Assessment ID is required'),
+      .isUUID()
+      .withMessage('Invalid assessment ID'),
   ],
   handleValidationErrors,
   async (req: Request, res: Response) => {
@@ -128,9 +135,8 @@ router.put(
   requireTeacherOrAdmin,
   [
     param('id')
-      .isString()
-      .notEmpty()
-      .withMessage('Assessment ID is required'),
+      .isUUID()
+      .withMessage('Invalid assessment ID'),
     body('title')
       .optional()
       .isLength({ min: 3, max: 200 })
@@ -167,9 +173,8 @@ router.delete(
   requireTeacherOrAdmin,
   [
     param('id')
-      .isString()
-      .notEmpty()
-      .withMessage('Assessment ID is required'),
+      .isUUID()
+      .withMessage('Invalid assessment ID'),
   ],
   handleValidationErrors,
   async (req: Request, res: Response) => {
@@ -193,9 +198,8 @@ router.post(
   requireTeacherOrAdmin,
   [
     param('id')
-      .isString()
-      .notEmpty()
-      .withMessage('Assessment ID is required'),
+      .isUUID()
+      .withMessage('Invalid assessment ID'),
   ],
   handleValidationErrors,
   async (req: Request, res: Response) => {
@@ -220,9 +224,8 @@ router.post(
   requireTeacherOrAdmin,
   [
     param('id')
-      .isString()
-      .notEmpty()
-      .withMessage('Assessment ID is required'),
+      .isUUID()
+      .withMessage('Invalid assessment ID'),
   ],
   handleValidationErrors,
   async (req: Request, res: Response) => {
