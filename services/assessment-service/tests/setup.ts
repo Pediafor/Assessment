@@ -96,7 +96,7 @@ const testUtils = {
 
   // Create mock assessment data
   createMockAssessment: (overrides = {}) => ({
-    id: 'assessment-123',
+    id: '550e8400-e29b-41d4-a716-446655440000',
     title: 'Test Assessment',
     description: 'Test Description',
     instructions: 'Test Instructions',
