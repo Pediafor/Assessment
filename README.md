@@ -36,14 +36,14 @@ The application is structured as a set of interoperable services built for scala
 | **📝 Assessment Management** | ✅ **Production Ready** | **94/94 tests passing** - Complete CRUD operations, media support, comprehensive validation, role-based permissions |
 | **📋 Submission Service** | 🏗️ **Ready for Development** | Infrastructure prepared - Database schema, Docker setup, awaiting core implementation |
 | **📊 Automated Grading (MCQ)** | 🏗️ **Ready for Development** | Infrastructure prepared - Service structure ready for algorithm implementation |
-| **🤖 AI Question Generation** | � **Planned** | NLP-powered question generation from educational content |
-| **📈 Analytics Dashboard** | � **Planned** | Performance insights, institutional reporting, student progress tracking |
+| **🤖 AI Question Generation** | 📝 **Planned** | NLP-powered question generation from educational content |
+| **📈 Analytics Dashboard** | 📝 **Planned** | Performance insights, institutional reporting, student progress tracking |
 | **🎯 Adaptive Testing** | 📝 **Future** | AI-driven difficulty adjustment based on student performance |
 | **👥 Peer Review System** | 📝 **Future** | Community-driven grading and collaborative feedback |
 | **📱 Mobile Applications** | 📝 **Future** | Native mobile apps for assessment taking |
 | **🔌 LMS Integration** | 📝 **Future** | Canvas, Moodle, Blackboard integration framework |
 
-### � **Current Platform Status**
+### 🚀 **Current Platform Status**
 - **Core Foundation**: ✅ Complete (User Auth + Assessment Management)
 - **Gateway Infrastructure**: ✅ Operational  
 - **Database Architecture**: ✅ Production Ready
@@ -140,7 +140,7 @@ This foundation provides a **robust, scalable platform** ready for the next phas
 - **Mock Infrastructure**: Comprehensive Prisma mocking system enabling fast, reliable test execution without database dependencies
 - **CI/CD Ready**: Automated testing pipeline with proper isolation and cleanup procedures
 
-#### **� Architecture Improvements**
+#### 🏗️ **Architecture Improvements**
 - **Simplified Authentication**: Removed complex signature verification in favor of trusted gateway-based user context
 - **Optimized Database Queries**: Streamlined Prisma operations with proper relationship loading and filtering
 - **Enhanced Error Handling**: Comprehensive error responses with proper HTTP status codes and debugging information
@@ -148,7 +148,7 @@ This foundation provides a **robust, scalable platform** ready for the next phas
 
 ---
 
-## �🛠 Technology Stack ⚙️
+## 🛠️ Technology Stack ⚙️
 
 The application leverages a modern, polyglot **microservices architecture** built for performance, security, and maintainability. We prioritize **TypeScript/Node.js** for application logic and **Python** for specialized AI tasks.
 

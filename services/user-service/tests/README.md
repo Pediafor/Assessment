@@ -32,7 +32,7 @@ Focus on testing individual components in isolation with mocked dependencies:
 - **PASETO Utils Tests** (9 tests): Token signing, verification, security
 - **Hash Utils Tests** (7 tests): Password hashing, verification, security
 
-### � Integration Tests (17 tests)
+### 🔗 Integration Tests (17 tests)
 Test complete API workflows with real database connections:
 
 - **User Registration Flow**: Account creation, validation, error handling
