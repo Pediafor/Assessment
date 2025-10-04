@@ -23,18 +23,18 @@
 The Assessment Service is the core content management microservice for the Pediafor Assessment Platform. It handles the complete lifecycle of educational assessments, from creation and editing to publishing and media management.
 
 ### 🎯 Primary Responsibilities
-- **Assessment Management**: Complete CRUD operations for assessments and questions
-- **Media Processing**: Advanced file upload with image processing and thumbnails
-- **Content Publishing**: Assessment publishing and version control
-- **Access Control**: Role-based permissions with ownership validation
+- **Assessment Management**: CRUD operations for assessments with status management
+- **Media Processing**: File upload with support for images, audio, video, and documents
+- **Content Publishing**: Assessment publishing workflow and duplication
+- **Access Control**: Role-based permissions (Teacher, Admin) with ownership validation
 - **Data Integrity**: Comprehensive validation and error handling
 
 ### 🏆 Key Achievements
 - **100% Test Coverage**: 94/94 tests passing across all scenarios
-- **Production Architecture**: Optimized for performance and scalability
-- **Media Excellence**: Multi-format support with automatic processing
-- **Security Hardened**: Role-based access with comprehensive validation
-- **Developer Experience**: Hot reload development with complete documentation
+- **Production Architecture**: Microservice with PostgreSQL and Prisma ORM
+- **Media Excellence**: Multi-format support with automatic thumbnail generation
+- **Security Hardened**: Role-based access with gateway-provided authentication
+- **Developer Experience**: TypeScript, Express.js with comprehensive error handling
 
 ---
 
@@ -426,93 +426,129 @@ Soft delete assessment.
 }
 ```
 
-### Question Endpoints
+### Media Upload Endpoints
 
-#### POST `/assessments/:assessmentId/questions`
-Add question to assessment.
+#### POST `/media/question`
+Upload media files for questions (images, audio, video, documents).
 
-**Request:**
-```json
-{
-  "type": "multiple_choice",
-  "title": "Which of the following is a NoSQL database?",
-  "description": "Select the database that follows NoSQL principles",
-  "points": 3,
-  "required": true,
-  "settings": {
-    "options": [
-      { "text": "MySQL", "isCorrect": false },
-      { "text": "MongoDB", "isCorrect": true },
-      { "text": "PostgreSQL", "isCorrect": false },
-      { "text": "SQLite", "isCorrect": false }
-    ],
-    "multipleCorrect": false,
-    "explanation": "MongoDB is a document-based NoSQL database."
-  }
-}
-```
+**Authorization:** Teacher or Admin role required
 
-#### PUT `/assessments/:assessmentId/questions/:questionId`
-Update existing question.
-
-#### DELETE `/assessments/:assessmentId/questions/:questionId`
-Remove question from assessment.
-
-#### POST `/assessments/:assessmentId/questions/reorder`
-Reorder questions in assessment.
-
-**Request:**
-```json
-{
-  "questionOrders": [
-    { "questionId": "uuid1", "order": 1 },
-    { "questionId": "uuid2", "order": 2 },
-    { "questionId": "uuid3", "order": 3 }
-  ]
-}
-```
-
-### Media Endpoints
-
-#### POST `/media/upload`
-Upload media files for assessments.
-
-**Request (multipart/form-data):**
-```
-file: [binary file data]
-assessmentId: "uuid"
-questionId: "uuid" (optional)
-description: "File description" (optional)
-```
+**Request:** Form-data with files and optional fields
 
 **Response:**
 ```json
 {
   "success": true,
   "data": {
-    "file": {
-      "id": "file-uuid",
-      "filename": "diagram.png",
-      "originalName": "er-diagram.png",
-      "mimeType": "image/png",
-      "size": 245760,
-      "url": "/media/files/file-uuid.png",
-      "thumbnailUrl": "/media/thumbnails/file-uuid-thumb.png",
-      "description": "Entity-Relationship diagram for the database design question",
-      "uploadedAt": "2025-10-04T11:20:00Z"
-    }
-  }
+    "files": [
+      {
+        "id": "media-uuid",
+        "originalName": "question-image.png",
+        "filename": "uploads/question-image-1234.png",
+        "mimetype": "image/png",
+        "size": 524288,
+        "url": "/uploads/question-image-1234.png",
+        "thumbnailUrl": "/uploads/thumbs/question-image-1234-thumb.png",
+        "dimensions": { "width": 800, "height": 600 }
+      }
+    ],
+    "fields": {}
+  },
+  "message": "Files uploaded successfully",
+  "timestamp": "2025-01-26T12:00:00Z"
 }
 ```
 
-#### GET `/media/files/:fileId`
-Serve media file.
+#### POST `/media/option`
+Upload images for multiple choice options.
 
-#### GET `/media/thumbnails/:fileId`
-Serve thumbnail (images only).
+**Authorization:** Teacher or Admin role required
 
-#### DELETE `/media/:fileId`
-Delete media file.
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "images": [
+      {
+        "id": "option-uuid",
+        "originalName": "option-a.png",
+        "filename": "uploads/option-a-5678.png",
+        "mimetype": "image/png",
+        "size": 256000,
+        "url": "/uploads/option-a-5678.png",
+        "thumbnailUrl": "/uploads/thumbs/option-a-5678-thumb.png",
+        "dimensions": { "width": 400, "height": 300 }
+      }
+    ],
+    "fields": {}
+  },
+  "message": "Images uploaded successfully",
+  "timestamp": "2025-01-26T12:00:00Z"
+}
+```
+
+#### POST `/media/audio`
+Upload audio files for assessments.
+
+**Authorization:** Teacher or Admin role required
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "audioFiles": [
+      {
+        "id": "audio-uuid",
+        "originalName": "listening-exercise.mp3",
+        "filename": "uploads/listening-exercise-9012.mp3",
+        "mimetype": "audio/mpeg",
+        "size": 2048000,
+        "url": "/uploads/listening-exercise-9012.mp3",
+        "duration": 120.5
+      }
+    ]
+  },
+  "message": "Audio files uploaded successfully",
+  "timestamp": "2025-01-26T12:00:00Z"
+}
+```
+
+#### POST `/media/video`
+Upload video files for assessments.
+
+**Authorization:** Teacher or Admin role required
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "videoFiles": [
+      {
+        "id": "video-uuid",
+        "originalName": "demo-video.mp4",
+        "filename": "uploads/demo-video-3456.mp4",
+        "mimetype": "video/mp4",
+        "size": 10485760,
+        "url": "/uploads/demo-video-3456.mp4",
+        "duration": 180.0,
+        "dimensions": { "width": 1920, "height": 1080 }
+      }
+    ]
+  },
+  "message": "Video files uploaded successfully",
+  "timestamp": "2025-01-26T12:00:00Z"
+}
+```
+
+### Static File Serving
+
+#### GET `/uploads/:filename`
+Serve uploaded files (images, audio, video, documents).
+
+**Example:** `GET /uploads/question-image-1234.png`
 
 ---
 
@@ -1689,6 +1725,8 @@ git push origin feature/assessment-duplication
 
 | Endpoint | Method | Description | Auth Required |
 |----------|--------|-------------|---------------|
+| `/` | GET | Service info | ❌ |
+| `/health` | GET | Health check | ❌ |
 | `/assessments` | GET | List assessments | ✅ |
 | `/assessments/:id` | GET | Get assessment details | ✅ |
 | `/assessments` | POST | Create assessment | ✅ (Teacher/Admin) |
@@ -1696,13 +1734,11 @@ git push origin feature/assessment-duplication
 | `/assessments/:id` | DELETE | Delete assessment | ✅ (Owner/Admin) |
 | `/assessments/:id/publish` | POST | Publish assessment | ✅ (Owner/Admin) |
 | `/assessments/:id/duplicate` | POST | Duplicate assessment | ✅ (Teacher/Admin) |
-| `/assessments/:id/questions` | POST | Add question | ✅ (Owner/Admin) |
-| `/assessments/:aid/questions/:qid` | PUT | Update question | ✅ (Owner/Admin) |
-| `/assessments/:aid/questions/:qid` | DELETE | Delete question | ✅ (Owner/Admin) |
-| `/media/upload` | POST | Upload file | ✅ (Teacher/Admin) |
-| `/media/files/:id` | GET | Serve file | ✅ |
-| `/media/:id` | DELETE | Delete file | ✅ (Owner/Admin) |
-| `/health` | GET | Health check | ❌ |
+| `/media/question` | POST | Upload question media | ✅ (Teacher/Admin) |
+| `/media/option` | POST | Upload option images | ✅ (Teacher/Admin) |
+| `/media/audio` | POST | Upload audio files | ✅ (Teacher/Admin) |
+| `/media/video` | POST | Upload video files | ✅ (Teacher/Admin) |
+| `/uploads/:filename` | GET | Serve uploaded files | ❌ |
 
 ---
 

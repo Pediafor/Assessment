@@ -202,162 +202,111 @@ Authenticate user and establish session.
 **Response:**
 ```json
 {
-  "success": true,
-  "data": {
-    "user": {
-      "id": "uuid-here",
-      "email": "user@example.com",
-      "name": "John Doe",
-      "role": "TEACHER",
-      "lastLoginAt": "2025-10-04T10:30:00Z"
-    },
-    "sessionExpiry": "2025-10-04T18:30:00Z"
-  }
+  "message": "Login successful",
+  "user": {
+    "id": "uuid-here",
+    "email": "user@example.com",
+    "firstName": "John",
+    "lastName": "Doe",
+    "role": "TEACHER",
+    "lastLogin": "2025-10-04T10:30:00Z"
+  },
+  "accessToken": "v4.public.eyJ..."
 }
 ```
 
 **Security Headers:**
 ```http
-Set-Cookie: auth-token=encrypted-paseto-token; HttpOnly; Secure; SameSite=Strict
-X-Session-ID: session-uuid
-X-Rate-Limit-Remaining: 4
-```
-
-#### POST `/auth/logout`
-Terminate user session and invalidate tokens.
-
-**Response:**
-```json
-{
-  "success": true,
-  "message": "Successfully logged out"
-}
+Set-Cookie: sessionId=user-uuid; HttpOnly; Secure; SameSite=Strict
 ```
 
 #### POST `/auth/refresh`
-Refresh authentication token before expiry.
+Refresh authentication token using httpOnly cookie session.
 
 **Response:**
 ```json
 {
-  "success": true,
-  "data": {
-    "sessionExpiry": "2025-10-04T20:30:00Z"
-  }
+  "accessToken": "v4.public.eyJ...",
+  "refreshToken": "v4.public.eyJ..."
+}
+```
+
+#### POST `/auth/logout`
+Terminate user session and clear cookies.
+
+**Response:**
+```json
+{
+  "message": "Logged out successfully"
 }
 ```
 
 ### User Management Endpoints
 
-#### GET `/users`
-Retrieve paginated list of users (Admin only).
-
-**Query Parameters:**
-```typescript
-interface UserListQuery {
-  page?: number;          // Default: 1
-  limit?: number;         // Default: 20, Max: 100
-  role?: 'STUDENT' | 'TEACHER' | 'ADMIN';
-  search?: string;        // Search by name/email
-  sortBy?: 'name' | 'email' | 'createdAt';
-  sortOrder?: 'asc' | 'desc';
-}
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": {
-    "users": [
-      {
-        "id": "uuid",
-        "email": "user@example.com",
-        "name": "John Doe",
-        "role": "TEACHER",
-        "isActive": true,
-        "createdAt": "2025-09-01T08:00:00Z",
-        "lastLoginAt": "2025-10-04T10:30:00Z"
-      }
-    ],
-    "pagination": {
-      "currentPage": 1,
-      "totalPages": 5,
-      "totalUsers": 94,
-      "hasNext": true,
-      "hasPrev": false
-    }
-  }
-}
-```
-
-#### GET `/users/:id`
-Retrieve specific user details.
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": {
-    "user": {
-      "id": "uuid",
-      "email": "user@example.com",
-      "name": "John Doe",
-      "role": "TEACHER",
-      "isActive": true,
-      "metadata": {
-        "department": "Computer Science",
-        "institution": "Example University"
-      },
-      "createdAt": "2025-09-01T08:00:00Z",
-      "updatedAt": "2025-10-04T10:30:00Z",
-      "lastLoginAt": "2025-10-04T10:30:00Z"
-    }
-  }
-}
-```
-
-#### POST `/users`
-Create new user account (Admin only).
+#### POST `/register`
+Create new user account.
 
 **Request:**
 ```json
 {
   "email": "newuser@example.com",
-  "name": "Jane Smith",
   "password": "SecurePass123!",
-  "role": "TEACHER",
-  "metadata": {
-    "department": "Mathematics",
-    "institution": "Example University"
-  }
+  "firstName": "Jane",
+  "lastName": "Smith",
+  "role": "TEACHER"
 }
 ```
 
 **Response:**
 ```json
 {
-  "success": true,
-  "data": {
-    "user": {
-      "id": "new-uuid",
-      "email": "newuser@example.com",
-      "name": "Jane Smith",
-      "role": "TEACHER",
-      "isActive": true,
-      "createdAt": "2025-10-04T11:00:00Z"
-    }
+  "message": "User registered successfully",
+  "user": {
+    "id": "new-uuid",
+    "email": "newuser@example.com",
+    "firstName": "Jane",
+    "lastName": "Smith",
+    "role": "TEACHER",
+    "isActive": true,
+    "createdAt": "2025-10-04T11:00:00Z"
   }
 }
 ```
 
-#### PUT `/users/:id`
-Update user information.
+#### GET `/profile/:id`
+Retrieve user profile by ID.
+
+**Response:**
+```json
+{
+  "user": {
+    "id": "uuid",
+    "email": "user@example.com",
+    "firstName": "John",
+    "lastName": "Doe",
+    "role": "TEACHER",
+    "isActive": true,
+    "profilePicture": "https://example.com/avatar.jpg",
+    "metadata": {
+      "department": "Computer Science",
+      "institution": "Example University"
+    },
+    "createdAt": "2025-09-01T08:00:00Z",
+    "updatedAt": "2025-10-04T10:30:00Z",
+    "lastLogin": "2025-10-04T10:30:00Z"
+  }
+}
+```
+
+#### PUT `/profile/:id`
+Update user profile (requires authentication and ownership/admin).
 
 **Request:**
 ```json
 {
-  "name": "Jane Smith-Johnson",
+  "firstName": "Jane",
+  "lastName": "Smith-Johnson",
+  "profilePicture": "https://example.com/new-avatar.jpg",
   "metadata": {
     "department": "Applied Mathematics",
     "phone": "+1-555-0123"
@@ -365,34 +314,63 @@ Update user information.
 }
 ```
 
-#### DELETE `/users/:id`
-Soft delete user account (Admin only).
+#### DELETE `/profile/:id`
+Soft delete user account (sets isActive to false).
 
 **Response:**
 ```json
 {
-  "success": true,
-  "message": "User account deactivated successfully"
+  "message": "User deleted successfully"
 }
 ```
 
-### Profile Management
+#### GET `/users`
+Get paginated list of users (with optional filters).
 
-#### GET `/users/profile`
-Get current user's profile.
+**Query Parameters:**
+```typescript
+interface UserListQuery {
+  page?: number;          // Default: 1
+  limit?: number;         // Default: 20, Max: 100
+  role?: 'STUDENT' | 'TEACHER' | 'ADMIN';
+  search?: string;        // Search by firstName, lastName, email
+}
+```
 
-#### PUT `/users/profile`
-Update current user's profile.
-
-#### POST `/users/profile/password`
-Change user password.
-
-**Request:**
+**Response:**
 ```json
 {
-  "currentPassword": "OldPass123!",
-  "newPassword": "NewSecurePass456!",
-  "confirmPassword": "NewSecurePass456!"
+  "users": [
+    {
+      "id": "uuid",
+      "email": "user@example.com",
+      "firstName": "John",
+      "lastName": "Doe",
+      "role": "TEACHER",
+      "isActive": true,
+      "createdAt": "2025-09-01T08:00:00Z",
+      "lastLogin": "2025-10-04T10:30:00Z"
+    }
+  ],
+  "pagination": {
+    "currentPage": 1,
+    "totalPages": 5,
+    "totalUsers": 94,
+    "hasNext": true,
+    "hasPrev": false
+  }
+}
+```
+
+#### GET `/health`
+Service health check endpoint.
+
+**Response:**
+```json
+{
+  "status": "healthy",
+  "timestamp": "2025-10-04T11:00:00Z",
+  "uptime": 3600
 }
 ```
 
@@ -403,78 +381,39 @@ Change user password.
 ### User Table Structure
 
 ```sql
--- Users table with comprehensive fields
-CREATE TABLE users (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    email VARCHAR(255) UNIQUE NOT NULL,
-    name VARCHAR(255) NOT NULL,
-    password_hash VARCHAR(255) NOT NULL,
-    role user_role NOT NULL DEFAULT 'STUDENT',
-    is_active BOOLEAN DEFAULT true,
-    metadata JSONB DEFAULT '{}',
-    email_verified BOOLEAN DEFAULT false,
-    email_verified_at TIMESTAMP,
-    password_changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    last_login_at TIMESTAMP,
-    login_count INTEGER DEFAULT 0,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    deleted_at TIMESTAMP
-);
+-- Users table (actual Prisma schema)
+model User {
+  id                 String    @id @default(uuid())
+  email              String    @unique
+  passwordHash       String
+  firstName          String?
+  lastName           String?
+  role               UserRole  @default(STUDENT)
+  isActive           Boolean   @default(true)
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  lastLogin          DateTime?
+  profilePicture     String?
+  metadata           Json?
+  resetPasswordToken String?
+  resetTokenExpiry   DateTime?
+  refreshToken       String?   // Stored for refresh workflow
+}
 
--- User roles enum
-CREATE TYPE user_role AS ENUM ('STUDENT', 'TEACHER', 'ADMIN');
-
--- Indexes for performance
-CREATE INDEX idx_users_email ON users(email);
-CREATE INDEX idx_users_role ON users(role);
-CREATE INDEX idx_users_active ON users(is_active) WHERE is_active = true;
-CREATE INDEX idx_users_last_login ON users(last_login_at);
+enum UserRole {
+  STUDENT
+  TEACHER
+  ADMIN
+}
 ```
 
-### Session Management
+### Database Features
 
-```sql
--- Active sessions tracking
-CREATE TABLE user_sessions (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    session_token VARCHAR(255) UNIQUE NOT NULL,
-    refresh_token VARCHAR(255) UNIQUE,
-    ip_address INET,
-    user_agent TEXT,
-    expires_at TIMESTAMP NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    last_activity TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- Indexes for session management
-CREATE INDEX idx_sessions_user_id ON user_sessions(user_id);
-CREATE INDEX idx_sessions_token ON user_sessions(session_token);
-CREATE INDEX idx_sessions_expires ON user_sessions(expires_at);
-```
-
-### Audit Logging
-
-```sql
--- User activity audit log
-CREATE TABLE user_audit_log (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID REFERENCES users(id),
-    action VARCHAR(100) NOT NULL,
-    resource_type VARCHAR(50),
-    resource_id UUID,
-    ip_address INET,
-    user_agent TEXT,
-    metadata JSONB DEFAULT '{}',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- Audit log indexes
-CREATE INDEX idx_audit_user_id ON user_audit_log(user_id);
-CREATE INDEX idx_audit_action ON user_audit_log(action);
-CREATE INDEX idx_audit_created_at ON user_audit_log(created_at);
-```
+- **Simple Schema**: Focused on essential user data without complex audit tables
+- **Flexible Metadata**: JSONB field for additional user information
+- **Soft Delete**: isActive flag for user deactivation
+- **Token Storage**: Refresh tokens stored in user record
+- **Timestamps**: Created/updated tracking with optional last login
 
 ---
 
