@@ -131,6 +131,13 @@ describe('Assessment Routes Integration Tests', () => {
     it('should create assessment successfully without description', async () => {
       const { description, ...validPayloadWithoutDescription } = validAssessmentPayload;
 
+      const mockCreatedAssessment = (global as any).testUtils.createMockAssessment({
+        ...validPayloadWithoutDescription,
+        createdBy: teacherHeaders['x-user-id'],
+      });
+
+      mockPrisma.assessment.create.mockResolvedValue(mockCreatedAssessment);
+
       const response = await request(testApp)
         .post('/assessments')
         .set(teacherHeaders)
@@ -269,7 +276,7 @@ describe('Assessment Routes Integration Tests', () => {
   });
 
   describe('GET /assessments/:id', () => {
-    const assessmentId = 'assessment-123';
+    const assessmentId = '550e8400-e29b-41d4-a716-446655440000';
 
     it('should return assessment by ID', async () => {
       const mockAssessment = (global as any).testUtils.createMockAssessment({
@@ -322,7 +329,7 @@ describe('Assessment Routes Integration Tests', () => {
   });
 
   describe('PUT /assessments/:id', () => {
-    const assessmentId = 'assessment-123';
+    const assessmentId = '550e8400-e29b-41d4-a716-446655440001';
     const updatePayload = {
       title: 'Updated Assessment',
       description: 'Updated Description',
@@ -435,7 +442,7 @@ describe('Assessment Routes Integration Tests', () => {
   });
 
   describe('DELETE /assessments/:id', () => {
-    const assessmentId = 'assessment-123';
+    const assessmentId = '550e8400-e29b-41d4-a716-446655440002';
 
     it('should delete assessment successfully when user is owner', async () => {
       const existingAssessment = (global as any).testUtils.createMockAssessment({
@@ -525,13 +532,27 @@ describe('Assessment Routes Integration Tests', () => {
   });
 
   describe('POST /assessments/:id/publish', () => {
-    const assessmentId = 'assessment-123';
+    const assessmentId = '550e8400-e29b-41d4-a716-446655440003';
 
     it('should publish assessment successfully when user is owner', async () => {
       const existingAssessment = (global as any).testUtils.createMockAssessment({
         id: assessmentId,
         createdBy: teacherHeaders['x-user-id'],
         status: 'DRAFT',
+        questionSets: [
+          {
+            id: 'qset-1',
+            title: 'Test Question Set',
+            questions: [
+              {
+                id: 'q-1',
+                type: 'MULTIPLE_CHOICE',
+                question: 'Test question?',
+                options: []
+              }
+            ]
+          }
+        ]
       });
 
       const publishedAssessment = {
@@ -560,6 +581,20 @@ describe('Assessment Routes Integration Tests', () => {
         id: assessmentId,
         createdBy: teacherHeaders['x-user-id'],
         status: 'PUBLISHED',
+        questionSets: [
+          {
+            id: 'qset-1',
+            title: 'Test Question Set',
+            questions: [
+              {
+                id: 'q-1',
+                type: 'MULTIPLE_CHOICE',
+                question: 'Test question?',
+                options: []
+              }
+            ]
+          }
+        ]
       });
 
       mockPrisma.assessment.findFirst.mockResolvedValue(existingAssessment);
@@ -584,7 +619,7 @@ describe('Assessment Routes Integration Tests', () => {
   });
 
   describe('POST /assessments/:id/duplicate', () => {
-    const assessmentId = 'assessment-123';
+    const assessmentId = '550e8400-e29b-41d4-a716-446655440004';
 
     it('should duplicate assessment successfully', async () => {
       const existingAssessment = (global as any).testUtils.createMockAssessment({
