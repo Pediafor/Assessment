@@ -25,7 +25,7 @@ export const extractUserContext = (req: Request, res: Response, next: NextFuncti
 
     // Validate required headers
     if (!userId || !userEmail || !userRole) {
-      throw new UnauthorizedError('Missing user context headers from gateway');
+      throw new UnauthorizedError('User ID not found');
     }
 
     // Validate role is one of the expected values
