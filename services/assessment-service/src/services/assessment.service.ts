@@ -7,6 +7,7 @@ import {
   PaginatedResponse,
   NotFoundError,
   ForbiddenError,
+  ValidationError,
   UserContext
 } from '../types';
 
@@ -41,6 +42,44 @@ export class AssessmentService {
         id,
         isActive: true,
         ...(user.role !== 'ADMIN' && { createdBy: user.id }),
+      },
+      include: {
+        questionSets: {
+          where: { isActive: true },
+          include: {
+            questions: {
+              where: { isActive: true },
+              include: {
+                mediaItems: true,
+                options: {
+                  include: {
+                    mediaItems: true,
+                  },
+                },
+              },
+              orderBy: { displayOrder: 'asc' },
+            },
+          },
+          orderBy: { displayOrder: 'asc' },
+        },
+      },
+    });
+
+    if (!assessment) {
+      throw new NotFoundError('Assessment not found');
+    }
+
+    return assessment as AssessmentWithSets;
+  }
+
+  /**
+   * Get assessment by ID without ownership filtering (for permission checks)
+   */
+  private async getAssessmentByIdInternal(id: string): Promise<AssessmentWithSets> {
+    const assessment = await prisma.assessment.findFirst({
+      where: {
+        id,
+        isActive: true,
       },
       include: {
         questionSets: {
@@ -117,8 +156,8 @@ export class AssessmentService {
     data: UpdateAssessmentRequest,
     user: UserContext
   ): Promise<Assessment> {
-    // Check ownership
-    const existingAssessment = await this.getAssessmentById(id, user);
+    // Get assessment without ownership filtering to check permissions
+    const existingAssessment = await this.getAssessmentByIdInternal(id);
     
     if (existingAssessment.createdBy !== user.id && user.role !== 'ADMIN') {
       throw new ForbiddenError('You can only update your own assessments');
@@ -143,8 +182,12 @@ export class AssessmentService {
    * Delete assessment (soft delete)
    */
   async deleteAssessment(id: string, user: UserContext): Promise<void> {
-    // Check ownership
-    await this.getAssessmentById(id, user);
+    // Get assessment without ownership filtering to check permissions
+    const existingAssessment = await this.getAssessmentByIdInternal(id);
+    
+    if (existingAssessment.createdBy !== user.id && user.role !== 'ADMIN') {
+      throw new ForbiddenError('You can only update your own assessments');
+    }
 
     await prisma.assessment.update({
       where: { id },
@@ -156,10 +199,15 @@ export class AssessmentService {
    * Publish assessment
    */
   async publishAssessment(id: string, user: UserContext): Promise<Assessment> {
-    const assessment = await this.getAssessmentById(id, user);
+    const assessment = await this.getAssessmentByIdInternal(id);
     
     if (assessment.createdBy !== user.id && user.role !== 'ADMIN') {
       throw new ForbiddenError('You can only publish your own assessments');
+    }
+
+    // Check if assessment is already published
+    if (assessment.status === 'PUBLISHED') {
+      throw new ValidationError('Assessment is already published');
     }
 
     // Validate assessment has questions
