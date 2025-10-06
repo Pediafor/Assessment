@@ -1,0 +1,220 @@
+{
+  "rabbit_version": "3.12.0",
+  "rabbitmq_version": "3.12.0",
+  "product_name": "RabbitMQ",
+  "product_version": "3.12.0",
+  "users": [
+    {
+      "name": "admin",
+      "password_hash": "qpOApR4k6P1FW7X3LlFf8eQqCJzD6X6u6KaH8C0V3Q==",
+      "hashing_algorithm": "rabbit_password_hashing_sha256",
+      "tags": ["administrator"]
+    },
+    {
+      "name": "assessment_service",
+      "password_hash": "8K2LhcUvZ9x3FJ4GvVkM7Y1eTq9S4k6F8eQ2pL3mN5w=",
+      "hashing_algorithm": "rabbit_password_hashing_sha256",
+      "tags": ["policymaker"]
+    },
+    {
+      "name": "submission_service",
+      "password_hash": "7R4VjxPkQ8s2M9dG5tE6wV3nH1zL8uK7eP2sF4gQ9x=",
+      "hashing_algorithm": "rabbit_password_hashing_sha256",
+      "tags": ["policymaker"]
+    }
+  ],
+  "vhosts": [
+    {
+      "name": "pediafor"
+    }
+  ],
+  "permissions": [
+    {
+      "user": "admin",
+      "vhost": "pediafor",
+      "configure": ".*",
+      "write": ".*",
+      "read": ".*"
+    },
+    {
+      "user": "assessment_service",
+      "vhost": "pediafor",
+      "configure": "assessment\\..*",
+      "write": "assessment\\..*",
+      "read": "assessment\\..*"
+    },
+    {
+      "user": "submission_service",
+      "vhost": "pediafor",
+      "configure": "submission\\..*",
+      "write": "submission\\..*|assessment\\..*",
+      "read": "submission\\..*|assessment\\..*"
+    }
+  ],
+  "topic_permissions": [],
+  "parameters": [],
+  "global_parameters": [
+    {
+      "name": "cluster_name",
+      "value": "pediafor-cluster"
+    }
+  ],
+  "policies": [
+    {
+      "vhost": "pediafor",
+      "name": "ha-assessment",
+      "pattern": "assessment\\..*",
+      "apply-to": "queues",
+      "definition": {
+        "ha-mode": "all",
+        "ha-sync-mode": "automatic",
+        "message-ttl": 3600000
+      },
+      "priority": 1
+    },
+    {
+      "vhost": "pediafor",
+      "name": "dlx-policy",
+      "pattern": ".*",
+      "apply-to": "queues",
+      "definition": {
+        "dead-letter-exchange": "dead.letter",
+        "dead-letter-routing-key": "failed"
+      },
+      "priority": 0
+    }
+  ],
+  "queues": [
+    {
+      "name": "assessment.created",
+      "vhost": "pediafor",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {
+        "x-message-ttl": 3600000,
+        "x-dead-letter-exchange": "dead.letter",
+        "x-dead-letter-routing-key": "failed.assessment.created"
+      }
+    },
+    {
+      "name": "assessment.updated",
+      "vhost": "pediafor",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {
+        "x-message-ttl": 3600000,
+        "x-dead-letter-exchange": "dead.letter",
+        "x-dead-letter-routing-key": "failed.assessment.updated"
+      }
+    },
+    {
+      "name": "assessment.deleted",
+      "vhost": "pediafor",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {
+        "x-message-ttl": 3600000,
+        "x-dead-letter-exchange": "dead.letter",
+        "x-dead-letter-routing-key": "failed.assessment.deleted"
+      }
+    },
+    {
+      "name": "assessment.published",
+      "vhost": "pediafor",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {
+        "x-message-ttl": 3600000,
+        "x-dead-letter-exchange": "dead.letter",
+        "x-dead-letter-routing-key": "failed.assessment.published"
+      }
+    },
+    {
+      "name": "dead.letter.queue",
+      "vhost": "pediafor",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {}
+    }
+  ],
+  "exchanges": [
+    {
+      "name": "assessment.events",
+      "vhost": "pediafor",
+      "type": "topic",
+      "durable": true,
+      "auto_delete": false,
+      "internal": false,
+      "arguments": {}
+    },
+    {
+      "name": "submission.events",
+      "vhost": "pediafor",
+      "type": "topic",
+      "durable": true,
+      "auto_delete": false,
+      "internal": false,
+      "arguments": {}
+    },
+    {
+      "name": "grading.events",
+      "vhost": "pediafor",
+      "type": "topic",
+      "durable": true,
+      "auto_delete": false,
+      "internal": false,
+      "arguments": {}
+    },
+    {
+      "name": "dead.letter",
+      "vhost": "pediafor",
+      "type": "direct",
+      "durable": true,
+      "auto_delete": false,
+      "internal": false,
+      "arguments": {}
+    }
+  ],
+  "bindings": [
+    {
+      "source": "assessment.events",
+      "vhost": "pediafor",
+      "destination": "assessment.created",
+      "destination_type": "queue",
+      "routing_key": "assessment.created",
+      "arguments": {}
+    },
+    {
+      "source": "assessment.events",
+      "vhost": "pediafor",
+      "destination": "assessment.updated",
+      "destination_type": "queue",
+      "routing_key": "assessment.updated",
+      "arguments": {}
+    },
+    {
+      "source": "assessment.events",
+      "vhost": "pediafor",
+      "destination": "assessment.deleted",
+      "destination_type": "queue",
+      "routing_key": "assessment.deleted",
+      "arguments": {}
+    },
+    {
+      "source": "assessment.events",
+      "vhost": "pediafor",
+      "destination": "assessment.published",
+      "destination_type": "queue",
+      "routing_key": "assessment.published",
+      "arguments": {}
+    },
+    {
+      "source": "dead.letter",
+      "vhost": "pediafor",
+      "destination": "dead.letter.queue",
+      "destination_type": "queue",
+      "routing_key": "failed",
+      "arguments": {}
+    }
+  ]
+}
