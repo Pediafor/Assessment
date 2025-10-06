@@ -1,0 +1,130 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Submission {
+  id           String   @id @default(cuid())
+  assessmentId String
+  userId       String
+  answers      Json
+  status       SubmissionStatus @default(DRAFT)
+  score        Float?
+  maxScore     Float?
+  startedAt    DateTime @default(now())
+  submittedAt  DateTime?
+  gradedAt     DateTime?
+  ipAddress    String?
+  userAgent    String?
+  checksum     String?
+  
+  // Metadata
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  // Relations
+  files        SubmissionFile[]
+  grades       Grade[]
+  attempts     AttemptLog[]
+  
+  @@map("submissions")
+  @@index([assessmentId])
+  @@index([userId])
+  @@index([status])
+}
+
+model SubmissionFile {
+  id           String   @id @default(cuid())
+  submissionId String
+  originalName String
+  fileName     String
+  filePath     String
+  mimeType     String
+  fileSize     Int
+  questionId   String?
+  description  String?
+  thumbnail    String?
+  
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  // Relations
+  submission   Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  
+  @@map("submission_files")
+  @@index([submissionId])
+}
+
+model Grade {
+  id           String      @id @default(cuid())
+  submissionId String
+  questionId   String?
+  score        Float
+  maxScore     Float
+  feedback     String?
+  gradedBy     String?
+  gradingType  GradingType @default(AUTO)
+  
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  // Relations
+  submission   Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  
+  @@map("grades")
+  @@index([submissionId])
+  @@index([questionId])
+}
+
+model AttemptLog {
+  id           String        @id @default(cuid())
+  submissionId String
+  action       AttemptAction
+  data         Json?
+  ipAddress    String?
+  userAgent    String?
+  
+  createdAt    DateTime @default(now())
+  
+  // Relations
+  submission   Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  
+  @@map("attempt_logs")
+  @@index([submissionId])
+  @@index([createdAt])
+}
+
+enum SubmissionStatus {
+  DRAFT
+  SUBMITTED
+  GRADING
+  GRADED
+  PUBLISHED
+  ARCHIVED
+}
+
+enum GradingType {
+  AUTO
+  MANUAL
+  HYBRID
+  PEER
+}
+
+enum AttemptAction {
+  CREATED
+  SAVED
+  UPDATED
+  SUBMITTED
+  FILE_ADDED
+  FILE_REMOVED
+  GRADED
+  PUBLISHED
+  ARCHIVED
+}
