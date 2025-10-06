@@ -4,9 +4,11 @@ import { AssessmentService } from '../services/assessment.service';
 import { extractUserContext, requireTeacherOrAdmin } from '../middleware/userContext';
 import { ApiResponse, ValidationError } from '../types';
 import { Request, Response, NextFunction } from 'express';
+import { getEventPublisher } from '../events/publisher';
 
 const router = Router();
 const assessmentService = new AssessmentService();
+const eventPublisher = getEventPublisher();
 
 // Apply user context extraction to all routes
 router.use(extractUserContext);
@@ -52,6 +54,28 @@ router.post(
   handleValidationErrors,
   async (req: Request, res: Response) => {
     const assessment = await assessmentService.createAssessment(req.body, req.user);
+    
+    // Publish assessment created event (async, don't block response)
+    setImmediate(async () => {
+      try {
+        await eventPublisher.publishAssessmentCreated({
+          assessmentId: assessment.id,
+          title: assessment.title,
+          description: assessment.description || '',
+          type: 'mixed', // Default to mixed type for now
+          createdBy: req.user.id,
+          timeLimit: assessment.settings?.duration,
+          totalMarks: 0, // Will be calculated based on questions
+          status: assessment.status.toLowerCase() as 'draft' | 'published' | 'archived'
+        }, {
+          userId: req.user.id,
+          requestId: req.headers['x-request-id'] as string,
+          sessionId: req.headers['x-session-id'] as string
+        });
+      } catch (eventError) {
+        console.error('Failed to publish assessment created event:', eventError);
+      }
+    });
     
     const response: ApiResponse = {
       success: true,
