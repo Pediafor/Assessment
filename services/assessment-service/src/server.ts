@@ -11,6 +11,7 @@ import assessmentRoutes from './routes/assessment.routes';
 import mediaRoutes from './routes/media.routes';
 import { AppError } from './types';
 import { createStaticFileServer } from './middleware/static';
+import { getRabbitMQConnection } from './config/rabbitmq';
 
 // Load environment variables
 dotenv.config();
@@ -173,12 +174,28 @@ app.use((error: any, req: express.Request, res: express.Response, next: express.
 // Start server
 if (process.env.NODE_ENV !== 'test') {
   const port = Number(PORT);
-  app.listen(port, '0.0.0.0', () => {
+  
+  // Initialize RabbitMQ connection
+  const initializeServices = async () => {
+    try {
+      const rabbitMQ = getRabbitMQConnection();
+      await rabbitMQ.connect();
+      console.log('✅ RabbitMQ connection initialized');
+    } catch (error) {
+      console.error('❌ Failed to initialize RabbitMQ:', error);
+      console.log('⚠️  Continuing without RabbitMQ - events will not be published');
+    }
+  };
+
+  app.listen(port, '0.0.0.0', async () => {
     console.log(`🚀 Assessment Service running on port ${port}`);
     console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
     console.log(`🏥 Health check: http://localhost:${port}/health`);
     console.log(`📖 Service info: http://localhost:${port}/`);
     console.log(`📡 Listening on all interfaces (0.0.0.0:${port})`);
+    
+    // Initialize services after server starts
+    await initializeServices();
   });
 }
 
