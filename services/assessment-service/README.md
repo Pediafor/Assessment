@@ -46,8 +46,11 @@ The Assessment Service is a **production-ready** core microservice in the Pediaf
 
 ### Microservices Communication
 
-- **Gateway Service**: Public-facing API gateway with authentication middleware
-- **Assessment Service**: Internal service handling assessment operations and file uploads
+- **Gateway Service**: Public-facing API gateway with authentication middleware and request routing
+- **Assessment Service**: Internal service handling assessment operations, question management, and file uploads
+- **Submission Service**: Consumer of assessment data for student submission workflows and answer validation
+- **Grading Service**: (Planned) Consumer of assessment data for scoring rubrics and grading algorithms
+- **User Service**: Provider of authentication context via Gateway Service integration
 - **Database Isolation**: Dedicated PostgreSQL instance with Prisma schema management
 - **User Context**: Authenticated requests enriched with user information from Gateway
 

@@ -30,10 +30,13 @@ The User Service is a core microservice in the Pediafor Assessment Platform, imp
 
 ### Microservices Communication
 
-- **Gateway Service**: Public-facing API gateway with authentication middleware
-- **User Service**: Internal service handling user operations and token issuance
-- **Database Isolation**: Each service has its own PostgreSQL instance
-- **Token Distribution**: PASETO public key shared for distributed verification
+- **Gateway Service**: Public-facing API gateway with authentication middleware and request routing
+- **User Service**: Internal service handling user operations, authentication, and token issuance
+- **Assessment Service**: Consumer of user authentication for assessment management operations
+- **Submission Service**: Consumer of user authentication for student submission management
+- **Grading Service**: (Planned) Consumer of user authentication for automated grading operations
+- **Database Isolation**: Each service has its own PostgreSQL instance for data sovereignty
+- **Token Distribution**: PASETO public key shared across services for distributed verification
 
 ## 🚀 Key Features
 
