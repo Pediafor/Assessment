@@ -49,7 +49,7 @@ graph TB
         
         SUBMISSION[📤 Submission Service<br/>Port 4002<br/>✅ Production Ready<br/>Tests: Functional<br/>✍️ Student Submissions<br/>💾 File Handling]
         
-        GRADING[🎯 Grading Service<br/>Port 4003<br/>✅ Production Ready<br/>Tests: Complete<br/>🤖 Auto-Grading<br/>📈 Analytics]
+        GRADING[🎯 Grading Service<br/>Port 4003<br/>✅ Production Ready<br/>38 Unit Tests Passing<br/>🤖 Auto-Grading<br/>📈 Analytics]
     end
     
     subgraph "Data Layer"
@@ -93,12 +93,12 @@ graph TB
 ```
 
 ### **Test Coverage Summary**
-- **Overall Platform**: **302/310 tests passing (97% success rate)**
+- **Overall Platform**: **294/310 tests passing (95% success rate)**
 - **Gateway Service**: 7/7 tests (100% success) - ✅ **Production Ready**
 - **User Service**: 61/77 tests (79% success) - ✅ **Production Ready** (16 DB integration tests failing)
 - **Assessment Service**: 94/94 tests (100% success) - ✅ **Production Ready**  
 - **Submission Service**: Functionally complete - ✅ **Production Ready**
-- **Grading Service**: Complete test coverage - ✅ **Production Ready**
+- **Grading Service**: 38 unit tests operational - ✅ **Production Ready** (Integration tests pending DB setup)
 
 ### **Authentication & Security Flow**
 

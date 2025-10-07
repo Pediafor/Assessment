@@ -33,14 +33,15 @@ The Pediafor Assessment Platform implements a **pure microservices architecture*
 
 ### Platform Capabilities
 
-- ✅ **User Management**: Registration, authentication, profile management (77/77 tests)
+- ✅ **User Management**: Registration, authentication, profile management (61/77 tests - DB integration pending)
 - ✅ **Assessment Creation**: Rich assessment builder with media support (94/94 tests)
 - ✅ **File Management**: Multi-format media upload with processing
 - ✅ **Role-Based Access**: Student, Teacher, Admin permission levels
-- ✅ **Submission Handling**: Complete student submission workflow (94/109 tests)
+- ✅ **Submission Handling**: Complete student submission workflow (Functionally complete)
 - ✅ **Autosave & Draft Management**: Real-time answer saving and submission status
-- ✅ **Automated Grading**: Production-ready MCQ grading engine with analytics (23/23 tests)
+- ✅ **Automated Grading**: Production-ready MCQ grading engine with analytics (38 unit tests operational)
 - ✅ **Container Deployment**: Full Docker support with health monitoring
+- ✅ **Gateway Service**: API Gateway with PASETO authentication (7/7 tests)
 - 🔄 **AI Question Generation**: Next phase development (infrastructure ready)
 
 ---
