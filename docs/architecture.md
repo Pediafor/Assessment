@@ -49,55 +49,190 @@ The Pediafor Assessment Platform implements a **pure microservices architecture*
 
 ### High-Level System Architecture
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                        CLIENT LAYER                             │
-├─────────────────┬─────────────────┬─────────────────────────────┤
-│   Web Portal    │   Mobile App    │   Admin Dashboard           │
-│   (React/Vue)   │   (iOS/Android) │   (Management Tools)        │
-└─────────────────┴─────────────────┴─────────────────────────────┘
-                              │
-                              ▼ HTTPS/WSS
-┌─────────────────────────────────────────────────────────────────┐
-│                        API GATEWAY                              │
-│   Gateway Service (Port 3000) - Public Entry Point              │
-│   • PASETO Token Validation                                     │
-│   • Request Routing & Load Balancing                            │
-│   • CORS & Rate Limiting                                        │
-│   • Health Check Aggregation                                    │
-└─────────────────────────────────────────────────────────────────┘
-                              │
-                              ▼ Internal Network
-┌───────────────────────────────────────────────────────────────────┐
-│                      MICROSERVICES LAYER                          │
-├─────────────┬─────────────┬─────────────┬─────────────┬───────────┤
-│User Service │Assessment   │Submission   │Grading      │Future     │
-│Port 4000    │Service      │Service      │Service      │Services   │
-│             │Port 4001    │Port 4002    │Port 4003    │...        │
-├─────────────┼─────────────┼─────────────┼─────────────┼───────────┤
-│• Auth Logic │• Assessment │• Student    │• Auto Grade │• Analytics│
-│• User CRUD  │  CRUD       │  Submission │• AI/ML      │• Reporting│
-│• Token Gen  │• Media Mgmt │• File Upload│• Feedback   │• Export   │
-│• Profile    │• Publishing │• Validation │• Statistics │• Backup   │
-└─────────────┴─────────────┴─────────────┴─────────────┴───────────┘
-                              │
-                              ▼ Database Connections
-┌─────────────────────────────────────────────────────────────────┐
-│                       DATA LAYER                                │
-├─────────────┬─────────────┬─────────────┬─────────────┬─────────┤
-│PostgreSQL   │PostgreSQL   │PostgreSQL   │PostgreSQL   │Redis    │
-│Port 5432    │Port 5433    │Port 5434    │Port 5435    │Port 6379│
-│             │             │             │             │         │
-│User Service │Assessment   │Submission   │Grading      │Gateway  │
-│Database     │Database     │Database     │Database     │Cache    │
-└─────────────┴─────────────┴─────────────┴─────────────┴─────────┘
+```mermaid
+graph TB
+    subgraph "External Clients"
+        WEB[🌐 Web Portal<br/>React/Vue/Angular]
+        MOBILE[📱 Mobile Apps<br/>iOS/Android/Flutter]
+        API[🔌 External APIs<br/>Third-party Integrations]
+        ADMIN[👨‍💼 Admin Dashboard<br/>Management Interface]
+    end
+    
+    subgraph "Load Balancer & Security"
+        LB[⚖️ Load Balancer<br/>NGINX/CloudFlare]
+        FIREWALL[🛡️ Security Layer<br/>Rate Limiting/DDoS Protection]
+    end
+    
+    subgraph "API Gateway Layer"
+        GATEWAY[🚪 Gateway Service<br/>Port 3000<br/>✅ Production Ready<br/><br/>🔐 PASETO Authentication<br/>🔄 Service Discovery<br/>📊 Request Routing<br/>⚡ Rate Limiting<br/>🔒 CORS Management<br/>📈 Health Monitoring]
+    end
+    
+    subgraph "Core Microservices"
+        direction TB
+        
+        USER[👤 User Service<br/>Port 4000<br/>✅ Production Ready<br/><br/>👥 User Management<br/>🔐 Authentication<br/>🎯 Token Generation<br/>👨‍🎓 Role Management<br/>📧 Profile Management]
+        
+        ASSESSMENT[📝 Assessment Service<br/>Port 4001<br/>✅ Production Ready<br/><br/>📊 Assessment CRUD<br/>🎯 Question Management<br/>🖼️ Media Handling<br/>📋 Template System<br/>📅 Publishing Control]
+        
+        SUBMISSION[📤 Submission Service<br/>Port 4002<br/>✅ Production Ready<br/><br/>✍️ Answer Collection<br/>💾 File Uploads<br/>⏰ Auto-save<br/>📝 Draft Management<br/>✅ Submission Tracking]
+        
+        GRADING[🎯 Grading Service<br/>Port 4003<br/>✅ Production Ready<br/><br/>🤖 Auto-Grading<br/>📊 Score Calculation<br/>📈 Analytics Engine<br/>🔍 Performance Analysis<br/>📋 Report Generation]
+    end
+    
+    subgraph "Future Services"
+        ANALYTICS[📊 Analytics Service<br/>🔄 Development<br/><br/>📈 Usage Metrics<br/>📊 Performance Insights<br/>🎯 User Behavior<br/>📋 Custom Reports]
+        
+        NOTIFICATION[🔔 Notification Service<br/>🔄 Planned<br/><br/>📧 Email Alerts<br/>📱 Push Notifications<br/>💬 In-app Messages<br/>⏰ Scheduled Reminders]
+        
+        AI[🤖 AI Service<br/>🔄 Future<br/><br/>🎯 Question Generation<br/>📝 Auto-feedback<br/>🔍 Plagiarism Detection<br/>📊 Predictive Analytics]
+    end
+    
+    subgraph "Data Storage Layer"
+        direction LR
+        DB1[(🗄️ User Database<br/>PostgreSQL 15<br/>Port 5432<br/><br/>👥 User Profiles<br/>🔐 Credentials<br/>⚙️ Preferences<br/>📊 Activity Logs)]
+        
+        DB2[(🗄️ Assessment Database<br/>PostgreSQL 15<br/>Port 5433<br/><br/>📝 Assessments<br/>❓ Questions<br/>🖼️ Media Files<br/>📋 Templates)]
+        
+        DB3[(🗄️ Submission Database<br/>PostgreSQL 15<br/>Port 5434<br/><br/>✍️ Student Answers<br/>📁 File Uploads<br/>⏰ Timestamps<br/>📊 Progress Tracking)]
+        
+        DB4[(🗄️ Grading Database<br/>PostgreSQL 15<br/>Port 5435<br/><br/>🎯 Scores<br/>📊 Analytics<br/>📈 Performance Data<br/>📋 Reports)]
+    end
+    
+    subgraph "Cache & Message Layer"
+        REDIS[(⚡ Redis Cluster<br/>Port 6379<br/><br/>🔑 Session Storage<br/>⚡ Response Cache<br/>🔄 Rate Limiting<br/>📊 Real-time Data)]
+        
+        QUEUE[📨 Message Queue<br/>Redis/RabbitMQ<br/><br/>📤 Event Processing<br/>📧 Email Queue<br/>🔔 Notifications<br/>📊 Analytics Events]
+    end
+    
+    subgraph "File Storage"
+        STORAGE[🗂️ File Storage<br/>AWS S3/Azure Blob<br/><br/>🖼️ Images<br/>🎥 Videos<br/>🔊 Audio Files<br/>📄 Documents]
+    end
+    
+    subgraph "Monitoring & Logging"
+        METRICS[📊 Metrics<br/>Prometheus/Grafana<br/><br/>📈 Performance<br/>⚡ Response Times<br/>🔍 Error Tracking<br/>📊 Business KPIs]
+        
+        LOGS[📝 Centralized Logging<br/>ELK Stack<br/><br/>🔍 Log Aggregation<br/>🚨 Error Tracking<br/>🔍 Audit Trails<br/>📊 Analytics]
+    end
+    
+    %% External connections
+    WEB --> LB
+    MOBILE --> LB
+    API --> LB
+    ADMIN --> LB
+    
+    %% Security layer
+    LB --> FIREWALL
+    FIREWALL --> GATEWAY
+    
+    %% Gateway routing
+    GATEWAY --> USER
+    GATEWAY --> ASSESSMENT
+    GATEWAY --> SUBMISSION
+    GATEWAY --> GRADING
+    
+    %% Database connections
+    USER --> DB1
+    ASSESSMENT --> DB2
+    SUBMISSION --> DB3
+    GRADING --> DB4
+    
+    %% Cache connections
+    GATEWAY --> REDIS
+    USER --> REDIS
+    ASSESSMENT --> REDIS
+    SUBMISSION --> REDIS
+    GRADING --> REDIS
+    
+    %% File storage
+    ASSESSMENT --> STORAGE
+    SUBMISSION --> STORAGE
+    
+    %% Inter-service communication
+    SUBMISSION -.-> ASSESSMENT
+    GRADING -.-> SUBMISSION
+    GRADING -.-> ASSESSMENT
+    ANALYTICS -.-> USER
+    ANALYTICS -.-> ASSESSMENT
+    ANALYTICS -.-> SUBMISSION
+    ANALYTICS -.-> GRADING
+    
+    %% Message queue
+    USER --> QUEUE
+    ASSESSMENT --> QUEUE
+    SUBMISSION --> QUEUE
+    GRADING --> QUEUE
+    NOTIFICATION -.-> QUEUE
+    
+    %% Monitoring
+    GATEWAY --> METRICS
+    USER --> METRICS
+    ASSESSMENT --> METRICS
+    SUBMISSION --> METRICS
+    GRADING --> METRICS
+    
+    GATEWAY --> LOGS
+    USER --> LOGS
+    ASSESSMENT --> LOGS
+    SUBMISSION --> LOGS
+    GRADING --> LOGS
+    
+    %% Styling
+    classDef production fill:#d4edda,stroke:#28a745,stroke-width:3px,color:#000
+    classDef development fill:#fff3cd,stroke:#ffc107,stroke-width:2px,color:#000
+    classDef planned fill:#f8d7da,stroke:#dc3545,stroke-width:2px,color:#000
+    classDef database fill:#e2e3e5,stroke:#6c757d,stroke-width:2px,color:#000
+    classDef infrastructure fill:#d1ecf1,stroke:#17a2b8,stroke-width:2px,color:#000
+    
+    class GATEWAY,USER,ASSESSMENT,SUBMISSION,GRADING production
+    class ANALYTICS development
+    class NOTIFICATION,AI planned
+    class DB1,DB2,DB3,DB4,REDIS,QUEUE,STORAGE database
+    class LB,FIREWALL,METRICS,LOGS infrastructure
 ```
 
 ### Service Interaction Flow
 
+```mermaid
+sequenceDiagram
+    participant C as 🖥️ Client
+    participant G as 🚪 Gateway
+    participant U as 👤 User Service
+    participant A as 📝 Assessment Service
+    participant S as 📤 Submission Service
+    participant Gr as 🎯 Grading Service
+    participant DB as 🗄️ Database
+    participant Cache as ⚡ Cache
+    
+    Note over C,Cache: Complete Assessment Workflow
+    
+    %% Authentication
+    C->>G: 1. Login Request
+    G->>U: 2. Forward credentials
+    U->>DB: 3. Validate user
+    U->>Cache: 4. Store session
+    U-->>G: 5. Return tokens
+    G-->>C: 6. Authentication success
+    
+    %% Assessment Creation
+    C->>G: 7. Create Assessment
+    G->>G: 8. Validate token
+    G->>A: 9. Forward request + user context
+    A->>DB: 10. Store assessment
+    A-->>G: 11. Assessment created
+    G-->>C: 12. Creation response
+    
+    %% Student Submission
+    C->>G: 13. Submit answers
+    G->>S: 14. Process submission
+    S->>DB: 15. Store answers
+    S->>Gr: 16. Trigger grading
+    Gr->>DB: 17. Calculate scores
+    Gr-->>S: 18. Grading complete
+    S-->>G: 19. Submission processed
+    G-->>C: 20. Success response
+    
+    Note over C,Cache: All services maintain independent data stores<br/>Gateway handles authentication and routing<br/>Services communicate via internal APIs
 ```
-Client Request → API Gateway → Authentication → Service Routing → Database → Response
-     ↓              ↓              ↓              ↓               ↓         ↓
 1. HTTP/HTTPS   2. Token      3. User        4. Business    5. Data     6. JSON
    Request         Validation    Context        Logic          Ops        Response
 ```
