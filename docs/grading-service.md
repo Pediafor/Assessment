@@ -56,7 +56,6 @@ The Grading Service is the **production-ready** automated evaluation engine for 
 - **Database**: ✅ PostgreSQL with optimized Prisma schema
 - **Integration**: ✅ Ready for submission service workflow
 - **Performance**: ✅ Optimized for high-volume institutional deployments
-```
 
 ### 🔄 Service Dependencies (Planned)
 
