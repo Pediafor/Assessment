@@ -8,6 +8,11 @@ describe('SubmissionService', () => {
   let mockTeacher: UserContext;
   let mockAdmin: UserContext;
 
+  // Helper function to generate unique assessment IDs
+  const generateUniqueAssessmentId = (prefix: string = 'assessment') => {
+    return `${prefix}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  };
+
   beforeAll(() => {
     submissionService = new SubmissionService();
     
@@ -39,7 +44,7 @@ describe('SubmissionService', () => {
   describe('createSubmission', () => {
     it('should create a new submission for a student', async () => {
       const submissionData = {
-        assessmentId: 'assessment-123',
+        assessmentId: generateUniqueAssessmentId('create-test'),
         autoSave: false
       };
 
@@ -64,8 +69,9 @@ describe('SubmissionService', () => {
     });
 
     it('should throw error if student already has a submission for the assessment', async () => {
+      const uniqueAssessmentId = generateUniqueAssessmentId('duplicate-test');
       const submissionData = {
-        assessmentId: 'assessment-duplicate',
+        assessmentId: uniqueAssessmentId,
         autoSave: false
       };
 
@@ -83,8 +89,9 @@ describe('SubmissionService', () => {
     let testSubmission: any;
 
     beforeEach(async () => {
+      const uniqueAssessmentId = `assessment-get-test-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
       testSubmission = await submissionService.createSubmission({
-        assessmentId: 'assessment-get-test',
+        assessmentId: uniqueAssessmentId,
         autoSave: false
       }, mockStudent);
     });
@@ -143,35 +150,37 @@ describe('SubmissionService', () => {
 
   describe('getSubmissionByAssessment', () => {
     let testSubmission: any;
+    let testAssessmentId: string;
 
     beforeEach(async () => {
+      testAssessmentId = generateUniqueAssessmentId('by-assessment-test');
       testSubmission = await submissionService.createSubmission({
-        assessmentId: 'assessment-by-assessment-test',
+        assessmentId: testAssessmentId,
         autoSave: false
       }, mockStudent);
     });
 
     it('should get submission by assessment ID for student', async () => {
       const submission = await submissionService.getSubmissionByAssessment(
-        'assessment-by-assessment-test',
+        testAssessmentId,
         undefined,
         mockStudent
       );
 
       expect(submission).toBeDefined();
-      expect(submission!.assessmentId).toBe('assessment-by-assessment-test');
+      expect(submission!.assessmentId).toBe(testAssessmentId);
       expect(submission!.userId).toBe(mockStudent.id);
     });
 
     it('should get submission by assessment ID and student ID for teacher', async () => {
       const submission = await submissionService.getSubmissionByAssessment(
-        'assessment-by-assessment-test',
+        testAssessmentId,
         mockStudent.id,
         mockTeacher
       );
 
       expect(submission).toBeDefined();
-      expect(submission!.assessmentId).toBe('assessment-by-assessment-test');
+      expect(submission!.assessmentId).toBe(testAssessmentId);
       expect(submission!.userId).toBe(mockStudent.id);
     });
 
@@ -191,7 +200,7 @@ describe('SubmissionService', () => {
 
     beforeEach(async () => {
       testSubmission = await submissionService.createSubmission({
-        assessmentId: 'assessment-save-answers',
+        assessmentId: generateUniqueAssessmentId('save-answers'),
         autoSave: false
       }, mockStudent);
     });
@@ -245,7 +254,7 @@ describe('SubmissionService', () => {
 
     beforeEach(async () => {
       testSubmission = await submissionService.createSubmission({
-        assessmentId: 'assessment-submit-test',
+        assessmentId: generateUniqueAssessmentId('submit-test'),
         autoSave: false
       }, mockStudent);
     });
@@ -290,7 +299,7 @@ describe('SubmissionService', () => {
 
     beforeEach(async () => {
       testSubmission = await submissionService.createSubmission({
-        assessmentId: 'assessment-update-test',
+        assessmentId: generateUniqueAssessmentId('update-test'),
         autoSave: false
       }, mockStudent);
     });
@@ -337,15 +346,21 @@ describe('SubmissionService', () => {
   });
 
   describe('getSubmissions', () => {
+    let testAssessmentId1: string;
+    let testAssessmentId2: string;
+
     beforeEach(async () => {
       // Create multiple submissions for testing
+      testAssessmentId1 = generateUniqueAssessmentId('list-1');
+      testAssessmentId2 = generateUniqueAssessmentId('list-2');
+      
       await submissionService.createSubmission({
-        assessmentId: 'assessment-list-1',
+        assessmentId: testAssessmentId1,
         autoSave: false
       }, mockStudent);
 
       await submissionService.createSubmission({
-        assessmentId: 'assessment-list-2', 
+        assessmentId: testAssessmentId2, 
         autoSave: false
       }, mockStudent);
     });
@@ -378,13 +393,13 @@ describe('SubmissionService', () => {
 
     it('should filter submissions by assessment ID', async () => {
       const result = await submissionService.getSubmissions({
-        assessmentId: 'assessment-list-1',
+        assessmentId: testAssessmentId1,
         page: 1,
         limit: 10
       }, mockTeacher);
 
       expect(result.submissions.length).toBe(1);
-      expect(result.submissions[0].assessmentId).toBe('assessment-list-1');
+      expect(result.submissions[0].assessmentId).toBe(testAssessmentId1);
     });
 
     it('should paginate results correctly', async () => {
@@ -403,7 +418,7 @@ describe('SubmissionService', () => {
     let assessmentId: string;
 
     beforeEach(async () => {
-      assessmentId = 'assessment-stats-test';
+      assessmentId = generateUniqueAssessmentId('stats-test');
       
       // Create submissions with different statuses
       const submission1 = await submissionService.createSubmission({
@@ -452,7 +467,7 @@ describe('SubmissionService', () => {
 
     beforeEach(async () => {
       testSubmission = await submissionService.createSubmission({
-        assessmentId: 'assessment-delete-test',
+        assessmentId: generateUniqueAssessmentId('delete-test'),
         autoSave: false
       }, mockStudent);
     });

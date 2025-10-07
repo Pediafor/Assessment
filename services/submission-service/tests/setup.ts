@@ -6,6 +6,7 @@ declare global {
 
 beforeAll(async () => {
   // Clean up database before all tests  
+  await prisma.attemptLog.deleteMany({});
   await prisma.grade.deleteMany({});
   await prisma.submissionFile.deleteMany({});
   await prisma.submission.deleteMany({});
@@ -13,18 +14,15 @@ beforeAll(async () => {
 
 afterAll(async () => {
   // Clean up database after all tests
+  await prisma.attemptLog.deleteMany({});
   await prisma.grade.deleteMany({});
   await prisma.submissionFile.deleteMany({});
   await prisma.submission.deleteMany({});
   await prisma.$disconnect();
 });
 
-beforeEach(async () => {
-  // Clean up before each test
-  await prisma.grade.deleteMany({});
-  await prisma.submissionFile.deleteMany({});
-  await prisma.submission.deleteMany({});
-});
+// Don't do automatic cleanup between tests
+// Each test should be responsible for its own data management
 
 // Make prisma available globally for tests
 global.testPrisma = prisma;
