@@ -233,10 +233,6 @@ sequenceDiagram
     
     Note over C,Cache: All services maintain independent data stores<br/>Gateway handles authentication and routing<br/>Services communicate via internal APIs
 ```
-1. HTTP/HTTPS   2. Token      3. User        4. Business    5. Data     6. JSON
-   Request         Validation    Context        Logic          Ops        Response
-```
-
 ---
 
 ## System Components
