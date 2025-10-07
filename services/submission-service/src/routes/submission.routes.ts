@@ -1,4 +1,4 @@
-import { Router, Request, Response } from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
 import { body, param, query, validationResult } from 'express-validator';
 import { SubmissionService } from '../services/submission.service';
 import { extractUserContext, requireStudent, requireTeacherOrAdmin } from '../middleware/userContext';
@@ -35,16 +35,20 @@ router.post(
       .withMessage('Assessment ID must be a string'),
     validateRequest
   ],
-  async (req: Request, res: Response) => {
-    const submission = await submissionService.createSubmission(req.body, req.user);
-    
-    const response: ApiResponse = {
-      success: true,
-      data: submission,
-      message: 'Submission created successfully'
-    };
-    
-    res.status(201).json(response);
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const submission = await submissionService.createSubmission(req.body, req.user);
+      
+      const response: ApiResponse = {
+        success: true,
+        data: submission,
+        message: 'Submission created successfully'
+      };
+      
+      res.status(201).json(response);
+    } catch (error) {
+      next(error);
+    }
   }
 );
 
@@ -63,15 +67,19 @@ router.get(
       .withMessage('Submission ID must be a string'),
     validateRequest
   ],
-  async (req: Request, res: Response) => {
-    const submission = await submissionService.getSubmissionById(req.params.id, req.user);
-    
-    const response: ApiResponse = {
-      success: true,
-      data: submission
-    };
-    
-    res.json(response);
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const submission = await submissionService.getSubmissionById(req.params.id, req.user);
+      
+      const response: ApiResponse = {
+        success: true,
+        data: submission
+      };
+      
+      res.json(response);
+    } catch (error) {
+      next(error);
+    }
   }
 );
 
@@ -105,24 +113,28 @@ router.get(
       .withMessage('Invalid status'),
     validateRequest
   ],
-  async (req: Request, res: Response) => {
-    const result = await submissionService.getSubmissions({
-      page: req.query.page ? parseInt(req.query.page as string) : undefined,
-      limit: req.query.limit ? parseInt(req.query.limit as string) : undefined,
-      assessmentId: req.query.assessmentId as string,
-      studentId: req.query.studentId as string,
-      status: req.query.status as string,
-      sortBy: req.query.sortBy as string,
-      sortOrder: req.query.sortOrder as 'asc' | 'desc'
-    }, req.user);
-    
-    const response: ApiResponse = {
-      success: true,
-      data: result.submissions,
-      meta: result.meta
-    };
-    
-    res.json(response);
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const result = await submissionService.getSubmissions({
+        page: req.query.page ? parseInt(req.query.page as string) : undefined,
+        limit: req.query.limit ? parseInt(req.query.limit as string) : undefined,
+        assessmentId: req.query.assessmentId as string,
+        studentId: req.query.studentId as string,
+        status: req.query.status as string,
+        sortBy: req.query.sortBy as string,
+        sortOrder: req.query.sortOrder as 'asc' | 'desc'
+      }, req.user);
+      
+      const response: ApiResponse = {
+        success: true,
+        data: result.submissions,
+        meta: result.meta
+      };
+      
+      res.json(response);
+    } catch (error) {
+      next(error);
+    }
   }
 );
 
@@ -145,19 +157,23 @@ router.get(
       .withMessage('Student ID must be a string'),
     validateRequest
   ],
-  async (req: Request, res: Response) => {
-    const submission = await submissionService.getSubmissionByAssessment(
-      req.params.assessmentId,
-      req.query.studentId as string,
-      req.user
-    );
-    
-    const response: ApiResponse = {
-      success: true,
-      data: submission
-    };
-    
-    res.json(response);
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const submission = await submissionService.getSubmissionByAssessment(
+        req.params.assessmentId,
+        req.query.studentId as string,
+        req.user
+      );
+      
+      const response: ApiResponse = {
+        success: true,
+        data: submission
+      };
+      
+      res.json(response);
+    } catch (error) {
+      next(error);
+    }
   }
 );
 
@@ -188,16 +204,20 @@ router.put(
       .withMessage('Max score must be a positive number'),
     validateRequest
   ],
-  async (req: Request, res: Response) => {
-    const submission = await submissionService.updateSubmission(req.params.id, req.body, req.user);
-    
-    const response: ApiResponse = {
-      success: true,
-      data: submission,
-      message: 'Submission updated successfully'
-    };
-    
-    res.json(response);
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const submission = await submissionService.updateSubmission(req.params.id, req.body, req.user);
+      
+      const response: ApiResponse = {
+        success: true,
+        data: submission,
+        message: 'Submission updated successfully'
+      };
+      
+      res.json(response);
+    } catch (error) {
+      next(error);
+    }
   }
 );
 
@@ -217,16 +237,20 @@ router.post(
       .withMessage('Submission ID must be a string'),
     validateRequest
   ],
-  async (req: Request, res: Response) => {
-    const submission = await submissionService.submitSubmission(req.params.id, req.user);
-    
-    const response: ApiResponse = {
-      success: true,
-      data: submission,
-      message: 'Submission submitted successfully'
-    };
-    
-    res.json(response);
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const submission = await submissionService.submitSubmission(req.params.id, req.user);
+      
+      const response: ApiResponse = {
+        success: true,
+        data: submission,
+        message: 'Submission submitted successfully'
+      };
+      
+      res.json(response);
+    } catch (error) {
+      next(error);
+    }
   }
 );
 
@@ -249,16 +273,20 @@ router.post(
       .withMessage('Answers are required'),
     validateRequest
   ],
-  async (req: Request, res: Response) => {
-    const submission = await submissionService.saveAnswers(req.params.id, req.body.answers, req.user);
-    
-    const response: ApiResponse = {
-      success: true,
-      data: submission,
-      message: 'Answers saved successfully'
-    };
-    
-    res.json(response);
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const submission = await submissionService.saveAnswers(req.params.id, req.body.answers, req.user);
+      
+      const response: ApiResponse = {
+        success: true,
+        data: submission,
+        message: 'Answers saved successfully'
+      };
+      
+      res.json(response);
+    } catch (error) {
+      next(error);
+    }
   }
 );
 
@@ -278,15 +306,19 @@ router.get(
       .withMessage('Assessment ID must be a string'),
     validateRequest
   ],
-  async (req: Request, res: Response) => {
-    const stats = await submissionService.getSubmissionStats(req.params.assessmentId, req.user);
-    
-    const response: ApiResponse = {
-      success: true,
-      data: stats
-    };
-    
-    res.json(response);
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const stats = await submissionService.getSubmissionStats(req.params.assessmentId, req.user);
+      
+      const response: ApiResponse = {
+        success: true,
+        data: stats
+      };
+      
+      res.json(response);
+    } catch (error) {
+      next(error);
+    }
   }
 );
 
@@ -305,16 +337,20 @@ router.delete(
       .withMessage('Submission ID must be a string'),
     validateRequest
   ],
-  async (req: Request, res: Response) => {
-    const result = await submissionService.deleteSubmission(req.params.id, req.user);
-    
-    const response: ApiResponse = {
-      success: true,
-      data: result,
-      message: result.message
-    };
-    
-    res.json(response);
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const result = await submissionService.deleteSubmission(req.params.id, req.user);
+      
+      const response: ApiResponse = {
+        success: true,
+        data: result,
+        message: result.message
+      };
+      
+      res.json(response);
+    } catch (error) {
+      next(error);
+    }
   }
 );
 

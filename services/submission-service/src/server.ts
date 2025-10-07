@@ -9,6 +9,7 @@ import 'express-async-errors';
 
 // Route imports
 import submissionRoutes from './routes/submission.routes';
+import fileRoutes from './routes/file.routes';
 import healthRoutes from './routes/health.routes';
 
 // Middleware imports
@@ -66,6 +67,7 @@ if (process.env.NODE_ENV !== 'test') {
 // Routes
 app.use('/health', healthRoutes);
 app.use('/api/submissions', submissionRoutes);
+app.use('/api', fileRoutes);
 
 // Root endpoint
 app.get('/', (req, res) => {
@@ -76,7 +78,8 @@ app.get('/', (req, res) => {
     status: 'running',
     endpoints: {
       health: '/health',
-      submissions: '/api/submissions'
+      submissions: '/api/submissions',
+      files: '/api/files'
     }
   });
 });
