@@ -1,0 +1,141 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Grade represents the overall grade for a submission
+model Grade {
+  id              String    @id @default(cuid())
+  submissionId    String    @unique // Reference to submission from submission service
+  assessmentId    String    // Reference to assessment from assessment service
+  userId          String    // Student being graded
+  
+  // Scoring
+  totalScore      Float     // Total points earned
+  maxScore        Float     // Maximum possible points  
+  percentage      Float     // Calculated percentage (totalScore/maxScore * 100)
+  
+  // Metadata
+  gradedAt        DateTime  @default(now())
+  gradedBy        String?   // User who initiated grading (optional for automated)
+  isAutomated     Boolean   @default(true) // Whether this was automatically graded
+  
+  // Feedback
+  feedback        String?   // Optional overall feedback
+  
+  // Question-level breakdown
+  questionGrades  QuestionGrade[]
+  
+  // Audit trail
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  @@map("grades")
+}
+
+// Individual question scoring within a grade
+model QuestionGrade {
+  id              String    @id @default(cuid())
+  gradeId         String    // Parent grade
+  questionId      String    // Question identifier from assessment
+  
+  // Scoring
+  pointsEarned    Float     // Points earned for this question
+  maxPoints       Float     // Maximum points for this question
+  isCorrect       Boolean?  // Whether answer was correct (null for partial credit)
+  
+  // Answer analysis
+  studentAnswer   Json?     // Student's submitted answer
+  correctAnswer   Json?     // Correct answer(s) for reference
+  
+  // Feedback
+  feedback        String?   // Question-specific feedback
+  
+  // Metadata
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  // Relations
+  grade           Grade     @relation(fields: [gradeId], references: [id], onDelete: Cascade)
+  
+  @@map("question_grades")
+}
+
+// Grade analytics and statistics
+model GradeAnalytics {
+  id              String    @id @default(cuid())
+  assessmentId    String    // Assessment these analytics are for
+  
+  // Statistical measures
+  totalSubmissions Int      // Number of submissions graded
+  averageScore     Float    // Average score across all submissions
+  medianScore      Float    // Median score
+  standardDeviation Float   // Standard deviation of scores
+  minScore         Float    // Lowest score
+  maxScore         Float    // Highest score
+  
+  // Distribution data
+  scoreDistribution Json    // Score ranges and counts
+  
+  // Question analysis
+  questionStats    Json     // Per-question difficulty and discrimination
+  
+  // Metadata
+  calculatedAt     DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  
+  @@unique([assessmentId])
+  @@map("grade_analytics")
+}
+
+// Grading configuration for assessments
+model GradingConfig {
+  id              String    @id @default(cuid())
+  assessmentId    String    @unique // Assessment this config applies to
+  
+  // Grading method
+  gradingMethod   GradingMethod @default(AUTOMATED)
+  
+  // Scoring configuration
+  allowPartialCredit Boolean @default(true)
+  penaltyPerWrongAnswer Float? // Penalty for incorrect answers
+  
+  // MCQ specific settings
+  mcqScoringType  MCQScoringType @default(STANDARD)
+  
+  // Timing and availability
+  autoGradeOnSubmit Boolean @default(true)
+  releaseGradesImmediately Boolean @default(false)
+  
+  // Feedback settings
+  showCorrectAnswers Boolean @default(false)
+  showFeedback      Boolean @default(true)
+  
+  // Metadata
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  createdBy       String    // User who created this config
+  
+  @@map("grading_configs")
+}
+
+// Enums
+enum GradingMethod {
+  AUTOMATED       // Fully automated grading
+  MANUAL          // Manual grading only
+  HYBRID          // Automated with manual review
+}
+
+enum MCQScoringType {
+  STANDARD        // 1 point for correct, 0 for incorrect
+  PARTIAL_CREDIT  // Partial points for multiple choice questions
+  NEGATIVE_MARKING // Subtract points for wrong answers
+}
