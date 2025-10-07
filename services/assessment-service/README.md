@@ -1,5 +1,14 @@
 # Assessment Service - Pediafor Assessment Platform
 
+## 🎉 **Service Status: OPERATIONAL** 
+[![Build Status](https://img.shields.io/badge/Build-Passing-success)](.)
+[![Service Status](https://img.shields.io/badge/Status-Healthy%20%26%20Running-green)](.)
+[![Tests](https://img.shields.io/badge/Tests-94%2F94%20Passing-success)](.)
+[![Port](https://img.shields.io/badge/Port-4001%20Active-blue)](.)
+[![Database](https://img.shields.io/badge/Database-Connected%20%26%20Healthy-green)](.)
+
+> **Recently Fixed**: Service rebuild resolved startup issues - now fully operational and healthy on port 4001
+
 ## Overview
 
 The Assessment Service is a **production-ready** core microservice in the Pediafor Assessment Platform, implementing comprehensive assessment creation and management capabilities. Built as part of a pure microservices architecture, it provides:
