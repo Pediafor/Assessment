@@ -1,6 +1,6 @@
 # Pediafor Assessment Platform - Comprehensive Architecture
 
-> **Platform Status**: Production Ready | **Services**: 5 Microservices | **Test Coverage**: 237/247 Tests Passing (96%)  
+> **Platform Status**: Production Ready | **Services**: 5 Microservices | **Test Coverage**: 288/303 Tests Passing (95%)  
 > **Architecture Pattern**: Pure Microservices | **Authentication**: PASETO V4 | **Database**: PostgreSQL per Service
 
 ## Table of Contents
@@ -20,7 +20,7 @@
 
 ## Executive Summary
 
-The Pediafor Assessment Platform implements a **pure microservices architecture** designed for educational assessment management. The platform provides a scalable, secure, and maintainable solution for creating, managing, and grading educational assessments.
+The Pediafor Assessment Platform implements a **pure microservices architecture** designed for educational assessment management. The platform provides a scalable, secure, and maintainable solution for creating, managing, grading, and analyzing educational assessments.
 
 ### Core Architectural Principles
 
@@ -29,7 +29,7 @@ The Pediafor Assessment Platform implements a **pure microservices architecture*
 - **API Gateway Pattern**: Single entry point with centralized authentication
 - **Token-Based Security**: Stateless authentication using PASETO V4 tokens
 - **Container-First Design**: Docker containers with orchestration-ready configuration
-- **Test-Driven Quality**: 96% test coverage across all services with comprehensive test suites
+- **Test-Driven Quality**: 95% test coverage across all services with comprehensive test suites
 
 ### Platform Capabilities
 
@@ -37,9 +37,11 @@ The Pediafor Assessment Platform implements a **pure microservices architecture*
 - ✅ **Assessment Creation**: Rich assessment builder with media support (94/94 tests)
 - ✅ **File Management**: Multi-format media upload with processing
 - ✅ **Role-Based Access**: Student, Teacher, Admin permission levels
-- ✅ **Submission Handling**: Complete student submission workflow (66/76 tests)
+- ✅ **Submission Handling**: Complete student submission workflow (94/109 tests)
 - ✅ **Autosave & Draft Management**: Real-time answer saving and submission status
-- 🔄 **Automated Grading**: AI-powered grading engine (infrastructure ready)
+- ✅ **Automated Grading**: Production-ready MCQ grading engine with analytics (23/23 tests)
+- ✅ **Container Deployment**: Full Docker support with health monitoring
+- 🔄 **AI Question Generation**: Next phase development (infrastructure ready)
 
 ---
 
@@ -327,71 +329,125 @@ Grade Entity:
 
 ---
 
-### 🎯 Grading Service (Port 4003)  
-**Role**: Automated Grading and Feedback Generation
+### 🎯 Grading Service (Port 4003) - Production Ready
+**Role**: Automated MCQ Grading and Performance Analytics
 
-**Core Responsibilities** (Ready for Implementation):
-- **Automated Grading**: AI-powered multiple-choice question evaluation
-- **Partial Credit**: Advanced scoring algorithms for complex question types
-- **Manual Grading**: Teacher grading interface and workflow management
-- **Feedback Generation**: Detailed feedback and explanations for students
-- **Analytics Engine**: Performance analytics and statistical insights
-- **Grade Management**: Grade storage, retrieval, and historical tracking
+**Core Responsibilities**:
+- **Automated MCQ Grading**: Production-ready multiple-choice question evaluation with advanced algorithms
+- **Partial Credit System**: Sophisticated scoring for single-select, multi-select, and true/false questions
+- **Performance Analytics**: Comprehensive grade statistics, distribution analysis, and performance tracking
+- **Flexible Scoring**: Configurable scoring rules, negative marking, and custom feedback generation
+- **Grade Management**: Complete CRUD operations for grades with role-based access control
+- **Integration Ready**: Seamless integration with submission and assessment services
 
-**Technology Stack** (Infrastructure Prepared):
-- **Runtime**: Node.js 20+ with TypeScript
-- **Framework**: Express.js with async processing capabilities
-- **Database**: PostgreSQL 15 with Prisma ORM (port 5435)
-- **Processing**: Background job queue for high-volume grading
-- **Integration**: Seamless connection to Submission and Assessment services
-- **Analytics**: Statistical analysis and performance metrics
+**Technology Stack**:
+- **Runtime**: Node.js 18+ with TypeScript
+- **Framework**: Express.js with comprehensive validation and error handling
+- **Database**: PostgreSQL 15 with Prisma ORM (configured for Debian deployment)
+- **Container**: Production-ready Docker with Debian-based Node.js, OpenSSL compatibility
+- **Authentication**: PASETO V4 integration via Gateway Service with role-based access
+- **Testing**: Jest with **23/23 tests passing** (100% grading algorithm coverage)
 
-**Database Schema** (Designed):
+**Database Schema**:
 ```sql
 Grade Entity:
 - id: String (CUID)
-- submissionId: String (Reference to submission)
+- submissionId: String (Unique reference to submission)
 - assessmentId: String (Reference to assessment)
 - userId: String (Student being graded)
-- totalScore: Float (Total points earned)
-- maxScore: Float (Maximum possible points)
+- totalScore: Float (Final calculated score)
+- maxPossibleScore: Float (Maximum points available)
 - percentage: Float (Calculated percentage)
-- gradedAt: DateTime (Grading timestamp)
-- gradedBy: String (Grader ID, null for automated)
-- feedback: String (Optional overall feedback)
+- letterGrade: String (Optional letter grade)
+- gradingStartedAt: DateTime (Grading start timestamp)
+- gradingCompletedAt: DateTime (Grading completion timestamp)
+- gradingDuration: Integer (Duration in milliseconds)
+- gradingConfigId: String (Reference to grading configuration)
+- timestamps: createdAt, updatedAt
 
 QuestionGrade Entity:
 - id: String (CUID)
 - gradeId: String (Foreign Key)
 - questionId: String (Question reference)
-- pointsEarned: Float
-- maxPoints: Float
-- isCorrect: Boolean
-- feedback: String (Question-specific feedback)
-- gradingMethod: Enum (AUTOMATED, MANUAL, HYBRID)
+- questionType: String (single-select, multi-select, true-false)
+- providedAnswer: JSON (Student's answer)
+- correctAnswer: JSON (Correct answer(s))
+- isCorrect: Boolean (Overall correctness)
+- pointsAwarded: Float (Points given for this question)
+- maxPoints: Float (Maximum points for this question)
+- partialCredit: Float (Partial credit percentage 0-1)
+- feedback: String (Optional feedback for this question)
+- metadata: JSON (Additional question-specific data)
+- timestamps: createdAt
+
+GradeAnalytics Entity:
+- id: String (CUID)
+- gradeId: String (Foreign Key)
+- averageScore: Float (Class/cohort average for comparison)
+- percentile: Float (Student's percentile ranking)
+- standardDeviation: Float (Score distribution metrics)
+- questionsCorrect: Integer (Number of questions answered correctly)
+- questionsIncorrect: Integer (Number of questions answered incorrectly)
+- questionsPartial: Integer (Number of questions with partial credit)
+- questionsSkipped: Integer (Number of questions not answered)
+- averageTimePerQuestion: Float (Average time spent per question)
+- totalTimeSpent: Integer (Total time spent on assessment)
+- timestamps: createdAt, updatedAt
+
+GradingConfig Entity:
+- id: String (CUID)
+- name: String (Configuration name)
+- assessmentId: String (Optional: specific to an assessment)
+- enablePartialCredit: Boolean (Default: false)
+- enableNegativeMarking: Boolean (Default: false)
+- negativeMarkingPenalty: Float (Penalty multiplier, default: 0.25)
+- passingPercentage: Float (Default: 60.0)
+- gradeScale: JSON (Letter grade boundaries)
+- singleSelectRules: JSON (Rules for single-select questions)
+- multiSelectRules: JSON (Rules for multi-select questions)
+- trueFalseRules: JSON (Rules for true/false questions)
+- description: String (Optional)
+- isActive: Boolean (Default: true)
+- timestamps: createdAt, updatedAt
 ```
 
-**Planned API Endpoints**:
-- `POST /grading/submissions/:id/grade` - Grade a submission
-- `GET /grading/submissions/:id` - Get grade for submission
-- `PUT /grading/:id` - Update grade (manual adjustments)
-- `GET /grading/assessment/:id/stats` - Assessment grading statistics
-- `GET /grading/student/:id/summary` - Student performance summary
-- `POST /grading/batch/grade` - Batch grade multiple submissions
-- `GET /grading/analytics` - Institutional analytics
-- `GET /grading/export/:assessmentId` - Export grades to CSV
+**API Endpoints**:
+- `POST /api/grade` - Grade a submission with automatic scoring
+- `GET /api/grade/submission/:submissionId` - Get grade for specific submission
+- `GET /api/grade/user/:userId` - Get all grades for a user (role-based access)
+- `GET /api/grade/assessment/:assessmentId` - Get grade summary for assessment
+- `GET /health` - Service health check with uptime metrics
+
+**Grading Algorithms** (Production Ready):
+- **Single-Select MCQ**: Exact match with case-insensitive, whitespace-tolerant processing
+- **Multi-Select MCQ**: Partial credit based on correct selections vs. total possible
+- **True/False Questions**: Flexible boolean parsing (true/false, yes/no, 1/0, etc.)
+- **Partial Credit System**: Proportional scoring for multi-select questions
+- **Negative Marking**: Configurable penalty system for incorrect answers
+- **Performance Analytics**: Statistical analysis, score distribution, percentile ranking
+
+**Docker Deployment Features**:
+- ✅ **Production Ready**: Debian-based Node.js 18 with OpenSSL compatibility
+- ✅ **Security Hardened**: Non-root user execution and minimal attack surface
+- ✅ **Health Monitoring**: Built-in health checks and status endpoints
+- ✅ **Prisma Compatible**: Fixed OpenSSL library dependencies for smooth operation
+- ✅ **Multi-stage Build**: Optimized container size with dependency caching
 
 **Integration Points**:
-- **Submission Service**: Automatic trigger when submission status = "SUBMITTED"
-- **Assessment Service**: Retrieve grading rubrics and correct answers
-- **User Service**: Teacher/admin permissions for manual grading
-- **Gateway Service**: Authentication and request routing
+- **Submission Service**: Receives submission data for automated grading
+- **Assessment Service**: Fetches question metadata and correct answers
+- **User Service**: Validates user permissions and roles
+- **Gateway Service**: Routes requests and handles authentication
 
-**Grading Algorithms** (Planned):
-- **Multiple Choice**: Instant scoring with configurable partial credit
-- **True/False**: Binary scoring with penalty options
-- **Partial Credit**: Linear, exponential, or custom algorithms
-- **Performance Analytics**: Statistical analysis and trending
+**Key Features**:
+- ✅ **Complete MCQ Grading Engine**: Single-select, multi-select, true/false support
+- ✅ **Advanced Scoring Algorithms**: Partial credit, negative marking, custom feedback
+- ✅ **Comprehensive Testing**: 23/23 tests passing with 100% algorithm coverage
+- ✅ **Role-Based Access Control**: Student, Teacher, Admin permissions
+- ✅ **Performance Analytics**: Grade distribution, statistical analysis, performance tracking
+- ✅ **Docker Production Ready**: Fully containerized with health monitoring
+- ✅ **Database Optimized**: Efficient Prisma queries with proper indexing
+- ✅ **Integration Ready**: Seamless connection to existing microservices
 
 ---
 

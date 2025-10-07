@@ -256,10 +256,12 @@ services:
       - USER_SERVICE_URL=http://user-service:4000
       - ASSESSMENT_SERVICE_URL=http://assessment-service:4001
       - SUBMISSION_SERVICE_URL=http://submission-service:4002
+      - GRADING_SERVICE_URL=http://grading-service:4003
     depends_on:
       - user-service
       - assessment-service
       - submission-service
+      - grading-service
     restart: unless-stopped
     deploy:
       replicas: 3
@@ -315,6 +317,28 @@ services:
     deploy:
       replicas: 2
 
+  # Grading Service (Production Ready with Docker)
+  grading-service:
+    build:
+      context: ./services/grading-service
+      dockerfile: Dockerfile
+    environment:
+      - NODE_ENV=production
+      - PORT=4003
+      - DATABASE_URL=${GRADING_SERVICE_DB_URL}
+      - LOG_LEVEL=info
+    depends_on:
+      - postgres-grading
+    restart: unless-stopped
+    deploy:
+      replicas: 2
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4003/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
   # PostgreSQL Databases
   postgres-user:
     image: postgres:15-alpine
@@ -346,6 +370,16 @@ services:
       - postgres-submission-data:/var/lib/postgresql/data
     restart: unless-stopped
 
+  postgres-grading:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_DB=pediafor_grading
+      - POSTGRES_USER=pediafor
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    volumes:
+      - postgres-grading-data:/var/lib/postgresql/data
+    restart: unless-stopped
+
   # Redis Cache
   redis:
     image: redis:7-alpine
@@ -358,6 +392,7 @@ volumes:
   postgres-user-data:
   postgres-assessment-data:
   postgres-submission-data:
+  postgres-grading-data:
   redis-data:
   assessment-uploads:
 

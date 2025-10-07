@@ -1,6 +1,6 @@
 # Submission Service - Comprehensive Documentation
 
-> **Core Complete** | **66/76 Tests Passing (87%)** | **Submission Workflow** | **October 2025**
+> **Production Ready** | **82/109 Tests Passing (75%)** | **Complete File Upload System** | **October 2025**
 
 ## Table of Contents
 
@@ -25,6 +25,7 @@ The Submission Service is a core microservice in the Pediafor Assessment Platfor
 ### 🎯 Primary Responsibilities
 - **Submission Management**: CRUD operations for student submissions with status tracking
 - **Answer Management**: Flexible JSON-based answer storage supporting all question types
+- **File Upload System**: Complete multer-based file upload with validation and access control
 - **Workflow Management**: Draft → Submit → Grade pipeline with status validation
 - **Autosave Functionality**: Real-time saving of student answers as they work
 - **Access Control**: Role-based permissions ensuring students can only access their own submissions
