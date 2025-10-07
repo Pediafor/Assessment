@@ -72,7 +72,7 @@ export const authenticateGateway = async (req: Request, res: Response, next: Nex
     console.log(`[GATEWAY AUTH] ${req.method} ${req.url}`);
     
     // Skip authentication for public routes
-    // Note: req.path comes after proxy stripping, so no /api prefix
+    // Handle both direct routes (with /api prefix in tests) and proxied routes (without /api prefix)
     const publicRoutes = [
       '/auth/login',
       '/auth/refresh', 
@@ -82,7 +82,16 @@ export const authenticateGateway = async (req: Request, res: Response, next: Nex
       '/users/verify-email',
       '/users/forgot-password',
       '/users/reset-password',
-      '/health'
+      '/health',
+      // Test routes with /api prefix
+      '/api/auth/login',
+      '/api/auth/refresh', 
+      '/api/auth/logout',
+      '/api/users/register',
+      '/api/users/login',
+      '/api/users/verify-email',
+      '/api/users/forgot-password',
+      '/api/users/reset-password'
     ];
     
     const isPublicRoute = publicRoutes.some(route => 
