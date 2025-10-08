@@ -80,7 +80,7 @@ graph TB
     
     subgraph "Supporting Infrastructure"
         REDIS[(⚡ Redis Cache<br/>Session & rate limiting)]
-        LOGS[📝 Centralized Logging<br/>Request tracking)]
+        LOGS[📝 Centralized Logging<br/>Request tracking]
     end
     
     %% Request flow
