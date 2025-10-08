@@ -4,7 +4,7 @@
 ![Status](https://img.shields.io/badge/Status-Production%20Ready-green)
 ![Contributions Welcome](https://img.shields.io/badge/Contributions-Welcome-brightgreen)
 ![Built with Node.js](https://img.shields.io/badge/Backend-Node.js%20%26%20TypeScript-339933?logo=nodedotjs)
-![Built with React](https://img.shields.io/badge/Frontend-React-61DAFB?logo=react)
+![Built with React](https://img.shields.io/badge/Frontend-React%20%26%20Next.js-61DAFB?logo=react)
 ![Python](https://img.shields.io/badge/AI%20Services-Python%20%2F%20FastAPI-3776AB?logo=python)
 ![Postgres](https://img.shields.io/badge/Database-PostgreSQL-336791?logo=postgresql)
 ![Docker](https://img.shields.io/badge/Container-Docker-2496ED?logo=docker)
@@ -34,6 +34,7 @@
 | **📝 Assessment Service** | ✅ **Production Ready** | 94/94 | Complete CRUD operations, media support |
 | **📋 Submission Service** | ✅ **Production Ready** | 94/109 | File uploads, submission workflow, autosave |
 | **🎯 Grading Service** | ✅ **Production Ready** | 23/23 | Automated MCQ grading, analytics, Docker ready |
+| **🌐 Frontend Application** | 🚧 **In Development** | - | React/Next.js web interface with role-based dashboards |
 | **🤖 AI Question Generation** | 📝 **Planned** | - | NLP-powered question generation |
 | **📈 Analytics Dashboard** | 📝 **Planned** | - | Performance insights and reporting |
 
@@ -49,11 +50,13 @@
 | Component | Technology | Purpose |
 |-----------|------------|---------|
 | **Backend Services** | Node.js, TypeScript, Express | Core microservices (Auth, Assessment, Submission) |
+| **Frontend Application** | React 18, Next.js 15, TypeScript | Modern web interface with SSR and role-based dashboards |
+| **UI Framework** | Tailwind CSS, shadcn/ui, Radix UI | Responsive design system with accessible components |
+| **API Integration** | TanStack Query, Zustand, Zod | Type-safe API calls, state management, and validation |
 | **AI Services** | Python, FastAPI | Machine learning and NLP processing |
 | **Database** | PostgreSQL with Prisma ORM | Robust data persistence and relationships |
 | **Authentication** | PASETO V4 Tokens | Secure, stateless authentication |
 | **Containerization** | Docker | Consistent development and deployment |
-| **Frontend** | React, TypeScript, Tailwind CSS | Modern, responsive user interface |
 
 ## 💻 Getting Started
 
@@ -63,8 +66,26 @@
 git clone https://github.com/pediafor/assessment.git
 cd assessment
 
-# Start all services with Docker
+# Start all services with Docker (includes frontend + backend)
 docker-compose up --build
+
+# Access the application
+# Frontend: http://localhost:3001
+# API Gateway: http://localhost:3000
+```
+
+### Frontend Development
+```bash
+# Navigate to frontend directory
+cd frontend
+
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
+
+# Visit http://localhost:3001
 ```
 
 ### Service Development
@@ -85,18 +106,67 @@ npm test
 ```
 
 ### Service Endpoints
-- **Gateway**: http://localhost:3000
+- **Frontend Application**: http://localhost:3001 (Main web interface)
+- **Gateway**: http://localhost:3000 (API Gateway)
 - **User Service**: http://localhost:4000
 - **Assessment Service**: http://localhost:4001
 - **Submission Service**: http://localhost:4002
 - **Grading Service**: http://localhost:4003
 
+## 🎨 Frontend Architecture
+
+### Design Philosophy
+The frontend follows a **single-application architecture** that provides a unified user experience across all platform features. Built with modern React patterns and TypeScript, it communicates exclusively with the Gateway Service, which handles all backend service routing.
+
+### Key Features
+- **🎯 Role-Based Dashboards**: Tailored interfaces for Students, Teachers, and Administrators
+- **🔐 Seamless Authentication**: PASETO token integration with automatic refresh
+- **📱 Responsive Design**: Mobile-first design with Tailwind CSS
+- **♿ Accessibility First**: WCAG compliant components with Radix UI
+- **⚡ Performance Optimized**: Next.js SSR, code splitting, and image optimization
+- **🧪 Type-Safe API**: End-to-end TypeScript with Zod validation
+
+### Architecture Overview
+```
+┌─────────────────────────────────────┐
+│      Frontend Application          │ ← Single React/Next.js app
+│         (Port 3001)                │   with role-based views
+└─────────────────┬───────────────────┘
+                  │ API calls (/api/*)
+                  ▼
+┌─────────────────────────────────────┐
+│      Gateway Service               │ ← Routes to appropriate
+│         (Port 3000)                │   backend services  
+└─────────────────┬───────────────────┘
+                  │ Internal routing
+                  ▼
+┌─────────────────────────────────────┐
+│     Backend Microservices          │ ← Existing services
+│   User | Assessment | Submission   │   (no changes needed)
+│   Grading | Future Services        │
+└─────────────────────────────────────┘
+```
+
+### User Experience Flow
+1. **Students**: Assessment taking, progress tracking, results viewing
+2. **Teachers**: Assessment creation, class management, grading oversight  
+3. **Administrators**: User management, system analytics, platform configuration
+
 ## 🤝 Contributing
 
 We welcome contributions! Please check [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on:
 - Setting up your development environment
+- Backend service development (Node.js/TypeScript)
+- Frontend development (React/Next.js/TypeScript)
 - Coding standards and best practices
 - Submitting pull requests
+
+### Development Areas
+- **🔧 Backend Services**: Microservices architecture with Node.js and TypeScript
+- **🎨 Frontend Interface**: React/Next.js application with modern UI components
+- **🧪 Testing**: Jest/Vitest testing for both backend and frontend
+- **📝 Documentation**: Technical docs, API documentation, and user guides
+- **🐳 DevOps**: Docker, CI/CD, and deployment automation
 
 **New contributors**: Check our [issue tracker](https://github.com/pediafor/assessment/issues) for [`good first issue`](https://github.com/pediafor/assessment/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) tags.
 
