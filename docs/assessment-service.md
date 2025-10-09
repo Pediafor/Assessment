@@ -1,6 +1,13 @@
 # Assessment Service - Comprehensive Documentation
 
-> **Production Ready & Operational** | **41/41 Tests Passing** | **Service Healthy** | **October 2025**
+[![Status](https://img.shields.io/badge/Status-Production%20Ready%20%26%20Operational-success)](.)
+[![Test Coverage](https://img.shields.io/badge/Tests-41%2F41%20(100%25)-success)](.)
+[![Service Health](https://img.shields.io/badge/Health-Service%20Healthy-brightgreen)](.)
+[![Port](https://img.shields.io/badge/Port-4001-blue)](.)
+[![Database](https://img.shields.io/badge/Database-PostgreSQL-336791?logo=postgresql)](.)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue?logo=typescript)](.)
+[![Express](https://img.shields.io/badge/Express.js-4.x-green?logo=express)](.)
+[![Last Updated](https://img.shields.io/badge/Updated-October%202025-blue)](.)
 
 ## Table of Contents
 

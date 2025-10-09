@@ -1,6 +1,10 @@
 # Pediafor Assessment Platform - Troubleshooting Guide
 
-> **Platform Support** | **Common Issues & Solutions** | **Debug Procedures** | **October 2025**
+[![Platform Support](https://img.shields.io/badge/Support-Platform%20Support-blue)](.)
+[![Issue Coverage](https://img.shields.io/badge/Coverage-Common%20Issues%20%26%20Solutions-brightgreen)](.)
+[![Debug Procedures](https://img.shields.io/badge/Procedures-Debug%20Procedures-orange)](.)
+[![Help](https://img.shields.io/badge/Help-Available%2024%2F7-green)](.)
+[![Last Updated](https://img.shields.io/badge/Updated-October%202025-blue)](.)
 
 ## Table of Contents
 

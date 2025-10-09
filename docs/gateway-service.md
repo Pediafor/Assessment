@@ -1,7 +1,12 @@
 # Gateway Service - API Gateway & Authentication Hub
 
-> **Status**: ✅ **Production Ready** | **Test Coverage**: 7/7 (100%) | **Security**: PASETO V4 Authentication  
-> **Port**: 3000 | **Role**: Central API Gateway & Authentication Layer
+[![Status](https://img.shields.io/badge/Status-Production%20Ready-success)](.)
+[![Test Coverage](https://img.shields.io/badge/Tests-7%2F7%20(100%25)-success)](.)
+[![Security](https://img.shields.io/badge/Security-PASETO%20V4%20Authentication-green)](.)
+[![Port](https://img.shields.io/badge/Port-3000-blue)](.)
+[![Role](https://img.shields.io/badge/Role-Central%20API%20Gateway-orange)](.)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue?logo=typescript)](.)
+[![Express](https://img.shields.io/badge/Express.js-4.x-green?logo=express)](.)
 
 ## Table of Contents
 

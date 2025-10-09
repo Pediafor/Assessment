@@ -1,12 +1,13 @@
 # Grading Service - Comprehensive Documentation
 
-> **Production Ready** | **Docker Containerized** | **Automated MCQ Grading** | **October 2025**
-
-[![Build Status](https://img.shields.io/badge/Build-Production%20Ready-success)](.)
-[![Tests](https://img.shields.io/badge/Tests-38%20Unit%20Tests%20Operational-success)](.)
+[![Status](https://img.shields.io/badge/Status-Production%20Ready-success)](.)
+[![Test Coverage](https://img.shields.io/badge/Tests-38%20Unit%20Tests%20Operational-success)](.)
 [![Docker](https://img.shields.io/badge/Docker-Ready-blue?logo=docker)](.)
+[![MCQ Grading](https://img.shields.io/badge/Feature-Automated%20MCQ%20Grading-brightgreen)](.)
+[![Port](https://img.shields.io/badge/Port-4003-blue)](.)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.6.3-blue?logo=typescript)](.)
 [![Node.js](https://img.shields.io/badge/Node.js-18%2B-green?logo=nodedotjs)](.)
+[![Last Updated](https://img.shields.io/badge/Updated-October%202025-blue)](.)
 
 ---
 

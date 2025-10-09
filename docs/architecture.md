@@ -1,7 +1,12 @@
 # Pediafor Assessment Platform - Comprehensive Architecture
 
-> **Platform Status**: Production Ready | **Services**: 5 Microservices | **Test Coverage**: 288/303 Tests Passing (95%)  
-> **Architecture Pattern**: Pure Microservices | **Authentication**: PASETO V4 | **Database**: PostgreSQL per Service
+[![Platform Status](https://img.shields.io/badge/Platform-Production%20Ready-success)](.)
+[![Services](https://img.shields.io/badge/Services-5%20Microservices-blue)](.)
+[![Test Coverage](https://img.shields.io/badge/Tests-295%2F310%20Passing%20(95%25)-success)](.)
+[![Architecture](https://img.shields.io/badge/Pattern-Pure%20Microservices-orange)](.)
+[![Authentication](https://img.shields.io/badge/Auth-PASETO%20V4-green)](.)
+[![Database](https://img.shields.io/badge/Database-PostgreSQL%20per%20Service-336791?logo=postgresql)](.)
+[![Docker](https://img.shields.io/badge/Container-Docker-blue?logo=docker)](.)
 
 ## Table of Contents
 

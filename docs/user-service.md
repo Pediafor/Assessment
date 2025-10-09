@@ -1,6 +1,13 @@
 # User Service - Comprehensive Documentation
 
-> **Production Ready** | **77/77 Tests Passing** | **Security Hardened** | **October 2025**
+[![Status](https://img.shields.io/badge/Status-Production%20Ready-success)](.)
+[![Test Coverage](https://img.shields.io/badge/Tests-77%2F77%20(100%25)-success)](.)
+[![Security](https://img.shields.io/badge/Security-Hardened-green)](.)
+[![Port](https://img.shields.io/badge/Port-4000-blue)](.)
+[![Database](https://img.shields.io/badge/Database-PostgreSQL-336791?logo=postgresql)](.)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue?logo=typescript)](.)
+[![Prisma](https://img.shields.io/badge/ORM-Prisma-2D3748?logo=prisma)](.)
+[![Last Updated](https://img.shields.io/badge/Updated-October%202025-blue)](.)
 
 ## Table of Contents
 

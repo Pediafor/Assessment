@@ -1,7 +1,12 @@
 # Pediafor Assessment Platform - Development Guide
 
-> **Development Status**: Active | **Test Coverage**: 237/247 (96%) | **Code Quality**: TypeScript + ESLint + Prettier  
-> **Architecture**: Microservices | **Database**: PostgreSQL per Service | **Testing**: Jest + Supertest
+[![Development Status](https://img.shields.io/badge/Development-Active-brightgreen)](.)
+[![Test Coverage](https://img.shields.io/badge/Tests-295%2F310%20(95%25)-success)](.)
+[![Code Quality](https://img.shields.io/badge/Quality-TypeScript%20%2B%20ESLint%20%2B%20Prettier-blue)](.)
+[![Architecture](https://img.shields.io/badge/Architecture-Microservices-orange)](.)
+[![Database](https://img.shields.io/badge/Database-PostgreSQL%20per%20Service-336791?logo=postgresql)](.)
+[![Testing](https://img.shields.io/badge/Testing-Jest%20%2B%20Supertest-red?logo=jest)](.)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue?logo=typescript)](.)
 
 ## Table of Contents
 

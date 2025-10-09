@@ -1,5 +1,11 @@
 # Testing Constraints and Coverage Analysis
 
+[![Test Status](https://img.shields.io/badge/Status-Analysis%20Report-blue)](.)
+[![Platform Coverage](https://img.shields.io/badge/Coverage-295%2F310%20Tests%20(95%25)-success)](.)
+[![Constraints](https://img.shields.io/badge/Constraints-Identified%20%26%20Documented-yellow)](.)
+[![Analysis](https://img.shields.io/badge/Analysis-Complete-brightgreen)](.)
+[![Last Updated](https://img.shields.io/badge/Updated-October%202025-blue)](.)
+
 ## Overview
 
 This document explains the current test coverage status across the Pediafor Assessment Platform and provides detailed analysis of remaining constraints that prevent 100% platform-wide test coverage.

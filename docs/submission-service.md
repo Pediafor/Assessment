@@ -1,6 +1,13 @@
 # Submission Service - Comprehensive Documentation
 
-> **Production Ready** | **82/109 Tests Passing (75%)** | **Complete File Upload System** | **October 2025**
+[![Status](https://img.shields.io/badge/Status-Production%20Ready-success)](.)
+[![Test Coverage](https://img.shields.io/badge/Tests-82%2F109%20(75%25)-yellow)](.)
+[![File Upload](https://img.shields.io/badge/File%20Upload-Complete%20System-brightgreen)](.)
+[![Port](https://img.shields.io/badge/Port-4002-blue)](.)
+[![Database](https://img.shields.io/badge/Database-PostgreSQL-336791?logo=postgresql)](.)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue?logo=typescript)](.)
+[![Express](https://img.shields.io/badge/Express.js-4.x-green?logo=express)](.)
+[![Last Updated](https://img.shields.io/badge/Updated-October%202025-blue)](.)
 
 ## Table of Contents
 

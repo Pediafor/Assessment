@@ -1,7 +1,11 @@
 # Pediafor Assessment Platform - API Documentation
 
-> **API Version**: v1.0 | **Base URL**: `https://api.pediafor.com` | **Authentication**: PASETO V4 Tokens  
-> **Content Type**: `application/json` | **Rate Limit**: 100 requests/15 minutes | **Status**: Production Ready
+[![API Version](https://img.shields.io/badge/API%20Version-v1.0-blue)](.)
+[![Base URL](https://img.shields.io/badge/Base%20URL-api.pediafor.com-gray)](.)
+[![Authentication](https://img.shields.io/badge/Auth-PASETO%20V4%20Tokens-green)](.)
+[![Content Type](https://img.shields.io/badge/Content%20Type-application%2Fjson-blue)](.)
+[![Rate Limit](https://img.shields.io/badge/Rate%20Limit-100%20req%2F15min-yellow)](.)
+[![Status](https://img.shields.io/badge/Status-Production%20Ready-success)](.)
 
 ## Table of Contents
 
