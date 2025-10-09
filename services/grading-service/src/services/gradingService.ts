@@ -9,6 +9,7 @@ import {
   GradingConfig as ConfigType,
   QuestionGradeResult 
 } from '../types';
+import { getGradingEventPublisher } from '../events/publisher';
 
 export class GradingService {
   private prisma: PrismaClient;
@@ -64,6 +65,37 @@ export class GradingService {
 
       // Save grade to database
       const savedGrade = await this.saveGrade(gradeResult);
+
+      // Publish grading completed event
+      try {
+        const eventPublisher = getGradingEventPublisher();
+        await eventPublisher.ensureConnection();
+
+        const gradingEventData = {
+          submissionId: gradeResult.submissionId,
+          assessmentId: gradeResult.assessmentId,
+          studentId: gradeResult.userId,
+          totalMarks: gradeResult.maxScore,
+          calculatedMarks: gradeResult.totalScore,
+          percentage: gradeResult.percentage,
+          gradedAt: gradeResult.gradedAt.toISOString(),
+          gradingStatus: 'SUCCESS' as const,
+          questionsGraded: gradeResult.questionGrades.length,
+          totalQuestions: gradeResult.questionGrades.length
+        };
+
+        const metadata = {
+          correlationId: `grading-${gradeResult.submissionId}-${Date.now()}`,
+          userId: gradeResult.userId,
+          source: 'grading-service'
+        };
+
+        await eventPublisher.publishGradingCompleted(gradingEventData, metadata);
+        console.log(`📤 Published grading.completed event for submission ${gradeResult.submissionId}`);
+      } catch (error) {
+        console.error('⚠️ Failed to publish grading completed event:', error);
+        // Don't fail the grading if event publishing fails
+      }
 
       return {
         success: true,

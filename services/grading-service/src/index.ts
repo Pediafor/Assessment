@@ -7,6 +7,10 @@ import dotenv from 'dotenv';
 import gradingRoutes from './routes/gradingRoutes';
 import { userContextMiddleware, errorHandler } from './middleware/auth';
 
+// RabbitMQ imports
+import { getRabbitMQConnection } from './config/rabbitmq';
+import { getGradingEventSubscriber } from './events/subscriber';
+
 // Load environment variables
 dotenv.config();
 
@@ -59,22 +63,54 @@ app.use('*', (req: express.Request, res: express.Response) => {
 app.use(errorHandler);
 
 // Graceful shutdown
-const server = app.listen(PORT, () => {
+const server = app.listen(PORT, async () => {
   console.log(`🚀 Grading Service running on port ${PORT}`);
   console.log(`📊 Health check available at http://localhost:${PORT}/health`);
   console.log(`🎯 API endpoints available at http://localhost:${PORT}/api/grade`);
+  
+  // Initialize RabbitMQ and event subscribers
+  try {
+    const rabbitMQ = getRabbitMQConnection();
+    await rabbitMQ.connect();
+    console.log('🐰 RabbitMQ connected successfully');
+    
+    const eventSubscriber = getGradingEventSubscriber();
+    await eventSubscriber.initialize();
+    console.log('🎧 Event subscriber initialized - ready to process submission events');
+  } catch (error) {
+    console.error('❌ Failed to initialize RabbitMQ or event subscriber:', error);
+    // Don't exit - service can still work for manual grading
+  }
 });
 
 // Handle graceful shutdown
-process.on('SIGTERM', () => {
+process.on('SIGTERM', async () => {
   console.log('SIGTERM received, shutting down gracefully');
+  
+  try {
+    const eventSubscriber = getGradingEventSubscriber();
+    await eventSubscriber.close();
+    console.log('🔌 Event subscriber closed');
+  } catch (error) {
+    console.error('❌ Error closing event subscriber:', error);
+  }
+  
   server.close(() => {
     console.log('Process terminated');
   });
 });
 
-process.on('SIGINT', () => {
+process.on('SIGINT', async () => {
   console.log('SIGINT received, shutting down gracefully');
+  
+  try {
+    const eventSubscriber = getGradingEventSubscriber();
+    await eventSubscriber.close();
+    console.log('🔌 Event subscriber closed');
+  } catch (error) {
+    console.error('❌ Error closing event subscriber:', error);
+  }
+  
   server.close(() => {
     console.log('Process terminated');
   });

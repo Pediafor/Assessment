@@ -16,6 +16,9 @@ import healthRoutes from './routes/health.routes';
 import { errorHandler } from './middleware/errorHandler';
 import { notFoundHandler } from './middleware/notFoundHandler';
 
+// RabbitMQ import
+import { getRabbitMQConnection } from './config/rabbitmq';
+
 // Load environment variables
 dotenv.config();
 
@@ -94,12 +97,27 @@ app.use(errorHandler);
 if (process.env.NODE_ENV !== 'test') {
   const port = Number(PORT);
   
-  app.listen(port, '0.0.0.0', () => {
+  // Initialize RabbitMQ connection
+  const initializeServices = async () => {
+    try {
+      const rabbitMQ = getRabbitMQConnection();
+      await rabbitMQ.connect();
+      console.log('🐰 RabbitMQ initialized successfully');
+    } catch (error) {
+      console.error('❌ Failed to initialize RabbitMQ:', error);
+      // Don't exit - service can still work without events
+    }
+  };
+  
+  app.listen(port, '0.0.0.0', async () => {
     console.log(`🚀 Submission Service running on port ${port}`);
     console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
     console.log(`🏥 Health check: http://localhost:${port}/health`);
     console.log(`📖 Service info: http://localhost:${port}/`);
     console.log(`📡 Listening on all interfaces (0.0.0.0:${port})`);
+    
+    // Initialize async services
+    await initializeServices();
   });
 }
 

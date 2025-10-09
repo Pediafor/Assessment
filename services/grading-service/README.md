@@ -18,6 +18,7 @@ The **Grading Service** is a production-ready, containerized microservice in the
 - **🛡️ Security Hardened**: Non-root user implementation and security best practices
 - **📊 Health Monitoring**: Built-in health checks and service status endpoints
 - **⚡ Optimized Build**: Multi-stage Docker build with dependency caching
+- **🎯 Event-Driven Architecture**: RabbitMQ integration for automatic submission processing
 
 ### 🎯 **Core Features (Production Ready)**
 
@@ -48,6 +49,74 @@ The **Grading Service** is a production-ready, containerized microservice in the
 - **Grading Configuration Management**: Flexible per-assessment grading rules
 - **Performance Analytics**: Statistical measures and score distribution analysis
 - **Audit Trail**: Complete grading history and modification tracking
+
+### 🎯 **Event-Driven Architecture Integration**
+
+The Grading Service now features **automatic event-driven grading** through RabbitMQ integration, eliminating the need for manual grading triggers and creating a truly reactive assessment platform.
+
+#### **Event Subscription & Processing**
+```typescript
+// Automatic grading workflow
+Submission Service publishes → RabbitMQ routes → Grading Service consumes → Grades automatically
+```
+
+#### **Consumed Events**
+| Event Type | Source | Action | Processing |
+|------------|--------|--------|------------|
+| `submission.submitted` | Submission Service | Triggers automatic grading | Fetch submission → Grade → Publish result |
+
+#### **Published Events**
+| Event Type | Routing Key | Description | Published When |
+|------------|-------------|-------------|----------------|
+| `grading.completed` | `grading.completed` | Grading successfully finished | Grade calculation complete |
+| `grading.failed` | `grading.failed` | Grading process failed | Error during grading |
+
+#### **Event Processing Schema**
+```json
+{
+  "event": {
+    "eventId": "grade-2024-10-09-789012",
+    "eventType": "grading.completed",
+    "timestamp": "2024-10-09T10:31:15.000Z",
+    "serviceId": "grading-service",
+    "version": "1.0.0",
+    "data": {
+      "submissionId": "sub-123",
+      "assessmentId": "assess-456",
+      "studentId": "student-789",
+      "totalMarks": 100,
+      "calculatedMarks": 85,
+      "percentage": 85.0,
+      "gradedAt": "2024-10-09T10:31:15.000Z",
+      "gradingStatus": "SUCCESS",
+      "questionsGraded": 20,
+      "totalQuestions": 20
+    }
+  },
+  "metadata": {
+    "correlationId": "submission-update-123-1728466200",
+    "userId": "student-789",
+    "source": "grading-service"
+  },
+  "publishedAt": "2024-10-09T10:31:15.000Z"
+}
+```
+
+#### **Automatic Grading Workflow**
+1. **Event Subscription**: Listens to `grading.submission.submitted` queue
+2. **Submission Fetch**: Retrieves submission data via internal API
+3. **Assessment Fetch**: Gets assessment configuration and questions
+4. **Grade Calculation**: Processes answers using grading engine
+5. **Result Publishing**: Publishes success/failure events
+6. **Error Handling**: Failed messages routed to dead letter queue
+
+#### **RabbitMQ Configuration**
+- **Queue**: `grading.submission.submitted` (bound to `submission.events`)
+- **Publishing Exchange**: `grading.events` (Topic Exchange)
+- **Dead Letter Handling**: Failed grading attempts preserved for analysis
+- **Message Durability**: Persistent queues ensure no lost grading requests
+
+This creates a **zero-latency grading experience** where submissions are automatically processed without manual intervention.
 
 ## 🏗️ Architecture
 
@@ -213,11 +282,25 @@ DATABASE_URL=postgresql://user:password@host:5432/database
 PORT=4003
 NODE_ENV=production
 
+# RabbitMQ Configuration
+RABBITMQ_URL=amqp://admin:pediafor2024@localhost:5672/pediafor
+RABBITMQ_HOST=localhost
+RABBITMQ_PORT=5672
+RABBITMQ_MANAGEMENT_PORT=15672
+
+# External Service URLs
+SUBMISSION_SERVICE_URL=http://localhost:4002
+ASSESSMENT_SERVICE_URL=http://localhost:4001
+USER_SERVICE_URL=http://localhost:4000
+
 # Authentication (if using JWT)
 JWT_SECRET=your-secret-key
 
 # Logging
 LOG_LEVEL=info
+
+# CORS
+CORS_ORIGIN=http://localhost:3001
 ```
 
 ## 🚀 Quick Start

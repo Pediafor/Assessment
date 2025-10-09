@@ -44,7 +44,8 @@ The Pediafor Assessment Platform implements a **pure microservices architecture*
 - ✅ **Role-Based Access**: Student, Teacher, Admin permission levels
 - ✅ **Submission Handling**: Complete student submission workflow (Functionally complete)
 - ✅ **Autosave & Draft Management**: Real-time answer saving and submission status
-- ✅ **Automated Grading**: Production-ready MCQ grading engine with analytics (38 unit tests operational)
+- ✅ **Event-Driven Architecture**: RabbitMQ-powered automatic workflows
+- ✅ **Automated Grading**: Production-ready MCQ grading engine with zero-latency processing
 - ✅ **Container Deployment**: Full Docker support with health monitoring
 - ✅ **Gateway Service**: API Gateway with PASETO authentication (7/7 tests)
 - 🔄 **AI Question Generation**: Next phase development (infrastructure ready)
@@ -107,7 +108,7 @@ graph TB
     subgraph "Cache & Message Layer"
         REDIS[(⚡ Redis Cluster<br/>Port 6379<br/><br/>🔑 Session Storage<br/>⚡ Response Cache<br/>🔄 Rate Limiting<br/>📊 Real-time Data)]
         
-        QUEUE[📨 Message Queue<br/>Redis/RabbitMQ<br/><br/>📤 Event Processing<br/>📧 Email Queue<br/>🔔 Notifications<br/>📊 Analytics Events]
+        QUEUE[📨 RabbitMQ Message Broker<br/>Port 5672/15672<br/>✅ Production Ready<br/><br/>🎯 Event-Driven Architecture<br/>📤 Submission Events<br/>🤖 Auto-Grading Triggers<br/>🔔 Notifications<br/>📊 Analytics Events<br/>💀 Dead Letter Handling]
     end
     
     subgraph "File Storage"
@@ -644,6 +645,57 @@ Service Health Response:
   "database": "connected" | "disconnected",
   "dependencies": ["service-a", "service-b"]
 }
+```
+
+#### 🎯 Event-Driven Communication Pattern (NEW)
+```typescript
+Event-Driven Workflow:
+Submission Service → RabbitMQ → Grading Service → Automatic Processing
+
+Event Publishing:
+- submission.submitted: Student submits for grading
+- submission.updated: Submission data modified  
+- grading.completed: Grading process finished
+- grading.failed: Grading process encountered error
+
+Message Routing:
+Exchange: submission.events (Topic)
+Queues: grading.submission.submitted
+Dead Letter: Failed messages preserved for analysis
+```
+
+#### 📨 RabbitMQ Configuration
+```yaml
+Event Infrastructure:
+- Message Broker: RabbitMQ 3.12 (Port 5672)
+- Management UI: Port 15672
+- Exchange Types: Topic exchanges for flexible routing
+- Queue Durability: Persistent queues with TTL
+- Dead Letter Exchange: Failed message handling
+- Authentication: Service-specific user credentials
+```
+
+#### 🔄 Automatic Grading Workflow
+```
+Student Action → Event Chain → Automated Result:
+
+1. Student submits answers
+   └─ Submission Service updates status to "SUBMITTED"
+   
+2. Event published to RabbitMQ
+   └─ submission.submitted event with submission data
+   
+3. Grading Service receives event
+   └─ Fetches submission and assessment data
+   
+4. Automatic grading performed
+   └─ MCQ/True-False questions processed
+   
+5. Results published
+   └─ grading.completed event with scores and analytics
+   
+6. Platform updated
+   └─ Grade stored, student notified (future)
 ```
 
 ---

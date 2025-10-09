@@ -23,6 +23,8 @@ The **Submission Service** is a core microservice in the Pediafor Assessment Pla
 - **Submission Analytics**: Statistics, reporting, and progress tracking for educators
 
 ### 🆕 **Recently Added Features**
+- **Event-Driven Architecture**: RabbitMQ integration for automatic grading workflow triggers
+- **Real-time Grading**: Submissions automatically trigger grading service via events
 - **Complete File Upload System**: Multer-based file handling with type validation, size limits, and secure storage
 - **File Access Control**: Students can manage their own files, teachers/admins have full access
 - **File Download & Streaming**: Secure file download with proper headers and access verification
@@ -107,6 +109,64 @@ enum SubmissionStatus {
   RETURNED   // Returned to student for revision
 }
 ```
+
+### 🎯 **Event-Driven Architecture Integration**
+
+The Submission Service now implements **event-driven communication** with RabbitMQ for seamless integration with the Grading Service and other platform components.
+
+#### **Event Publishing**
+```typescript
+// Automatic event publishing when submission status changes
+When student submits → status: DRAFT → SUBMITTED → publishes 'submission.submitted' event
+```
+
+#### **Published Events**
+| Event Type | Routing Key | Description | Triggered When |
+|------------|-------------|-------------|----------------|
+| `submission.submitted` | `submission.submitted` | Student has submitted for grading | Status changes to SUBMITTED |
+| `submission.updated` | `submission.updated` | Submission data modified | Any field updated |
+| `submission.graded` | `submission.graded` | Grade received from grading service | External grade update |
+
+#### **Event Schema Example**
+```json
+{
+  "event": {
+    "eventId": "sub-2024-10-09-123456",
+    "eventType": "submission.submitted",
+    "timestamp": "2024-10-09T10:30:00.000Z",
+    "serviceId": "submission-service",
+    "version": "1.0.0",
+    "data": {
+      "submissionId": "sub-123",
+      "assessmentId": "assess-456",
+      "studentId": "student-789",
+      "status": "SUBMITTED",
+      "submittedAt": "2024-10-09T10:30:00.000Z",
+      "answers": [...],
+      "totalMarks": 100
+    }
+  },
+  "metadata": {
+    "correlationId": "submission-update-123-1728466200",
+    "userId": "student-789",
+    "source": "submission-service"
+  },
+  "publishedAt": "2024-10-09T10:30:00.000Z"
+}
+```
+
+#### **RabbitMQ Configuration**
+- **Exchange**: `submission.events` (Topic Exchange)
+- **Queue Bindings**: Automatic routing to grading service
+- **Dead Letter Handling**: Failed events routed to `dead.letter` exchange
+- **Message Persistence**: Durable queues ensure reliable delivery
+
+#### **Automatic Grading Workflow**
+```
+Student Submits → Event Published → Grading Service Consumes → Automatic Grading → Grade Published
+```
+
+This eliminates the need for manual API calls and creates a truly reactive system where submissions automatically trigger grading workflows.
 
 ### **API Endpoints**
 
@@ -231,6 +291,19 @@ npm run dev
 PORT=4002
 DATABASE_URL="postgresql://user:password@localhost:5434/submission_db"
 NODE_ENV=development
+
+# RabbitMQ Configuration
+RABBITMQ_URL=amqp://admin:pediafor2024@localhost:5672/pediafor
+RABBITMQ_HOST=localhost
+RABBITMQ_PORT=5672
+RABBITMQ_MANAGEMENT_PORT=15672
+
+# CORS Configuration
+CORS_ORIGIN=http://localhost:3001,http://localhost:3000
+
+# Rate Limiting
+RATE_LIMIT_WINDOW_MS=900000
+RATE_LIMIT_MAX_REQUESTS=100
 ```
 
 ### **Docker Development**
@@ -330,6 +403,11 @@ src/
 ├── middleware/           # Authentication, validation, error handling
 ├── routes/              # API route definitions
 ├── services/            # Business logic layer
+├── events/              # Event-driven architecture
+│   ├── types.ts         # Event type definitions
+│   └── publisher.ts     # RabbitMQ event publishing
+├── config/              # Configuration files
+│   └── rabbitmq.ts      # RabbitMQ connection setup
 ├── types.ts             # TypeScript type definitions
 ├── prismaClient.ts      # Database client configuration
 └── server.ts            # Express server setup

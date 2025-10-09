@@ -32,14 +32,15 @@
 | **🔐 User Service** | ✅ **Production Ready** | 77/77 | PASETO authentication, role-based access control |
 | **🚪 Gateway Service** | ✅ **Production Ready** | 7/7 | API gateway with authentication middleware, service routing |
 | **📝 Assessment Service** | ✅ **Production Ready** | 94/94 | Complete CRUD operations, media support |
-| **📋 Submission Service** | ✅ **Production Ready** | 94/109 | File uploads, submission workflow, autosave |
-| **🎯 Grading Service** | ✅ **Production Ready** | 23/23 | Automated MCQ grading, analytics, Docker ready |
+| **📋 Submission Service** | ✅ **Production Ready** | 94/109 | File uploads, submission workflow, autosave, event publishing |
+| **🎯 Grading Service** | ✅ **Production Ready** | 23/23 | Automated MCQ grading, event-driven processing, analytics |
 | **🌐 Frontend Application** | 🚧 **In Development** | - | React/Next.js web interface with role-based dashboards |
 | **🤖 AI Question Generation** | 📝 **Planned** | - | NLP-powered question generation |
 | **📈 Analytics Dashboard** | 📝 **Planned** | - | Performance insights and reporting |
 
 ### Current Platform Status
 - **Core Services**: ✅ All 5 core services operational and production-ready
+- **Event-Driven Architecture**: ✅ RabbitMQ-powered automatic grading workflows
 - **Test Coverage**: ✅ 295/310 tests passing (95% success rate)
 - **Docker Infrastructure**: ✅ Full containerization with health monitoring
 - **Complete Workflow**: ✅ Students can create, submit, and receive automated grades
@@ -50,6 +51,7 @@
 | Component | Technology | Purpose |
 |-----------|------------|---------|
 | **Backend Services** | Node.js, TypeScript, Express | Core microservices (Auth, Assessment, Submission) |
+| **Event Architecture** | RabbitMQ, AMQP | Event-driven communication and automatic workflows |
 | **Frontend Application** | React 18, Next.js 15, TypeScript | Modern web interface with SSR and role-based dashboards |
 | **UI Framework** | Tailwind CSS, shadcn/ui, Radix UI | Responsive design system with accessible components |
 | **API Integration** | TanStack Query, Zustand, Zod | Type-safe API calls, state management, and validation |
@@ -112,6 +114,16 @@ npm test
 - **Assessment Service**: http://localhost:4001
 - **Submission Service**: http://localhost:4002
 - **Grading Service**: http://localhost:4003
+
+### Docker Integration Testing ✅
+The event-driven architecture has been **successfully validated** using Docker containers with real RabbitMQ infrastructure:
+
+- **✅ RabbitMQ**: Running healthy with management UI at http://localhost:15672
+- **✅ Event Flow**: Submission events successfully trigger automatic grading
+- **✅ Microservices**: All services connected via pediafor-network
+- **✅ Monitoring**: Complete observability through RabbitMQ management interface
+
+For detailed testing results, see [DOCKER_INTEGRATION_TEST.md](DOCKER_INTEGRATION_TEST.md).
 
 ## 🎨 Frontend Architecture
 

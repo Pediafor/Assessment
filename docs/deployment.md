@@ -3,9 +3,10 @@
 [![Deployment Status](https://img.shields.io/badge/Deployment-All%20Services%20Production%20Ready-success)](.)
 [![Container Runtime](https://img.shields.io/badge/Runtime-Docker-blue?logo=docker)](.)
 [![Orchestration](https://img.shields.io/badge/Orchestration-Docker%20Compose%20%2F%20Kubernetes-blue)](.)
-[![Infrastructure](https://img.shields.io/badge/Infrastructure-Microservices%20(5%20Core%20%2B%20Frontend)-orange)](.)
+[![Infrastructure](https://img.shields.io/badge/Infrastructure-Microservices%20(5%20Core%20%2B%20Frontend%20%2B%20RabbitMQ)-orange)](.)
 [![Database](https://img.shields.io/badge/Database-PostgreSQL%20per%20Service-336791?logo=postgresql)](.)
 [![Cache](https://img.shields.io/badge/Cache-Redis-red?logo=redis)](.)
+[![Message Broker](https://img.shields.io/badge/Events-RabbitMQ-orange?logo=rabbitmq)](.)
 [![Test Coverage](https://img.shields.io/badge/Tests-295%2F310%20Passing%20(95%25)-success)](.)
 [![Last Updated](https://img.shields.io/badge/Updated-October%202025-blue)](.)
 
@@ -48,6 +49,7 @@
 - **Node.js**: 20.x LTS (for development)
 - **PostgreSQL**: 15.x (or via Docker)
 - **Redis**: 7.x (or via Docker)
+- **RabbitMQ**: 3.12+ (or via Docker)
 
 #### **Optional Tools**
 - **Kubernetes**: 1.28+ (for production orchestration)
@@ -458,6 +460,15 @@ GRADING_SERVICE_DB_URL=postgresql://user:password@postgres-grading:5435/pediafor
 
 # Redis Configuration
 REDIS_URL=redis://redis-cluster:6379
+
+# RabbitMQ Configuration
+RABBITMQ_URL=amqp://admin:pediafor2024@rabbitmq:5672/pediafor
+RABBITMQ_HOST=rabbitmq
+RABBITMQ_PORT=5672
+RABBITMQ_MANAGEMENT_PORT=15672
+RABBITMQ_USER=admin
+RABBITMQ_PASS=pediafor2024
+RABBITMQ_VHOST=pediafor
 
 # PASETO Keys (generate secure keys)
 PASETO_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----"

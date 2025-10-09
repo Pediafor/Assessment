@@ -1,14 +1,36 @@
 # RabbitMQ Integration for Pediafor Assessment Platform
 
-This directory contains the RabbitMQ infrastructure setup for async communication between microservices in the Pediafor Assessment Platform.
+This directory contains the RabbitMQ infrastructure setup for event-driven communication between microservices in the Pediafor Assessment Platform.
 
 ## 🏗️ Architecture Overview
 
-The RabbitMQ integration enables event-driven communication between:
+The RabbitMQ integration enables **production-ready event-driven communication** between:
 - **Assessment Service** - Publishes assessment lifecycle events
-- **Submission Service** - Consumes assessment events, publishes submission events  
-- **Grading Service** - Consumes assessment and submission events
+- **Submission Service** - ✅ **IMPLEMENTED** - Publishes submission events when students submit
+- **Grading Service** - ✅ **IMPLEMENTED** - Consumes submission events and triggers automatic grading
 - **Future Services** - Can easily subscribe to relevant event streams
+
+## ✅ Implementation Status
+
+### Currently Active Event Flows
+
+#### **Automatic Grading Workflow (Live)**
+```
+Student submits → Submission Service publishes event → RabbitMQ routes → Grading Service consumes → Automatic grading → Results published
+```
+
+#### **Implemented Event Types**
+- ✅ `submission.submitted` - Published when student submits for grading
+- ✅ `submission.updated` - Published when submission data changes
+- ✅ `grading.completed` - Published when grading process finishes successfully  
+- ✅ `grading.failed` - Published when grading process encounters errors
+
+### Service Integration Status
+- ✅ **Submission Service**: Event publishing implemented with RabbitMQ config
+- ✅ **Grading Service**: Event subscription and automatic processing implemented
+- 🔄 **Assessment Service**: Basic infrastructure exists (partial integration)
+- 📝 **User Service**: Future integration planned
+- 📝 **Analytics Service**: Future consumer planned
 
 ## 📋 Components
 

@@ -1,5 +1,3 @@
-version: '3.8'
-
 # RabbitMQ Infrastructure for Pediafor Assessment Platform
 # This file sets up RabbitMQ with management UI for async communication
 
@@ -12,11 +10,6 @@ services:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-admin}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS:-pediafor2024}
       RABBITMQ_DEFAULT_VHOST: ${RABBITMQ_VHOST:-pediafor}
-      # Enable management plugin
-      RABBITMQ_PLUGINS: "rabbitmq_management"
-      # Performance and memory settings
-      RABBITMQ_VM_MEMORY_HIGH_WATERMARK: 0.8
-      RABBITMQ_DISK_FREE_LIMIT: 2GB
     ports:
       # AMQP port
       - "${RABBITMQ_PORT:-5672}:5672"
@@ -25,9 +18,6 @@ services:
     volumes:
       # Persistent storage for messages
       - rabbitmq_data:/var/lib/rabbitmq
-      # Configuration files
-      - ./config/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
-      - ./config/definitions.json:/etc/rabbitmq/definitions.json:ro
     networks:
       - pediafor-network
     healthcheck:
@@ -36,10 +26,6 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.rabbitmq.rule=Host(`rabbitmq.pediafor.local`)"
-      - "traefik.http.services.rabbitmq.loadbalancer.server.port=15672"
 
 volumes:
   rabbitmq_data:

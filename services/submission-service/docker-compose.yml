@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   # Submission Service Database
   submission-db:
@@ -39,8 +37,11 @@ services:
       - NODE_ENV=production
       - PORT=4002
       - DATABASE_URL=postgresql://${POSTGRES_USER:-submissionservice}:${POSTGRES_PASSWORD:-submissionpass123}@submission-db:5432/${POSTGRES_DB:-submission_service_db}
+      - RABBITMQ_HOST=pediafor-rabbitmq
+      - RABBITMQ_URL=amqp://admin:pediafor2024@pediafor-rabbitmq:5672/pediafor
     networks:
       - submission-service-network
+      - pediafor-network
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:4002/health || exit 1"]
       interval: 30s
@@ -55,3 +56,6 @@ networks:
   submission-service-network:
     driver: bridge
     name: submission-service-network
+  pediafor-network:
+    external: true
+    name: pediafor-network

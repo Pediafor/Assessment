@@ -9,6 +9,7 @@ import {
   UnauthorizedError,
   UserContext 
 } from '../types';
+import { getSubmissionEventPublisher } from '../events/publisher';
 
 export class SubmissionService {
   
@@ -108,6 +109,7 @@ export class SubmissionService {
   // Update submission
   async updateSubmission(submissionId: string, data: UpdateSubmissionRequest, user: UserContext) {
     const submission = await this.getSubmissionById(submissionId, user);
+    const previousStatus = submission.status;
 
     // Only the student who owns the submission can update it (unless admin/teacher)
     if (user.role === 'STUDENT' && submission.userId !== user.id) {
@@ -139,6 +141,44 @@ export class SubmissionService {
         grades: true
       }
     });
+
+    // Publish events when status changes
+    try {
+      const eventPublisher = getSubmissionEventPublisher();
+      await eventPublisher.ensureConnection();
+
+      if (data.status && data.status !== previousStatus) {
+        const eventData = {
+          submissionId: updatedSubmission.id,
+          assessmentId: updatedSubmission.assessmentId,
+          studentId: updatedSubmission.userId,
+          status: updatedSubmission.status as any,
+          totalMarks: updatedSubmission.maxScore || undefined,
+          submittedAt: updatedSubmission.submittedAt?.toISOString(),
+          answers: Array.isArray(updatedSubmission.answers) ? updatedSubmission.answers : []
+        };
+
+        const metadata = {
+          userId: user.id,
+          correlationId: `submission-update-${updatedSubmission.id}-${Date.now()}`
+        };
+
+        if (data.status === 'SUBMITTED') {
+          await eventPublisher.publishSubmissionSubmitted(eventData, metadata);
+          console.log(`🎯 Published submission.submitted event for submission ${submissionId}`);
+        } else {
+          await eventPublisher.publishSubmissionUpdated({
+            ...eventData,
+            previousStatus,
+            updatedFields: Object.keys(data)
+          }, metadata);
+          console.log(`🔄 Published submission.updated event for submission ${submissionId}`);
+        }
+      }
+    } catch (error) {
+      console.error('⚠️ Failed to publish submission event:', error);
+      // Don't fail the update if event publishing fails
+    }
 
     return updatedSubmission;
   }
