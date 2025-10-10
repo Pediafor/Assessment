@@ -1,0 +1,280 @@
+# Pediafor Assessment Platform - Complete System Docker Compose
+# This file orchestrates all services for integrated testing
+
+version: '3.8'
+
+networks:
+  pediafor-network:
+    name: pediafor-network
+    driver: bridge
+
+volumes:
+  rabbitmq_data:
+  user_db_data:
+  assessment_db_data:
+  submission_db_data:
+  grading_db_data:
+  redis_data:
+
+services:
+  # Message Broker
+  rabbitmq:
+    image: rabbitmq:3.12-management-alpine
+    container_name: pediafor-rabbitmq
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: pediafor2024
+      RABBITMQ_DEFAULT_VHOST: pediafor
+    ports:
+      - "5672:5672"   # AMQP port
+      - "15672:15672" # Management UI
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - pediafor-network
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Cache
+  redis:
+    image: redis:7-alpine
+    container_name: gateway-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - pediafor-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Databases
+  user-db:
+    image: postgres:15-alpine
+    container_name: user-service-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: userservice_user
+      POSTGRES_PASSWORD: userservice_password
+      POSTGRES_DB: userservice_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - user_db_data:/var/lib/postgresql/data
+    networks:
+      - pediafor-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U userservice_user -d userservice_db"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  assessment-db:
+    image: postgres:15-alpine
+    container_name: assessment-service-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: assessmentservice_user
+      POSTGRES_PASSWORD: assessmentservice_password
+      POSTGRES_DB: assessmentservice_db
+    ports:
+      - "5433:5432"
+    volumes:
+      - assessment_db_data:/var/lib/postgresql/data
+    networks:
+      - pediafor-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U assessmentservice_user -d assessmentservice_db"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  submission-db:
+    image: postgres:15-alpine
+    container_name: submission-service-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: submissionservice_user
+      POSTGRES_PASSWORD: submissionservice_password
+      POSTGRES_DB: submissionservice_db
+    ports:
+      - "5434:5432"
+    volumes:
+      - submission_db_data:/var/lib/postgresql/data
+    networks:
+      - pediafor-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U submissionservice_user -d submissionservice_db"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  grading-db:
+    image: postgres:15-alpine
+    container_name: grading-service-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: gradingservice_user
+      POSTGRES_PASSWORD: gradingservice_password
+      POSTGRES_DB: gradingservice_db
+    ports:
+      - "5435:5432"
+    volumes:
+      - grading_db_data:/var/lib/postgresql/data
+    networks:
+      - pediafor-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U gradingservice_user -d gradingservice_db"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Microservices
+  user-service:
+    build:
+      context: ./services/user-service
+      dockerfile: Dockerfile
+    container_name: user-service
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      DATABASE_URL: postgresql://userservice_user:userservice_password@user-db:5432/userservice_db
+      RABBITMQ_URL: amqp://admin:pediafor2024@rabbitmq:5672
+      PASETO_PRIVATE_KEY: ${PASETO_PRIVATE_KEY}
+      PASETO_PUBLIC_KEY: ${PASETO_PUBLIC_KEY}
+    ports:
+      - "4000:4000"
+    depends_on:
+      user-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - pediafor-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  gateway-service:
+    build:
+      context: ./services/gateway-service
+      dockerfile: Dockerfile
+    container_name: gateway-service
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      REDIS_URL: redis://redis:6379
+      USER_SERVICE_URL: http://user-service:4000
+      ASSESSMENT_SERVICE_URL: http://assessment-service:4001
+      SUBMISSION_SERVICE_URL: http://submission-service:4002
+      GRADING_SERVICE_URL: http://grading-service:4003
+      PASETO_PUBLIC_KEY: ${PASETO_PUBLIC_KEY}
+    ports:
+      - "3000:3000"
+    depends_on:
+      redis:
+        condition: service_healthy
+      user-service:
+        condition: service_healthy
+    networks:
+      - pediafor-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  assessment-service:
+    build:
+      context: ./services/assessment-service
+      dockerfile: Dockerfile
+    container_name: assessment-service
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 4001
+      DATABASE_URL: postgresql://assessmentservice_user:assessmentservice_password@assessment-db:5432/assessmentservice_db
+      RABBITMQ_URL: amqp://admin:pediafor2024@rabbitmq:5672
+    ports:
+      - "4001:4001"
+    depends_on:
+      assessment-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - pediafor-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  submission-service:
+    build:
+      context: ./services/submission-service
+      dockerfile: Dockerfile
+    container_name: submission-service
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 4002
+      DATABASE_URL: postgresql://submissionservice_user:submissionservice_password@submission-db:5432/submissionservice_db
+      RABBITMQ_URL: amqp://admin:pediafor2024@rabbitmq:5672
+    ports:
+      - "4002:4002"
+    depends_on:
+      submission-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - pediafor-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4002/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  grading-service:
+    build:
+      context: ./services/grading-service
+      dockerfile: Dockerfile
+    container_name: grading-service
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 4003
+      DATABASE_URL: postgresql://gradingservice_user:gradingservice_password@grading-db:5432/gradingservice_db
+      RABBITMQ_URL: amqp://admin:pediafor2024@rabbitmq:5672
+    ports:
+      - "4003:4003"
+    depends_on:
+      grading-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - pediafor-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4003/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
