@@ -11,7 +11,8 @@ import {
   AssessmentUpdatedEvent,
   AssessmentDeletedEvent,
   AssessmentPublishedEvent,
-  AssessmentArchivedEvent
+  AssessmentArchivedEvent,
+  AssessmentFullyGradedEvent
 } from './types';
 
 class EventPublisher {
@@ -135,6 +136,33 @@ class EventPublisher {
   }
 
   /**
+   * Publish an assessment fully graded event
+   */
+  async publishAssessmentFullyGraded(data: {
+    assessmentId: string;
+    totalSubmissions: number;
+    gradedAt: string;
+    analytics: {
+      averageScore: number;
+      completionRate: number;
+      totalSubmissions: number;
+      highestScore: number;
+      lowestScore: number;
+    };
+  }, metadata: EventMetadata = {}): Promise<void> {
+    const event: AssessmentFullyGradedEvent = {
+      eventId: uuidv4(),
+      eventType: 'assessment.fully_graded',
+      timestamp: new Date(),
+      serviceId: 'assessment-service',
+      version: '1.0.0',
+      data
+    };
+
+    await this.publishEvent(event, 'assessment.fully_graded', metadata);
+  }
+
+  /**
    * Generic method to publish any assessment event
    */
   private async publishEvent<T extends BaseEvent>(
@@ -201,5 +229,8 @@ export const getEventPublisher = (): EventPublisher => {
   }
   return eventPublisherInstance;
 };
+
+// Alternative alias for consistency with other services
+export const getAssessmentEventPublisher = getEventPublisher;
 
 export { EventPublisher };

@@ -12,6 +12,7 @@ import mediaRoutes from './routes/media.routes';
 import { AppError } from './types';
 import { createStaticFileServer } from './middleware/static';
 import { getRabbitMQConnection } from './config/rabbitmq';
+import { AssessmentEventSubscriber } from './events/subscriber';
 
 // Load environment variables
 dotenv.config();
@@ -175,15 +176,21 @@ app.use((error: any, req: express.Request, res: express.Response, next: express.
 if (process.env.NODE_ENV !== 'test') {
   const port = Number(PORT);
   
-  // Initialize RabbitMQ connection
+  // Initialize RabbitMQ connection and event subscriber
   const initializeServices = async () => {
     try {
       const rabbitMQ = getRabbitMQConnection();
       await rabbitMQ.connect();
       console.log('✅ RabbitMQ connection initialized');
+      
+      // Initialize event subscriber
+      const eventSubscriber = new AssessmentEventSubscriber();
+      await eventSubscriber.initialize();
+      console.log('🎧 Assessment event subscriber initialized');
+      
     } catch (error) {
-      console.error('❌ Failed to initialize RabbitMQ:', error);
-      console.log('⚠️  Continuing without RabbitMQ - events will not be published');
+      console.error('❌ Failed to initialize services:', error);
+      console.log('⚠️  Continuing without RabbitMQ - events will not be published/consumed');
     }
   };
 

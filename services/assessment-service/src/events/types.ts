@@ -151,6 +151,117 @@ export const EXCHANGES = {
   DEAD_LETTER: 'dead.letter',
 } as const;
 
+// External Event Types (from other services)
+export interface SubmissionSubmittedEvent {
+  event: {
+    eventId: string;
+    eventType: 'submission.submitted';
+    timestamp: Date;
+    serviceId: 'submission-service';
+    version: string;
+    data: {
+      submissionId: string;
+      assessmentId: string;
+      studentId: string;
+      status: 'SUBMITTED';
+      totalMarks?: number;
+      submittedAt?: string;
+      answers: any[];
+    };
+  };
+  metadata: {
+    correlationId?: string;
+    userId?: string;
+    timestamp: Date;
+  };
+}
+
+export interface SubmissionGradedEvent {
+  event: {
+    eventId: string;
+    eventType: 'submission.graded';
+    timestamp: Date;
+    serviceId: 'grading-service';
+    version: string;
+    data: {
+      submissionId: string;
+      assessmentId: string;
+      studentId: string;
+      score: number;
+      totalMarks: number;
+      percentage: number;
+      gradedAt: string;
+      gradedBy?: string;
+    };
+  };
+  metadata: {
+    correlationId?: string;
+    userId?: string;
+    timestamp: Date;
+  };
+}
+
+export interface GradingCompletedEvent {
+  event: {
+    eventId: string;
+    eventType: 'grading.completed';
+    timestamp: Date;
+    serviceId: 'grading-service';
+    version: string;
+    data: {
+      submissionId: string;
+      assessmentId: string;
+      gradingId: string;
+      finalScore: number;
+      feedback?: string;
+      completedAt: string;
+    };
+  };
+  metadata: {
+    correlationId?: string;
+    userId?: string;
+    timestamp: Date;
+  };
+}
+
+export interface UserRegisteredEvent {
+  event: {
+    eventId: string;
+    eventType: 'user.registered';
+    timestamp: Date;
+    serviceId: 'user-service';
+    version: string;
+    data: {
+      userId: string;
+      email: string;
+      role: 'STUDENT' | 'TEACHER' | 'ADMIN';
+      organizationId?: string;
+      registeredAt: string;
+    };
+  };
+  metadata: {
+    correlationId?: string;
+    timestamp: Date;
+  };
+}
+
+// Assessment Fully Graded Event (published by assessment service)
+export interface AssessmentFullyGradedEvent extends BaseEvent {
+  eventType: 'assessment.fully_graded';
+  data: {
+    assessmentId: string;
+    totalSubmissions: number;
+    gradedAt: string;
+    analytics: {
+      averageScore: number;
+      completionRate: number;
+      totalSubmissions: number;
+      highestScore: number;
+      lowestScore: number;
+    };
+  };
+}
+
 // Queue names
 export const QUEUES = {
   ASSESSMENT_CREATED: 'assessment.created',

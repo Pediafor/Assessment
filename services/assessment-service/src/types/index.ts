@@ -257,3 +257,81 @@ export class ForbiddenError extends AppError {
     super(message, 403);
   }
 }
+
+// External Event Types (from other services)
+export interface SubmissionSubmittedEvent {
+  event: {
+    id: string;
+    type: 'submission.submitted';
+    version: string;
+    data: {
+      submissionId: string;
+      assessmentId: string;
+      studentId: string;
+      status: string;
+    };
+    metadata: {
+      timestamp: string;
+      source: string;
+      correlationId: string;
+    };
+  };
+}
+
+export interface SubmissionGradedEvent {
+  event: {
+    id: string;
+    type: 'submission.graded';
+    version: string;
+    data: {
+      submissionId: string;
+      assessmentId: string;
+      studentId: string;
+      score: number;
+      totalMarks: number;
+    };
+    metadata: {
+      timestamp: string;
+      source: string;
+      correlationId: string;
+    };
+  };
+}
+
+export interface GradingCompletedEvent {
+  event: {
+    id: string;
+    type: 'grading.completed';
+    version: string;
+    data: {
+      submissionId: string;
+      assessmentId: string;
+      gradingId: string;
+      finalScore: number;
+      feedback: string;
+    };
+    metadata: {
+      timestamp: string;
+      source: string;
+      correlationId: string;
+    };
+  };
+}
+
+export interface UserRegisteredEvent {
+  event: {
+    id: string;
+    type: 'user.registered';
+    version: string;
+    data: {
+      userId: string;
+      role: string;
+      organizationId?: string;
+    };
+    metadata: {
+      timestamp: string;
+      source: string;
+      correlationId: string;
+    };
+  };
+}

@@ -141,6 +141,44 @@ class RabbitMQConnection {
     });
   }
 
+  async consume(queueName: string, callback: (message: any) => Promise<void>): Promise<void> {
+    if (!this.channel) {
+      throw new Error('RabbitMQ not connected');
+    }
+
+    await this.assertQueue(queueName, { durable: true });
+
+    await this.channel.consume(queueName, async (msg: any) => {
+      if (msg) {
+        try {
+          const content = JSON.parse(msg.content.toString());
+          await callback(content);
+          this.channel.ack(msg);
+        } catch (error) {
+          console.error(`Error processing message from ${queueName}:`, error);
+          this.channel.nack(msg, false, false); // Don't requeue
+        }
+      }
+    });
+
+    console.log(`📬 Consuming messages from queue: ${queueName}`);
+  }
+
+  async subscribe(exchange: string, routingKey: string, callback: (message: any) => Promise<void>): Promise<void> {
+    if (!this.channel) {
+      throw new Error('RabbitMQ not connected');
+    }
+
+    // Create a unique queue name for this subscription
+    const queueName = `${exchange}.${routingKey}.${Date.now()}`;
+    
+    await this.assertExchange(exchange, 'topic');
+    await this.assertQueue(queueName, { durable: true, exclusive: false });
+    await this.bindQueue(queueName, exchange, routingKey);
+
+    await this.consume(queueName, callback);
+  }
+
   async close(): Promise<void> {
     try {
       if (this.channel) {
