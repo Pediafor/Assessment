@@ -6,9 +6,10 @@ The User Service is a core microservice in the Pediafor Assessment Platform, imp
 
 - **🔐 Secure Authentication**: PASETO V4 tokens with Ed25519 cryptography
 - **👥 User Management**: Complete CRUD operations with role-based access control
+- **📤 Event-Driven Architecture**: RabbitMQ integration for real-time notifications
 - **🏛️ Database-per-Service**: Dedicated PostgreSQL database with Prisma ORM
 - **🐳 Production Ready**: Containerized with Docker Compose orchestration
-- **🧪 Comprehensive Testing**: 60+ tests covering unit, functional, and integration scenarios
+- **🧪 Comprehensive Testing**: 89+ tests covering unit, functional, and integration scenarios
 - **🔒 Security-First Design**: httpOnly cookies, token rotation, XSS/CSRF protection
 
 ## Architecture Overview
@@ -23,6 +24,15 @@ The User Service is a core microservice in the Pediafor Assessment Platform, imp
 │ - Load Balance  │    │ - Token Issue   │    │ - Migrations    │
 └─────────────────┘    └─────────────────┘    └─────────────────┘
         │                        │                        │
+        │                        ▼                        │
+        │               ┌─────────────────┐               │
+        │               │    RabbitMQ     │               │
+        │               │   Event Bus     │               │
+        │               │                 │               │
+        │               │ - User Events   │               │
+        │               │ - Notifications │               │
+        │               │ - Analytics     │               │
+        │               └─────────────────┘               │
         │                        │                        │
    Port :3000               Port :4000               Port :5432
    (Public API)            (Internal)             (Private)
@@ -53,11 +63,18 @@ The User Service is a core microservice in the Pediafor Assessment Platform, imp
 - **Soft Delete**: Maintains data integrity while marking users inactive
 - **Pagination Support**: Efficient listing with role-based filtering
 
+### Event-Driven Architecture
+- **RabbitMQ Integration**: Real-time event publishing for user lifecycle events
+- **Event Types**: user.registered, user.profile_updated, user.deactivated, user.reactivated, user.role_changed
+- **Reliable Messaging**: Durable queues with error handling and service continuity
+- **Cross-Service Communication**: Enables other services to react to user changes
+- **Analytics Ready**: User events feed into analytics and notification systems
+
 ### Development Experience
 - **TypeScript**: Full type safety with modern JavaScript features
 - **Prisma ORM**: Type-safe database operations with auto-generated client
 - **Hot Reload**: Development environment with automatic code recompilation
-- **Comprehensive Testing**: 60+ tests with mock implementations for fast CI/CD
+- **Comprehensive Testing**: 89+ tests with event integration testing for robust CI/CD
 
 ## 📊 Database Schema
 
@@ -95,6 +112,8 @@ enum UserRole {
 - **Prisma 6.16**: Next-generation ORM with type safety
 - **PostgreSQL 15**: Robust relational database
 - **PASETO 3.1**: Secure token implementation
+- **RabbitMQ**: Message broker for event-driven architecture
+- **amqplib**: Node.js RabbitMQ client for reliable messaging
 
 ### Development
 - **TypeScript 5.9**: Static typing and modern JavaScript
@@ -106,7 +125,7 @@ enum UserRole {
 
 Our comprehensive testing approach ensures reliability and maintainability:
 
-### Test Coverage (60+ Tests)
+### Test Coverage (89+ Tests)
 ```
 ✅ Basic Environment Tests (6 tests)
    - Environment setup, TypeScript support, async operations
@@ -130,6 +149,14 @@ Our comprehensive testing approach ensures reliability and maintainability:
 ✅ Auth Service Tests (12 tests)
    - Token issuance, refresh token handling
    - Session management, security validation
+
+✅ Event Publisher Tests (7 tests)
+   - RabbitMQ connection management, event publishing
+   - Error handling for messaging failures
+
+✅ User Service Integration Tests (22 tests)
+   - Complete user lifecycle with event integration
+   - Registration, updates, deactivation with event verification
 ```
 
 ### Testing Philosophy
@@ -190,9 +217,12 @@ enum UserRole {
 - **🛡️ Password Security**: Argon2 hashing with secure verification
 - **🗄️ Database Integration**: Prisma ORM with PostgreSQL and error handling
 - **🐳 Production Deployment**: Multi-stage Docker builds with optimization
-- **🧪 Comprehensive Testing**: 60+ tests covering all core functionality
+- **🧪 Comprehensive Testing**: 89+ tests covering all core functionality and event integration
 - **🏗️ Microservices Architecture**: Database-per-service with isolated containers
 - **📊 API Documentation**: Complete endpoint documentation with examples
+- **🔄 Event-Driven Architecture**: Complete RabbitMQ integration with 5 event types
+- **📡 Real-time Communication**: User lifecycle events published to message broker
+- **🎯 Cross-Service Integration**: Events consumed by analytics and notification systems
 
 ### 🔄 **Architecture Completed**
 - **Gateway Integration**: Token verification shared via public key
@@ -207,14 +237,18 @@ enum UserRole {
 services/user-service/
 ├── src/
 │   ├── app.ts                    # Express application setup
-│   ├── server.ts                 # HTTP server initialization
+│   ├── server.ts                 # HTTP server with RabbitMQ initialization ✅
 │   ├── prismaClient.ts           # Database client configuration
+│   ├── config/
+│   │   └── rabbitmq.ts          # RabbitMQ connection management ✅
+│   ├── events/
+│   │   └── publisher.ts         # Event publishing for user lifecycle ✅
 │   ├── routes/
 │   │   ├── auth.routes.ts        # Authentication endpoints ✅
 │   │   └── user.routes.ts        # User CRUD operations ✅
 │   ├── services/
 │   │   ├── auth.service.ts       # Token & session management ✅
-│   │   └── user.service.ts       # User business logic ✅
+│   │   └── user.service.ts       # User business logic with events ✅
 │   ├── utils/
 │   │   ├── paseto.ts            # PASETO V4 implementation ✅
 │   │   └── hash.ts              # Argon2 password hashing ✅
@@ -225,8 +259,9 @@ services/user-service/
 │   ├── functional.test.ts       # Core functionality tests
 │   ├── unit/
 │   │   ├── utils/               # Utility function tests
-│   │   └── services/            # Service layer tests
-│   ├── integration/             # Full API integration tests
+│   │   ├── services/            # Service layer tests
+│   │   └── events/              # Event publisher tests ✅
+│   ├── integration/             # Full API integration tests with events ✅
 │   └── setup.ts                 # Test configuration & utilities
 ├── prisma/
 │   ├── schema.prisma            # Database schema definition
@@ -284,6 +319,9 @@ POSTGRES_USER=userservice_user
 POSTGRES_PASSWORD=userservice_password
 POSTGRES_DB=userservice_db
 DATABASE_URL=postgresql://userservice_user:userservice_password@user-db:5432/userservice_db
+
+# RabbitMQ Configuration
+RABBITMQ_URL=amqp://admin:admin123@rabbitmq:5672
 
 # PASETO V4 Keys (generated from scripts/generate-keys.js)
 PASETO_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----
@@ -397,6 +435,43 @@ curl -X POST http://localhost:4000/auth/refresh \
 ```bash
 curl -X GET "http://localhost:4000/users?page=1&limit=5&role=STUDENT" \
   -H "Authorization: Bearer <access_token>"
+```
+
+## 🔄 Event-Driven Architecture
+
+### **Published Events**
+
+The User Service publishes the following events to RabbitMQ for consumption by other services:
+
+| Event Type | Trigger | Payload | Consumer Services |
+|------------|---------|---------|-------------------|
+| `user.registered` | New user registration | `{ userId, email, role, firstName, lastName, timestamp }` | Analytics, Notification |
+| `user.profile_updated` | Profile information changes | `{ userId, changes: { firstName?, lastName?, profilePicture?, metadata? }, timestamp }` | Analytics, Cache |
+| `user.deactivated` | User account deactivation | `{ userId, email, role, deactivatedBy, timestamp }` | Analytics, Cleanup |
+| `user.reactivated` | User account reactivation | `{ userId, email, role, reactivatedBy, timestamp }` | Analytics, Notification |
+| `user.role_changed` | Role assignment changes | `{ userId, oldRole, newRole, changedBy, timestamp }` | Analytics, Permission |
+
+### **Event Configuration**
+
+- **Exchange**: `user_events` (topic exchange)
+- **Routing Keys**: 
+  - `user.registered`
+  - `user.profile_updated`  
+  - `user.deactivated`
+  - `user.reactivated`
+  - `user.role_changed`
+- **Message Durability**: Persistent messages for reliability
+- **Error Handling**: Service continues operation even if RabbitMQ is unavailable
+- **Development Mode**: Events logged to console when RabbitMQ is not connected
+
+### **Event Integration Testing**
+
+```bash
+# Test user registration with event publishing
+npm test tests/integration/user.service.integration.test.ts
+
+# Verify event publishing for all user operations
+npm test -- --testNamePattern="should publish.*event"
 ```
 
 ## Token Workflow (PASETO V4)
@@ -555,6 +630,7 @@ npm test
 - **Prisma 6.16.2**: Type-safe database ORM with PostgreSQL
 - **PASETO 3.1.4**: Secure token implementation with Ed25519
 - **Argon2 0.44.0**: Advanced password hashing algorithm
+- **amqplib 0.10.4**: RabbitMQ client for event-driven messaging
 - **cookie-parser**: Secure httpOnly cookie handling
 - **Node.js 18+**: JavaScript runtime with modern features
 
@@ -571,6 +647,7 @@ npm test
 | POSTGRES_PASSWORD     | Database password                     | `secure123` |
 | POSTGRES_DB           | Database name                         | `userservice` |
 | DATABASE_URL          | Postgres connection string            | `postgresql://...` |
+| RABBITMQ_URL          | RabbitMQ connection string            | `amqp://admin:admin123@rabbitmq:5672` |
 | PASETO_PRIVATE_KEY    | Ed25519 private key for signing       | `-----BEGIN PRIVATE KEY-----...` |
 | PASETO_PUBLIC_KEY     | Ed25519 public key for verification   | `-----BEGIN PUBLIC KEY-----...` |
 | PORT                  | Service port                          | `4000` |

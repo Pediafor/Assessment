@@ -2,7 +2,7 @@
 
 [![Platform Status](https://img.shields.io/badge/Platform-Production%20Ready-success)](.)
 [![Services](https://img.shields.io/badge/Services-5%20Microservices-blue)](.)
-[![Test Coverage](https://img.shields.io/badge/Tests-307%2F322%20Passing%20(95.3%25)-success)](.)
+[![Test Coverage](https://img.shields.io/badge/Tests-319%2F334%20Passing%20(95.5%25)-success)](.)
 [![Architecture](https://img.shields.io/badge/Pattern-Event%20Driven%20Microservices-orange)](.)
 [![Authentication](https://img.shields.io/badge/Auth-PASETO%20V4-green)](.)
 [![Database](https://img.shields.io/badge/Database-PostgreSQL%20per%20Service-336791?logo=postgresql)](.)
@@ -37,17 +37,17 @@ The Pediafor Assessment Platform implements a **event-driven microservices archi
 - **API Gateway Pattern**: Single entry point with centralized authentication
 - **Token-Based Security**: Stateless authentication using PASETO V4 tokens
 - **Container-First Design**: Docker containers with orchestration-ready configuration
-- **Test-Driven Quality**: 95.3% test coverage across all services with comprehensive test suites
+- **Test-Driven Quality**: 95.5% test coverage across all services with comprehensive test suites
 
 ### Platform Capabilities
 
-- ✅ **User Management**: Registration, authentication, profile management (77/77 tests)
+- ✅ **User Management**: Registration, authentication, profile management with event publishing (89/89 tests)
 - ✅ **Assessment Creation**: Rich assessment builder with media support and event-driven analytics (106/106 tests)
 - ✅ **File Management**: Multi-format media upload with processing
 - ✅ **Role-Based Access**: Student, Teacher, Admin permission levels
 - ✅ **Submission Handling**: Complete student submission workflow with event publishing (94/109 tests)
 - ✅ **Autosave & Draft Management**: Real-time answer saving and submission status
-- ✅ **Event-Driven Architecture**: Complete RabbitMQ integration with real-time analytics
+- ✅ **Event-Driven Architecture**: Complete RabbitMQ integration with user lifecycle and assessment events
 - ✅ **Automated Grading**: Production-ready MCQ grading engine with event processing (23/23 tests)
 - ✅ **Container Deployment**: Full Docker support with health monitoring
 - ✅ **Gateway Service**: API Gateway with PASETO authentication (7/7 tests)
@@ -81,7 +81,7 @@ graph TB
     subgraph "Core Microservices"
         direction TB
         
-        USER[👤 User Service<br/>Port 4000<br/>✅ Production Ready<br/><br/>👥 User Management<br/>🔐 Authentication<br/>🎯 Token Generation<br/>👨‍🎓 Role Management<br/>📧 Profile Management]
+        USER[👤 User Service<br/>Port 4000<br/>✅ Production Ready<br/><br/>👥 User Management<br/>🔐 Authentication<br/>🎯 Token Generation<br/>👨‍🎓 Role Management<br/>📧 Profile Management<br/>📡 Event Publishing]
         
         ASSESSMENT[📝 Assessment Service<br/>Port 4001<br/>✅ Production Ready<br/><br/>📊 Assessment CRUD<br/>🎯 Question Management<br/>🖼️ Media Handling<br/>📋 Template System<br/>📅 Publishing Control]
         
@@ -270,7 +270,11 @@ graph TB
     RMQ -.-> E2[submission.graded]
     RMQ -.-> E3[grading.completed]
     RMQ -.-> E4[user.registered]
-    RMQ -.-> E5[assessment.fully_graded]
+    RMQ -.-> E5[user.profile_updated]
+    RMQ -.-> E6[user.deactivated]
+    RMQ -.-> E7[user.reactivated]
+    RMQ -.-> E8[user.role_changed]
+    RMQ -.-> E9[assessment.fully_graded]
     
     %% Management
     RMQ --> MGMT[Management UI<br/>:15672]
@@ -282,7 +286,7 @@ graph TB
     
     class SUB,GRAD,USER,ASSESS,ASSESS_SUB,FUTURE service
     class RMQ broker
-    class E1,E2,E3,E4,E5 event
+    class E1,E2,E3,E4,E5,E6,E7,E8,E9 event
     class MGMT mgmt
 ```
 
@@ -319,17 +323,26 @@ sequenceDiagram
 ### Event Types and Handlers
 
 #### Published Events
-- **submission.submitted**: Student submits an assessment
-- **submission.graded**: Submission receives a grade
-- **grading.completed**: Grading process completes
-- **user.registered**: New user joins the platform
-- **assessment.fully_graded**: All submissions for assessment are graded
+
+**User Service Events:**
+- **user.registered**: New user account creation with profile details
+- **user.profile_updated**: User profile information changes (name, picture, metadata)
+- **user.deactivated**: User account deactivation for security or administrative reasons
+- **user.reactivated**: User account reactivation after deactivation
+- **user.role_changed**: User role assignment changes (student ↔ teacher ↔ admin)
+
+**Assessment & Submission Events:**
+- **submission.submitted**: Student submits an assessment for grading
+- **submission.graded**: Submission receives a grade with scoring details
+- **grading.completed**: Grading process completes with final results
+- **assessment.fully_graded**: All submissions for assessment are graded and analytics ready
 
 #### Event Processing
-- **Real-Time Analytics**: Live assessment statistics and completion rates
-- **Automatic Workflows**: Seamless submission-to-grading pipelines
-- **Cross-Service Communication**: Decoupled service integration
-- **Statistics Tracking**: Organization and assessment metrics
+- **Real-Time Analytics**: Live assessment statistics, user engagement, and completion rates
+- **Automatic Workflows**: Seamless submission-to-grading pipelines and user onboarding
+- **Cross-Service Communication**: Decoupled service integration with event-driven messaging
+- **Statistics Tracking**: Organization metrics, user behavior analytics, and assessment performance
+- **Notification Systems**: User activity triggers for email alerts and dashboard updates
 
 ### Production Benefits
 
@@ -372,15 +385,16 @@ sequenceDiagram
 ---
 
 ### 👤 User Service (Port 4000)
-**Role**: User Management and Authentication Provider
+**Role**: User Management, Authentication Provider, and Event Publisher
 
 **Core Responsibilities**:
-- **User Registration**: Account creation with email validation
+- **User Registration**: Account creation with email validation and event publishing
 - **Authentication**: Login/logout with secure token generation
-- **Profile Management**: User profile CRUD operations
-- **Role Management**: Student, Teacher, Admin role assignment
+- **Profile Management**: User profile CRUD operations with change tracking
+- **Role Management**: Student, Teacher, Admin role assignment with audit events
 - **Token Issuance**: PASETO V4 token generation with Ed25519 signing
 - **Password Security**: Argon2 hashing with salt
+- **Event Publishing**: Real-time user lifecycle events to RabbitMQ message broker
 
 **Technology Stack**:
 - **Runtime**: Node.js 20+ with TypeScript
@@ -388,7 +402,15 @@ sequenceDiagram
 - **Database**: PostgreSQL 15 with Prisma ORM
 - **Authentication**: PASETO V4 with Ed25519 key pairs
 - **Security**: Argon2 password hashing, bcrypt fallback
-- **Testing**: Jest with 77/77 tests passing
+- **Messaging**: RabbitMQ with amqplib for event-driven architecture
+- **Testing**: Jest with 89/89 tests passing (including event integration)
+
+**Event-Driven Architecture**:
+- **Published Events**: `user.registered`, `user.profile_updated`, `user.deactivated`, `user.reactivated`, `user.role_changed`
+- **Message Broker**: RabbitMQ topic exchange with durable queues
+- **Event Reliability**: Service continues operation even if messaging fails
+- **Consumer Services**: Analytics, Notification, and Permission services
+- **Development Mode**: Graceful fallback with console logging when RabbitMQ unavailable
 
 **Database Schema**:
 ```sql
@@ -403,13 +425,13 @@ User Entity:
 ```
 
 **API Endpoints**:
-- `POST /register` - User registration
+- `POST /register` - User registration with event publishing
 - `POST /auth/login` - User authentication
 - `POST /auth/logout` - Token invalidation
 - `POST /auth/refresh` - Token refresh
 - `GET /profile/:id` - Get user profile
-- `PUT /profile/:id` - Update user profile
-- `DELETE /profile/:id` - Delete user profile
+- `PUT /profile/:id` - Update user profile with event publishing
+- `DELETE /profile/:id` - Soft delete user with event publishing
 - `GET /users` - List users (paginated, admin only)
 
 ---
