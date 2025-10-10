@@ -76,6 +76,37 @@ docker-compose up --build
 # API Gateway: http://localhost:3000
 ```
 
+### Platform Management & Testing
+
+For comprehensive platform management and testing, use our cross-platform scripts:
+
+**Windows (PowerShell)**:
+```powershell
+# Start entire platform
+.\scripts\windows\platform-manager.ps1 start
+
+# Run complete test suite
+.\scripts\windows\platform-manager.ps1 test
+
+# Monitor system health
+.\scripts\windows\system-health.ps1 --continuous
+```
+
+**Linux/macOS (Bash)**:
+```bash
+# Make scripts executable (first time only)
+chmod +x scripts/linux-mac/*.sh
+
+# Start entire platform
+./scripts/linux-mac/platform-manager.sh start
+
+# Run complete test suite
+./scripts/linux-mac/platform-manager.sh test
+
+# Monitor system health
+./scripts/linux-mac/system-health.sh --continuous
+```
+
 ### Frontend Development
 ```bash
 # Navigate to frontend directory
