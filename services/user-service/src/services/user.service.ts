@@ -1,5 +1,6 @@
 import prisma from "../prismaClient";
 import { UserRole } from "@prisma/client";
+import { UserEventPublisher } from "../events/publisher";
 
 interface CreateUserData {
   email: string;
@@ -24,7 +25,7 @@ interface GetUsersOptions {
 
 // Register new user
 export async function registerUser(userData: CreateUserData) {
-  return await prisma.user.create({
+  const user = await prisma.user.create({
     data: {
       email: userData.email,
       passwordHash: userData.passwordHash,
@@ -36,6 +37,17 @@ export async function registerUser(userData: CreateUserData) {
       updatedAt: new Date()
     }
   });
+
+  // Publish user registration event
+  await UserEventPublisher.publishUserRegistered({
+    userId: user.id,
+    email: user.email,
+    role: user.role,
+    firstName: user.firstName || undefined,
+    lastName: user.lastName || undefined
+  });
+
+  return user;
 }
 
 // Get user by ID
@@ -61,7 +73,13 @@ export async function getUserByEmail(email: string) {
 // Update user
 export async function updateUser(id: string, userData: UpdateUserData) {
   try {
-    return await prisma.user.update({
+    // Get current user data for comparison
+    const currentUser = await getUserById(id);
+    if (!currentUser) {
+      return null;
+    }
+
+    const updatedUser = await prisma.user.update({
       where: {
         id: id,
         isActive: true
@@ -71,6 +89,15 @@ export async function updateUser(id: string, userData: UpdateUserData) {
         updatedAt: new Date()
       }
     });
+
+    // Publish profile update event
+    await UserEventPublisher.publishUserProfileUpdated({
+      userId: updatedUser.id,
+      email: updatedUser.email,
+      changes: userData
+    });
+
+    return updatedUser;
   } catch (error: any) {
     if (error.code === 'P2025') {
       // Record not found
@@ -83,7 +110,13 @@ export async function updateUser(id: string, userData: UpdateUserData) {
 // Soft delete user
 export async function deleteUser(id: string) {
   try {
-    return await prisma.user.update({
+    // Get user data before deactivation
+    const user = await getUserById(id);
+    if (!user) {
+      return null;
+    }
+
+    const deactivatedUser = await prisma.user.update({
       where: {
         id: id,
         isActive: true
@@ -93,6 +126,14 @@ export async function deleteUser(id: string) {
         updatedAt: new Date()
       }
     });
+
+    // Publish user deactivation event
+    await UserEventPublisher.publishUserDeactivated({
+      userId: deactivatedUser.id,
+      email: deactivatedUser.email
+    });
+
+    return deactivatedUser;
   } catch (error: any) {
     if (error.code === 'P2025') {
       return null;
@@ -154,4 +195,74 @@ export async function removeRefreshToken(userId: string) {
       updatedAt: new Date()
     }
   });
+}
+
+// Reactivate user
+export async function reactivateUser(id: string) {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id, isActive: false }
+    });
+
+    if (!user) {
+      return null;
+    }
+
+    const reactivatedUser = await prisma.user.update({
+      where: { id },
+      data: {
+        isActive: true,
+        updatedAt: new Date()
+      }
+    });
+
+    // Publish user reactivation event
+    await UserEventPublisher.publishUserReactivated({
+      userId: reactivatedUser.id,
+      email: reactivatedUser.email
+    });
+
+    return reactivatedUser;
+  } catch (error: any) {
+    if (error.code === 'P2025') {
+      return null;
+    }
+    throw error;
+  }
+}
+
+// Change user role
+export async function changeUserRole(id: string, newRole: UserRole) {
+  try {
+    const currentUser = await getUserById(id);
+    if (!currentUser) {
+      return null;
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: {
+        id: id,
+        isActive: true
+      },
+      data: {
+        role: newRole,
+        updatedAt: new Date()
+      }
+    });
+
+    // Publish role change event
+    await UserEventPublisher.publishUserRoleChanged({
+      userId: updatedUser.id,
+      email: updatedUser.email,
+      oldRole: currentUser.role,
+      newRole: newRole
+    });
+
+    return updatedUser;
+  } catch (error: any) {
+    if (error.code === 'P2025') {
+      return null;
+    }
+    throw error;
+  }
 }
