@@ -235,3 +235,37 @@ __marimo__/
 # File uploads (generated during runtime)
 uploads/
 **/uploads/
+
+# Next.js (Frontend)
+frontend/.next/
+frontend/out/
+frontend/next-env.d.ts
+
+# Frontend Testing
+frontend/coverage/
+frontend/.nyc_output
+
+# Frontend Build
+frontend/build/
+frontend/dist/
+
+# Frontend Misc
+frontend/.DS_Store
+frontend/*.pem
+
+# Frontend Debug
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+
+# Frontend Local env files
+frontend/.env*.local
+
+# Vercel
+frontend/.vercel
+
+# ESLint
+frontend/.eslintcache
+
+# Turbo
+frontend/.turbo

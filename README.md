@@ -156,7 +156,6 @@ The complete event-driven architecture has been **successfully validated** using
 - **✅ Monitoring**: Complete observability through RabbitMQ management interface
 - **✅ Analytics**: Real-time assessment statistics and completion tracking
 
-For detailed testing results, see [DOCKER_INTEGRATION_TEST.md](DOCKER_INTEGRATION_TEST.md).
 
 ## 🎨 Frontend Architecture
 
