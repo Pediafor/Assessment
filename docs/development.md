@@ -1,9 +1,10 @@
 # Pediafor Assessment Platform - Development Guide
 
-[![Development Status](https://img.shields.io/badge/Development-Active-brightgreen)](.)
-[![Test Coverage](https://img.shields.io/badge/Tests-295%2F310%20(95%25)-success)](.)
+[![Development Status](https://img.shields.io/badge/Development-Production%20Ready-brightgreen)](.)
+[![Test Coverage](https://img.shields.io/badge/Tests-307%2F322%20(95.3%25)-success)](.)
 [![Code Quality](https://img.shields.io/badge/Quality-TypeScript%20%2B%20ESLint%20%2B%20Prettier-blue)](.)
-[![Architecture](https://img.shields.io/badge/Architecture-Microservices-orange)](.)
+[![Architecture](https://img.shields.io/badge/Architecture-Event%20Driven%20Microservices-orange)](.)
+[![Event Broker](https://img.shields.io/badge/Events-RabbitMQ-FF6600?logo=rabbitmq)](.)
 [![Database](https://img.shields.io/badge/Database-PostgreSQL%20per%20Service-336791?logo=postgresql)](.)
 [![Testing](https://img.shields.io/badge/Testing-Jest%20%2B%20Supertest-red?logo=jest)](.)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue?logo=typescript)](.)
@@ -13,13 +14,14 @@
 1. [Getting Started](#getting-started)
 2. [Development Environment](#development-environment)
 3. [Project Structure](#project-structure)
-4. [Development Workflow](#development-workflow)
-5. [Testing Guidelines](#testing-guidelines)
-6. [Code Standards](#code-standards)
-7. [Database Development](#database-development)
-8. [API Development](#api-development)
-9. [Contributing Guidelines](#contributing-guidelines)
-10. [Troubleshooting](#troubleshooting)
+4. [Event-Driven Development](#event-driven-development)
+5. [Development Workflow](#development-workflow)
+6. [Testing Guidelines](#testing-guidelines)
+7. [Code Standards](#code-standards)
+8. [Database Development](#database-development)
+9. [API Development](#api-development)
+10. [Contributing Guidelines](#contributing-guidelines)
+11. [Troubleshooting](#troubleshooting)
 
 ---
 
@@ -90,8 +92,8 @@ npm run generate-keys
 
 #### 4. Start Development Environment
 ```bash
-# Start databases and cache
-docker-compose up -d postgres-user postgres-assessment postgres-submission redis
+# Start databases, cache, and event broker
+docker-compose up -d postgres-user postgres-assessment postgres-submission redis rabbitmq
 
 # Run database migrations
 npm run db:migrate:all
@@ -316,6 +318,193 @@ service-name/
 ├── jest.config.js                 # Jest test configuration
 └── .env.example                   # Environment template
 ```
+
+---
+
+## Event-Driven Development
+
+The Pediafor Assessment Platform uses **RabbitMQ** for event-driven communication between microservices, enabling real-time analytics, notifications, and cross-service coordination.
+
+### **Event Architecture Overview**
+
+```
+┌─────────────────┐    Events     ┌─────────────────┐    Events     ┌─────────────────┐
+│   User Service  │──────────────▶│    RabbitMQ     │◀──────────────│Assessment Service│
+└─────────────────┘               │    Broker       │               └─────────────────┘
+                                  └─────────────────┘
+                                           │
+                                      Events │
+                                           ▼
+                                  ┌─────────────────┐
+                                  │Submission Service│
+                                  └─────────────────┘
+```
+
+### **Event Types and Flows**
+
+#### **Core Events**
+```typescript
+// User Events
+interface UserRegisteredEvent {
+  type: 'user.registered';
+  userId: string;
+  role: 'student' | 'instructor' | 'admin';
+  timestamp: Date;
+}
+
+// Submission Events
+interface SubmissionSubmittedEvent {
+  type: 'submission.submitted';
+  submissionId: string;
+  assessmentId: string;
+  studentId: string;
+  timestamp: Date;
+}
+
+// Grading Events
+interface GradingCompletedEvent {
+  type: 'grading.completed';
+  submissionId: string;
+  assessmentId: string;
+  score: number;
+  timestamp: Date;
+}
+```
+
+### **Event Development Guidelines**
+
+#### **1. Publishing Events**
+```typescript
+// services/submission-service/src/services/submission.service.ts
+import { publishEvent } from '../config/rabbitmq';
+
+export class SubmissionService {
+  async createSubmission(data: CreateSubmissionRequest): Promise<Submission> {
+    const submission = await this.repository.create(data);
+    
+    // Publish event after successful creation
+    await publishEvent('submission.submitted', {
+      submissionId: submission.id,
+      assessmentId: submission.assessmentId,
+      studentId: submission.studentId,
+      timestamp: new Date()
+    });
+    
+    return submission;
+  }
+}
+```
+
+#### **2. Consuming Events**
+```typescript
+// services/assessment-service/src/events/subscriber.ts
+import { subscribeToEvent } from '../config/rabbitmq';
+
+// Subscribe to cross-service events
+export const initializeEventSubscribers = async () => {
+  await subscribeToEvent('submission.submitted', async (event) => {
+    await assessmentService.updateAssessmentStats(event.assessmentId);
+    logger.info('Updated assessment stats', { assessmentId: event.assessmentId });
+  });
+
+  await subscribeToEvent('grading.completed', async (event) => {
+    await assessmentService.calculateAssessmentAnalytics(event.assessmentId);
+    logger.info('Calculated assessment analytics', { assessmentId: event.assessmentId });
+  });
+};
+```
+
+#### **3. Event Configuration**
+```typescript
+// config/rabbitmq.ts
+import { Connection, Channel } from 'amqplib';
+
+const EXCHANGE_NAME = 'pediafor.events';
+
+export const publishEvent = async (eventType: string, data: any) => {
+  const message = JSON.stringify({ type: eventType, ...data });
+  await channel.publish(EXCHANGE_NAME, eventType, Buffer.from(message));
+};
+
+export const subscribeToEvent = async (eventType: string, handler: Function) => {
+  const queue = await channel.assertQueue(`${serviceName}.${eventType}`, { durable: true });
+  await channel.bindQueue(queue.queue, EXCHANGE_NAME, eventType);
+  await channel.consume(queue.queue, async (msg) => {
+    if (msg) {
+      const event = JSON.parse(msg.content.toString());
+      await handler(event);
+      channel.ack(msg);
+    }
+  });
+};
+```
+
+### **Event Testing**
+
+#### **Unit Testing Events**
+```typescript
+// tests/events/subscriber.test.ts
+describe('Event Subscriber', () => {
+  it('should process submission.submitted events', async () => {
+    const mockEvent = {
+      type: 'submission.submitted',
+      submissionId: 'sub_123',
+      assessmentId: 'assess_456',
+      studentId: 'user_789',
+      timestamp: new Date()
+    };
+
+    await handleSubmissionSubmitted(mockEvent);
+    
+    expect(assessmentService.updateAssessmentStats).toHaveBeenCalledWith('assess_456');
+  });
+});
+```
+
+#### **Integration Testing Events**
+```typescript
+// tests/integration/events.test.ts
+describe('Event Integration', () => {
+  it('should trigger assessment stats update when submission is created', async () => {
+    // Create submission (triggers event)
+    const submission = await request(app)
+      .post('/api/submissions')
+      .send(submissionData);
+
+    // Wait for event processing
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    // Verify assessment stats were updated
+    const assessment = await assessmentService.getById(submissionData.assessmentId);
+    expect(assessment.submissionCount).toBe(1);
+  });
+});
+```
+
+### **Event Debugging**
+
+#### **RabbitMQ Management UI**
+- **URL**: http://localhost:15672
+- **Credentials**: admin/admin
+- **Monitor**: Exchanges, queues, message flow
+- **Debug**: Message routing, consumer status
+
+#### **Event Logging**
+```typescript
+// Add to event handlers for debugging
+logger.info('Event received', { 
+  type: event.type, 
+  data: event,
+  service: serviceName,
+  timestamp: new Date()
+});
+```
+
+#### **Common Event Issues**
+1. **Dead Letter Queue**: Check for failed message processing
+2. **Queue Binding**: Verify exchange-to-queue routing
+3. **Consumer Status**: Ensure subscribers are active
+4. **Message Format**: Validate event structure and types
 
 ---
 

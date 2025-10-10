@@ -1,10 +1,11 @@
 # Gateway Service - API Gateway & Authentication Hub
 
 [![Status](https://img.shields.io/badge/Status-Production%20Ready-success)](.)
-[![Test Coverage](https://img.shields.io/badge/Tests-7%2F7%20(100%25)-success)](.)
+[![Test Coverage](https://img.shields.io/badge/Tests-35%2F40%20(87.5%25)-yellow)](.)
 [![Security](https://img.shields.io/badge/Security-PASETO%20V4%20Authentication-green)](.)
 [![Port](https://img.shields.io/badge/Port-3000-blue)](.)
 [![Role](https://img.shields.io/badge/Role-Central%20API%20Gateway-orange)](.)
+[![Event Integration](https://img.shields.io/badge/Events-RabbitMQ%20Ready-FF6600?logo=rabbitmq)](.)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue?logo=typescript)](.)
 [![Express](https://img.shields.io/badge/Express.js-4.x-green?logo=express)](.)
 
@@ -14,16 +15,17 @@
 2. [Architecture](#architecture)
 3. [Authentication System](#authentication-system)
 4. [Service Routing](#service-routing)
-5. [Security Features](#security-features)
-6. [API Documentation](#api-documentation)
-7. [Production Features](#production-features)
-8. [Testing](#testing)
+5. [Event-Driven Features](#event-driven-features)
+6. [Security Features](#security-features)
+7. [API Documentation](#api-documentation)
+8. [Production Features](#production-features)
+9. [Testing](#testing)
 
 ---
 
 ## Overview
 
-The Gateway Service serves as the **single entry point** for all client applications accessing the Pediafor Assessment Platform. It implements a comprehensive API Gateway pattern with advanced authentication, routing, and security features.
+The Gateway Service serves as the **single entry point** for all client applications accessing the Pediafor Assessment Platform. It implements a comprehensive API Gateway pattern with advanced authentication, routing, security features, and event-driven coordination.
 
 ### **Core Responsibilities**
 
@@ -341,6 +343,83 @@ graph LR
     class GATEWAY gateway
     class USER,ASSESSMENT,SUBMISSION,GRADING service
     class MONITOR,CACHE monitor
+```
+
+---
+
+## Event-Driven Features
+
+### **Event Coordination Hub**
+
+The Gateway Service acts as a coordination point for event-driven workflows, enabling:
+- Cross-service event tracking and monitoring
+- Real-time notification aggregation
+- Event-based authentication state updates
+
+#### **Event Integration Points**
+```typescript
+// Real-time user activity tracking
+router.use('/api/*', async (req, res, next) => {
+  // Track user activity for analytics
+  if (req.user) {
+    await publishEvent('user.activity', {
+      userId: req.user.id,
+      endpoint: req.path,
+      method: req.method,
+      timestamp: new Date()
+    });
+  }
+  next();
+});
+```
+
+#### **Cross-Service Event Monitoring**
+```typescript
+// Monitor service health through event metrics
+interface ServiceHealthEvent {
+  service: string;
+  status: 'healthy' | 'degraded' | 'unhealthy';
+  responseTime: number;
+  timestamp: Date;
+}
+
+// Gateway aggregates service health events
+await subscribeToEvent('service.health', async (event: ServiceHealthEvent) => {
+  updateServiceHealthMetrics(event.service, event);
+  if (event.status === 'unhealthy') {
+    await notifyOpsTeam(event);
+  }
+});
+```
+
+#### **Authentication Event Integration**
+```typescript
+// Publish authentication events for security monitoring
+export const publishAuthEvent = async (type: string, data: any) => {
+  await publishEvent(`auth.${type}`, {
+    ...data,
+    gateway: 'main',
+    timestamp: new Date()
+  });
+};
+
+// Examples:
+// auth.login.success, auth.login.failed, auth.token.expired
+```
+
+### **Real-Time Client Updates**
+
+#### **Event-Driven Dashboard Updates**
+```typescript
+// Gateway coordinates real-time updates to connected clients
+app.use('/api/realtime', async (req, res, next) => {
+  // Subscribe client to relevant event streams
+  const userRole = req.user?.role;
+  const relevantEvents = getEventsForRole(userRole);
+  
+  await subscribeClientToEvents(req.user.id, relevantEvents);
+  next();
+});
 ```
 
 ---

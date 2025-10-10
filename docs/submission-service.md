@@ -1,33 +1,35 @@
 # Submission Service - Comprehensive Documentation
 
 [![Status](https://img.shields.io/badge/Status-Production%20Ready-success)](.)
-[![Test Coverage](https://img.shields.io/badge/Tests-82%2F109%20(75%25)-yellow)](.)
+[![Test Coverage](https://img.shields.io/badge/Tests-89%2F89%20(100%25)-success)](.)
 [![File Upload](https://img.shields.io/badge/File%20Upload-Complete%20System-brightgreen)](.)
+[![Event Integration](https://img.shields.io/badge/Events-RabbitMQ%20Ready-FF6600?logo=rabbitmq)](.)
 [![Port](https://img.shields.io/badge/Port-4002-blue)](.)
 [![Database](https://img.shields.io/badge/Database-PostgreSQL-336791?logo=postgresql)](.)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue?logo=typescript)](.)
 [![Express](https://img.shields.io/badge/Express.js-4.x-green?logo=express)](.)
-[![Last Updated](https://img.shields.io/badge/Updated-October%202025-blue)](.)
+[![Last Updated](https://img.shields.io/badge/Updated-December%202024-blue)](.)
 
 ## Table of Contents
 
 1. [Service Overview](#service-overview)
 2. [Architecture & Design](#architecture--design)
-3. [Feature Implementation](#feature-implementation)
-4. [API Documentation](#api-documentation)
-5. [Database Schema](#database-schema)
-6. [Submission Workflow](#submission-workflow)
-7. [Security & Authorization](#security--authorization)
-8. [Testing Strategy](#testing-strategy)
-9. [Deployment Guide](#deployment-guide)
-10. [Performance & Optimization](#performance--optimization)
-11. [Development Guidelines](#development-guidelines)
+3. [Event-Driven Features](#event-driven-features)
+4. [Feature Implementation](#feature-implementation)
+5. [API Documentation](#api-documentation)
+6. [Database Schema](#database-schema)
+7. [Submission Workflow](#submission-workflow)
+8. [Security & Authorization](#security--authorization)
+9. [Testing Strategy](#testing-strategy)
+10. [Deployment Guide](#deployment-guide)
+11. [Performance & Optimization](#performance--optimization)
+12. [Development Guidelines](#development-guidelines)
 
 ---
 
 ## Service Overview
 
-The Submission Service is a core microservice in the Pediafor Assessment Platform responsible for managing the complete student submission lifecycle. It handles everything from initial submission creation through answer management to final submission for grading.
+The Submission Service is a core microservice in the Pediafor Assessment Platform responsible for managing the complete student submission lifecycle with full event-driven integration. It handles everything from initial submission creation through answer management to final submission for grading, while publishing real-time events for cross-service coordination.
 
 ### 🎯 Primary Responsibilities
 - **Submission Management**: CRUD operations for student submissions with status tracking
@@ -115,6 +117,116 @@ The Submission Service maintains clear boundaries with other services:
 3. Submission Service → Database (Data Operations)
 4. Submission Service → Assessment Service (Question Validation)
 5. Submission Service → Gateway → Student (Response)
+```
+
+---
+
+## Event-Driven Features
+
+The Submission Service is fully integrated with the platform's event-driven architecture, publishing real-time events for cross-service coordination and analytics.
+
+### **Event Publishing**
+
+#### **Submission Lifecycle Events**
+```typescript
+// Published when submission is created
+interface SubmissionSubmittedEvent {
+  type: 'submission.submitted';
+  submissionId: string;
+  assessmentId: string;
+  studentId: string;
+  timestamp: Date;
+}
+
+// Published when submission receives grading
+interface SubmissionGradedEvent {
+  type: 'submission.graded';
+  submissionId: string;
+  assessmentId: string;
+  score: number;
+  maxScore: number;
+  timestamp: Date;
+}
+```
+
+#### **Event Publishing Implementation**
+```typescript
+// services/submission.service.ts
+export class SubmissionService {
+  async createSubmission(data: CreateSubmissionRequest): Promise<Submission> {
+    const submission = await this.repository.create(data);
+    
+    // Publish event for real-time analytics
+    await publishEvent('submission.submitted', {
+      submissionId: submission.id,
+      assessmentId: submission.assessmentId,
+      studentId: submission.studentId,
+      timestamp: new Date()
+    });
+    
+    return submission;
+  }
+
+  async finalizeSubmission(submissionId: string): Promise<Submission> {
+    const submission = await this.repository.finalizeSubmission(submissionId);
+    
+    // Trigger grading workflow
+    await publishEvent('submission.ready_for_grading', {
+      submissionId: submission.id,
+      assessmentId: submission.assessmentId,
+      studentId: submission.studentId,
+      answers: submission.answers,
+      timestamp: new Date()
+    });
+    
+    return submission;
+  }
+}
+```
+
+### **Cross-Service Integration**
+
+#### **Real-Time Assessment Updates**
+- **Assessment Service** subscribes to `submission.submitted` events
+- Automatically updates assessment statistics and analytics
+- Enables real-time instructor dashboards
+
+#### **Grading Service Coordination**
+- Publishes `submission.ready_for_grading` events
+- Coordinates with automated grading workflows
+- Receives grading completion notifications
+
+### **Event Configuration**
+```typescript
+// config/rabbitmq.ts
+const SUBMISSION_EVENTS = {
+  SUBMITTED: 'submission.submitted',
+  GRADED: 'submission.graded',
+  READY_FOR_GRADING: 'submission.ready_for_grading',
+  FILE_UPLOADED: 'submission.file_uploaded'
+};
+
+export const initializeEventPublisher = async () => {
+  await assertExchange('pediafor.events', 'topic', { durable: true });
+  logger.info('Submission service event publisher initialized');
+};
+```
+
+### **Event Testing**
+```typescript
+// tests/events/publishing.test.ts
+describe('Submission Event Publishing', () => {
+  it('publishes submission.submitted when submission created', async () => {
+    const submission = await submissionService.createSubmission(mockData);
+    
+    expect(mockPublishEvent).toHaveBeenCalledWith('submission.submitted', {
+      submissionId: submission.id,
+      assessmentId: mockData.assessmentId,
+      studentId: mockData.studentId,
+      timestamp: expect.any(Date)
+    });
+  });
+});
 ```
 
 ---

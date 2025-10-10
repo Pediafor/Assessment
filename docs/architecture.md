@@ -2,52 +2,56 @@
 
 [![Platform Status](https://img.shields.io/badge/Platform-Production%20Ready-success)](.)
 [![Services](https://img.shields.io/badge/Services-5%20Microservices-blue)](.)
-[![Test Coverage](https://img.shields.io/badge/Tests-295%2F310%20Passing%20(95%25)-success)](.)
-[![Architecture](https://img.shields.io/badge/Pattern-Pure%20Microservices-orange)](.)
+[![Test Coverage](https://img.shields.io/badge/Tests-307%2F322%20Passing%20(95.3%25)-success)](.)
+[![Architecture](https://img.shields.io/badge/Pattern-Event%20Driven%20Microservices-orange)](.)
 [![Authentication](https://img.shields.io/badge/Auth-PASETO%20V4-green)](.)
 [![Database](https://img.shields.io/badge/Database-PostgreSQL%20per%20Service-336791?logo=postgresql)](.)
+[![Events](https://img.shields.io/badge/Events-RabbitMQ%20Powered-orange)](.)
 [![Docker](https://img.shields.io/badge/Container-Docker-blue?logo=docker)](.)
 
 ## Table of Contents
 
 1. [Executive Summary](#executive-summary)
 2. [Architecture Overview](#architecture-overview)
-3. [System Components](#system-components)
-4. [Service Communication](#service-communication)
-5. [Data Architecture](#data-architecture)
-6. [Security Architecture](#security-architecture)
-7. [Deployment Architecture](#deployment-architecture)
-8. [Network Architecture](#network-architecture)
-9. [Development Architecture](#development-architecture)
-10. [Operational Architecture](#operational-architecture)
+3. [Event-Driven Architecture](#event-driven-architecture)
+4. [System Components](#system-components)
+5. [Service Communication](#service-communication)
+6. [Data Architecture](#data-architecture)
+7. [Security Architecture](#security-architecture)
+8. [Deployment Architecture](#deployment-architecture)
+9. [Network Architecture](#network-architecture)
+10. [Development Architecture](#development-architecture)
+11. [Operational Architecture](#operational-architecture)
 
 ---
 
 ## Executive Summary
 
-The Pediafor Assessment Platform implements a **pure microservices architecture** designed for educational assessment management. The platform provides a scalable, secure, and maintainable solution for creating, managing, grading, and analyzing educational assessments.
+The Pediafor Assessment Platform implements a **event-driven microservices architecture** designed for educational assessment management. The platform provides a scalable, secure, and maintainable solution for creating, managing, grading, and analyzing educational assessments with real-time processing capabilities.
 
 ### Core Architectural Principles
 
 - **Service Independence**: Each microservice owns its data and business logic
+- **Event-Driven Communication**: RabbitMQ-powered asynchronous messaging between services
 - **Database per Service**: No shared databases, ensuring loose coupling
 - **API Gateway Pattern**: Single entry point with centralized authentication
 - **Token-Based Security**: Stateless authentication using PASETO V4 tokens
 - **Container-First Design**: Docker containers with orchestration-ready configuration
-- **Test-Driven Quality**: 95% test coverage across all services with comprehensive test suites
+- **Test-Driven Quality**: 95.3% test coverage across all services with comprehensive test suites
 
 ### Platform Capabilities
 
-- ✅ **User Management**: Registration, authentication, profile management (61/77 tests - DB integration pending)
-- ✅ **Assessment Creation**: Rich assessment builder with media support (94/94 tests)
+- ✅ **User Management**: Registration, authentication, profile management (77/77 tests)
+- ✅ **Assessment Creation**: Rich assessment builder with media support and event-driven analytics (106/106 tests)
 - ✅ **File Management**: Multi-format media upload with processing
 - ✅ **Role-Based Access**: Student, Teacher, Admin permission levels
-- ✅ **Submission Handling**: Complete student submission workflow (Functionally complete)
+- ✅ **Submission Handling**: Complete student submission workflow with event publishing (94/109 tests)
 - ✅ **Autosave & Draft Management**: Real-time answer saving and submission status
-- ✅ **Event-Driven Architecture**: RabbitMQ-powered automatic workflows
-- ✅ **Automated Grading**: Production-ready MCQ grading engine with zero-latency processing
+- ✅ **Event-Driven Architecture**: Complete RabbitMQ integration with real-time analytics
+- ✅ **Automated Grading**: Production-ready MCQ grading engine with event processing (23/23 tests)
 - ✅ **Container Deployment**: Full Docker support with health monitoring
 - ✅ **Gateway Service**: API Gateway with PASETO authentication (7/7 tests)
+- ✅ **Frontend Application**: Complete React/Next.js interface with role-based dashboards
 - 🔄 **AI Question Generation**: Next phase development (infrastructure ready)
 
 ---
@@ -240,6 +244,101 @@ sequenceDiagram
     
     Note over C,Cache: All services maintain independent data stores<br/>Gateway handles authentication and routing<br/>Services communicate via internal APIs
 ```
+
+---
+
+## Event-Driven Architecture
+
+The platform implements a comprehensive event-driven architecture using RabbitMQ as the central message broker. This enables real-time processing, automatic workflows, and scalable inter-service communication.
+
+### Event Architecture Overview
+
+```mermaid
+graph TB
+    %% Event Publishers
+    SUB[Submission Service] --> RMQ[RabbitMQ Event Bus]
+    GRAD[Grading Service] --> RMQ
+    USER[User Service] --> RMQ
+    ASSESS[Assessment Service] --> RMQ
+    
+    %% Event Subscribers
+    RMQ --> ASSESS_SUB[Assessment Analytics]
+    RMQ --> FUTURE[Future Services]
+    
+    %% Event Types
+    RMQ -.-> E1[submission.submitted]
+    RMQ -.-> E2[submission.graded]
+    RMQ -.-> E3[grading.completed]
+    RMQ -.-> E4[user.registered]
+    RMQ -.-> E5[assessment.fully_graded]
+    
+    %% Management
+    RMQ --> MGMT[Management UI<br/>:15672]
+    
+    classDef service fill:#e1f5fe,stroke:#0277bd,stroke-width:2px
+    classDef broker fill:#fff3e0,stroke:#f57c00,stroke-width:3px
+    classDef event fill:#f3e5f5,stroke:#7b1fa2,stroke-width:1px
+    classDef mgmt fill:#e8f5e8,stroke:#2e7d32,stroke-width:2px
+    
+    class SUB,GRAD,USER,ASSESS,ASSESS_SUB,FUTURE service
+    class RMQ broker
+    class E1,E2,E3,E4,E5 event
+    class MGMT mgmt
+```
+
+### Event Flow Workflow
+
+```mermaid
+sequenceDiagram
+    participant Student
+    participant SubService as Submission Service
+    participant RabbitMQ
+    participant AssessService as Assessment Service
+    participant GradService as Grading Service
+    
+    Student->>SubService: Submit Assessment
+    SubService->>RabbitMQ: Publish submission.submitted
+    RabbitMQ->>AssessService: Event: submission.submitted
+    AssessService->>AssessService: Update Statistics
+    
+    SubService->>GradService: Trigger Auto-Grading
+    GradService->>GradService: Process MCQ Answers
+    GradService->>RabbitMQ: Publish grading.completed
+    
+    RabbitMQ->>AssessService: Event: grading.completed
+    AssessService->>AssessService: Update Analytics
+    AssessService->>AssessService: Check All Submissions
+    
+    alt All Submissions Graded
+        AssessService->>RabbitMQ: Publish assessment.fully_graded
+        RabbitMQ->>SubService: Event: assessment.fully_graded
+        SubService->>SubService: Update Assessment Status
+    end
+```
+
+### Event Types and Handlers
+
+#### Published Events
+- **submission.submitted**: Student submits an assessment
+- **submission.graded**: Submission receives a grade
+- **grading.completed**: Grading process completes
+- **user.registered**: New user joins the platform
+- **assessment.fully_graded**: All submissions for assessment are graded
+
+#### Event Processing
+- **Real-Time Analytics**: Live assessment statistics and completion rates
+- **Automatic Workflows**: Seamless submission-to-grading pipelines
+- **Cross-Service Communication**: Decoupled service integration
+- **Statistics Tracking**: Organization and assessment metrics
+
+### Production Benefits
+
+- **Scalability**: Asynchronous processing with message persistence
+- **Reliability**: Event durability and dead-letter queue handling
+- **Real-Time**: Live updates and immediate feedback
+- **Monitoring**: Complete visibility through RabbitMQ Management UI
+- **Fault Tolerance**: Graceful error handling and recovery
+
 ---
 
 ## System Components

@@ -1,19 +1,21 @@
 # Pediafor Assessment Platform - Documentation Index
 
 [![Platform Status](https://img.shields.io/badge/Platform-Production%20Ready-success)](.)
-[![Test Coverage](https://img.shields.io/badge/Tests-295%2F310%20Passing%20(95%25)-success)](.)
+[![Test Coverage](https://img.shields.io/badge/Tests-307%2F322%20Passing%20(95.3%25)-success)](.)
 [![Services](https://img.shields.io/badge/Services-5%20Backend%20%2B%20Frontend-blue)](.)
+[![Events](https://img.shields.io/badge/Events-RabbitMQ%20Powered-orange)](.)
 [![Documentation](https://img.shields.io/badge/Documentation-Complete-brightgreen)](.)
 [![Last Updated](https://img.shields.io/badge/Updated-October%202025-blue)](.)
 
-Welcome to the comprehensive documentation for the Pediafor Assessment Platform - a modern, secure, and scalable microservices-based assessment system built with TypeScript, Express.js, PostgreSQL, React/Next.js, and Docker.
+Welcome to the comprehensive documentation for the Pediafor Assessment Platform - a modern, secure, and scalable event-driven microservices-based assessment system built with TypeScript, Express.js, PostgreSQL, React/Next.js, RabbitMQ, and Docker.
 
 ## 📋 Quick Start
 
 | Document | Purpose | Audience |
 |----------|---------|----------|
-| [🏗️ Architecture](./architecture.md) | System design and service architecture | Developers, Architects |
-| [🚀 Deployment Guide](./deployment.md) | Production deployment instructions | DevOps, Deployment |
+| [🏗️ Architecture](./architecture.md) | Event-driven system design and service architecture | Developers, Architects |
+| [🔄 Event Architecture](./EVENT_DRIVEN_ARCHITECTURE.md) | Complete RabbitMQ event system documentation | Developers, Architects |
+| [🚀 Deployment Guide](./deployment.md) | Production deployment with Docker and events | DevOps, Deployment |
 | [🔧 Development Guide](./development.md) | Complete development setup and workflow | Developers |
 | [📡 API Reference](./api.md) | Complete API documentation with examples | Frontend Developers, Integrators |
 | [🎨 Frontend Guide](../README.md#frontend-application) | React/Next.js frontend architecture | Frontend Developers |
@@ -24,10 +26,10 @@ Welcome to the comprehensive documentation for the Pediafor Assessment Platform 
 |---------|--------|---------------|---------|
 | [🚪 Gateway Service](./gateway-service.md) | ✅ Production | Complete | API Gateway, Authentication, Routing |
 | [👤 User Service](./user-service.md) | ✅ Production | Complete | User management, Authentication |
-| [📝 Assessment Service](./assessment-service.md) | ✅ Production | Complete | Assessment CRUD, Media handling |
-| [📤 Submission Service](./submission-service.md) | ✅ Production | Complete | Student submissions, File uploads |
-| [🎯 Grading Service](./grading-service.md) | ✅ Production | Complete | Auto-grading, Analytics |
-| [🎨 Frontend Application](../README.md#frontend-application) | 📋 Planned | Architecture Ready | React/Next.js User Interface |
+| [📝 Assessment Service](./assessment-service.md) | ✅ Production | Complete | Assessment CRUD, Media, Event Analytics |
+| [📤 Submission Service](./submission-service.md) | ✅ Production | Complete | Student submissions, File uploads, Events |
+| [🎯 Grading Service](./grading-service.md) | ✅ Production | Complete | Auto-grading, Analytics, Events |
+| [🎨 Frontend Application](../README.md#frontend-application) | ✅ Production | Complete | React/Next.js User Interface |
 
 ---
 

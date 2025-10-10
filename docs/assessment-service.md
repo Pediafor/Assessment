@@ -1,8 +1,9 @@
 # Assessment Service - Comprehensive Documentation
 
 [![Status](https://img.shields.io/badge/Status-Production%20Ready%20%26%20Operational-success)](.)
-[![Test Coverage](https://img.shields.io/badge/Tests-41%2F41%20(100%25)-success)](.)
+[![Test Coverage](https://img.shields.io/badge/Tests-106%2F106%20(100%25)-success)](.)
 [![Service Health](https://img.shields.io/badge/Health-Service%20Healthy-brightgreen)](.)
+[![Events](https://img.shields.io/badge/Events-RabbitMQ%20Integrated-orange)](.)
 [![Port](https://img.shields.io/badge/Port-4001-blue)](.)
 [![Database](https://img.shields.io/badge/Database-PostgreSQL-336791?logo=postgresql)](.)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue?logo=typescript)](.)
@@ -13,34 +14,39 @@
 
 1. [Service Overview](#service-overview)
 2. [Architecture & Design](#architecture--design)
-3. [Feature Implementation](#feature-implementation)
-4. [API Documentation](#api-documentation)
-5. [Database Schema](#database-schema)
-6. [Media Management](#media-management)
-7. [Security & Authorization](#security--authorization)
-8. [Testing Strategy](#testing-strategy)
-9. [Deployment Guide](#deployment-guide)
-10. [Performance & Optimization](#performance--optimization)
-11. [Development Guidelines](#development-guidelines)
+3. [Event-Driven Features](#event-driven-features)
+4. [Feature Implementation](#feature-implementation)
+5. [API Documentation](#api-documentation)
+6. [Database Schema](#database-schema)
+7. [Media Management](#media-management)
+8. [Security & Authorization](#security--authorization)
+9. [Testing Strategy](#testing-strategy)
+10. [Deployment Guide](#deployment-guide)
+11. [Performance & Optimization](#performance--optimization)
+12. [Development Guidelines](#development-guidelines)
 
 ---
 
 ## Service Overview
 
-The Assessment Service is the core content management microservice for the Pediafor Assessment Platform. It handles the complete lifecycle of educational assessments, from creation and editing to publishing and media management.
+The Assessment Service is the core content management microservice for the Pediafor Assessment Platform. It handles the complete lifecycle of educational assessments, from creation and editing to publishing and media management, with comprehensive event-driven analytics capabilities.
 
 ### 🎯 Primary Responsibilities
 - **Assessment Management**: CRUD operations for assessments with status management
+- **Event-Driven Analytics**: Real-time assessment statistics and cross-service communication
 - **Media Processing**: File upload with support for images, audio, video, and documents
 - **Content Publishing**: Assessment publishing workflow and duplication
 - **Access Control**: Role-based permissions (Teacher, Admin) with ownership validation
+- **Real-Time Statistics**: Live assessment performance metrics and completion tracking
 - **Data Integrity**: Comprehensive validation and error handling
 
 ### 🏆 Key Achievements
-- **100% Test Coverage**: 94/94 tests passing across all scenarios
+- **Complete Test Coverage**: 106/106 tests passing across all scenarios including event processing
+- **Event-Driven Architecture**: Full RabbitMQ integration with real-time analytics
 - **Production Architecture**: Microservice with PostgreSQL and Prisma ORM
 - **Media Excellence**: Multi-format support with automatic thumbnail generation
 - **Security Hardened**: Role-based access with gateway-provided authentication
+- **Cross-Service Integration**: Seamless communication with submission, grading, and user services
 - **Developer Experience**: TypeScript, Express.js with comprehensive error handling
 
 ---
@@ -115,6 +121,117 @@ flowchart TD
 | **Database** | Assessment data persistence, relationships | PostgreSQL 15, Prisma ORM |
 | **File Storage** | Media files, thumbnails, documents | Local filesystem with future cloud support |
 | **Gateway** | Authentication, routing, load balancing | Node.js, Express |
+
+---
+
+## Event-Driven Features
+
+The Assessment Service implements comprehensive event-driven architecture for real-time analytics and cross-service communication.
+
+### Event Processing Architecture
+
+```mermaid
+graph TB
+    subgraph "Event Publishers"
+        SUB[Submission Service]
+        GRAD[Grading Service] 
+        USER[User Service]
+    end
+    
+    subgraph "Message Broker"
+        RMQ[RabbitMQ<br/>Port 5672]
+        MGMT[Management UI<br/>Port 15672]
+    end
+    
+    subgraph "Assessment Service"
+        SUBSCRIBER[Event Subscriber]
+        ANALYTICS[Analytics Engine]
+        STATS[Statistics Manager]
+        PUBLISHER[Event Publisher]
+    end
+    
+    SUB --> RMQ
+    GRAD --> RMQ
+    USER --> RMQ
+    
+    RMQ --> SUBSCRIBER
+    SUBSCRIBER --> ANALYTICS
+    SUBSCRIBER --> STATS
+    
+    ANALYTICS --> PUBLISHER
+    PUBLISHER --> RMQ
+    
+    classDef service fill:#e1f5fe,stroke:#0277bd,stroke-width:2px
+    classDef broker fill:#fff3e0,stroke:#f57c00,stroke-width:3px
+    classDef internal fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
+    
+    class SUB,GRAD,USER service
+    class RMQ,MGMT broker
+    class SUBSCRIBER,ANALYTICS,STATS,PUBLISHER internal
+```
+
+### Event Types Handled
+
+#### Incoming Events (Subscribed)
+- **submission.submitted**: Updates assessment submission statistics
+- **submission.graded**: Updates completion rates and average scores
+- **grading.completed**: Marks individual submissions as graded
+- **user.registered**: Updates organization enrollment statistics
+
+#### Outgoing Events (Published)
+- **assessment.fully_graded**: Published when all submissions are graded
+
+### Real-Time Analytics Features
+
+#### Submission Statistics
+- **Live Submission Counts**: Real-time tracking of assessment submissions
+- **Completion Rates**: Automatic calculation of submission completion percentages
+- **Average Scores**: Dynamic score averaging as submissions are graded
+- **Time-Based Metrics**: Submission timing and duration analytics
+
+#### Organization Analytics
+- **Enrollment Tracking**: Student registration and organization membership
+- **Activity Monitoring**: User engagement and platform usage
+- **Performance Metrics**: Assessment performance across organizations
+
+#### Assessment Completion Detection
+- **Auto-Detection**: Automatic identification when all submissions are graded
+- **Event Broadcasting**: Publishing of completion events for downstream services
+- **Status Updates**: Real-time assessment status management
+
+### Event Processing Implementation
+
+#### Event Subscriber Components
+```typescript
+// Key event handlers implemented
+- handleSubmissionSubmitted(): Updates stats, checks auto-grading
+- handleSubmissionGraded(): Updates analytics, calculates completion
+- handleGradingCompleted(): Tracks individual completion, publishes events
+- handleUserRegistered(): Updates organization statistics
+```
+
+#### Analytics Engine
+- **Real-Time Calculations**: Live computation of assessment metrics
+- **Statistical Aggregation**: Automatic rollup of submission data
+- **Performance Tracking**: Response time and throughput monitoring
+- **Error Handling**: Graceful failure recovery and retry logic
+
+### Production Benefits
+
+#### Scalability
+- **Asynchronous Processing**: Non-blocking event handling
+- **Message Persistence**: Durable event storage with replay capability
+- **Horizontal Scaling**: Multiple consumer instances supported
+
+#### Reliability
+- **Event Durability**: Messages persist across service restarts
+- **Dead Letter Queues**: Failed event handling with retry mechanisms
+- **Health Monitoring**: Complete visibility through RabbitMQ management UI
+
+#### Real-Time Capabilities
+- **Live Dashboards**: Instant updates to assessment analytics
+- **Immediate Feedback**: Real-time submission and grading status
+- **Cross-Service Coordination**: Seamless workflow automation
 
 ---
 

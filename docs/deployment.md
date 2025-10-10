@@ -3,26 +3,28 @@
 [![Deployment Status](https://img.shields.io/badge/Deployment-All%20Services%20Production%20Ready-success)](.)
 [![Container Runtime](https://img.shields.io/badge/Runtime-Docker-blue?logo=docker)](.)
 [![Orchestration](https://img.shields.io/badge/Orchestration-Docker%20Compose%20%2F%20Kubernetes-blue)](.)
-[![Infrastructure](https://img.shields.io/badge/Infrastructure-Microservices%20(5%20Core%20%2B%20Frontend%20%2B%20RabbitMQ)-orange)](.)
+[![Infrastructure](https://img.shields.io/badge/Infrastructure-Event%20Driven%20Microservices-orange)](.)
 [![Database](https://img.shields.io/badge/Database-PostgreSQL%20per%20Service-336791?logo=postgresql)](.)
-[![Cache](https://img.shields.io/badge/Cache-Redis-red?logo=redis)](.)
-[![Message Broker](https://img.shields.io/badge/Events-RabbitMQ-orange?logo=rabbitmq)](.)
-[![Test Coverage](https://img.shields.io/badge/Tests-295%2F310%20Passing%20(95%25)-success)](.)
+[![Events](https://img.shields.io/badge/Events-RabbitMQ%20Powered-orange?logo=rabbitmq)](.)
+[![Test Coverage](https://img.shields.io/badge/Tests-307%2F322%20Passing%20(95.3%25)-success)](.)
 [![Last Updated](https://img.shields.io/badge/Updated-October%202025-blue)](.)
 
 ## Table of Contents
 
 1. [Prerequisites](#prerequisites)
-2. [Local Development Setup](#local-development-setup)
-3. [Frontend Application Deployment](#frontend-application-deployment)
-4. [Production Deployment](#production-deployment)
-5. [Docker Deployment](#docker-deployment)
-6. [Kubernetes Deployment](#kubernetes-deployment)
-7. [Environment Configuration](#environment-configuration)
-8. [Database Setup](#database-setup)
-9. [Monitoring & Observability](#monitoring--observability)
-10. [Security Configuration](#security-configuration)
-11. [Troubleshooting](#troubleshooting)
+2. [Quick Start Deployment](#quick-start-deployment)
+3. [Event-Driven Architecture Setup](#event-driven-architecture-setup)
+4. [Local Development Setup](#local-development-setup)
+5. [Frontend Application Deployment](#frontend-application-deployment)
+6. [Production Deployment](#production-deployment)
+7. [Docker Deployment](#docker-deployment)
+8. [Kubernetes Deployment](#kubernetes-deployment)
+9. [Environment Configuration](#environment-configuration)
+10. [Database Setup](#database-setup)
+11. [RabbitMQ Configuration](#rabbitmq-configuration)
+12. [Monitoring & Observability](#monitoring--observability)
+13. [Security Configuration](#security-configuration)
+14. [Troubleshooting](#troubleshooting)
 
 ---
 
@@ -48,6 +50,7 @@
 - **Docker**: 24.0+ with Docker Compose v2
 - **Node.js**: 20.x LTS (for development)
 - **PostgreSQL**: 15.x (or via Docker)
+- **RabbitMQ**: 3.13+ (or via Docker)
 - **Redis**: 7.x (or via Docker)
 - **RabbitMQ**: 3.12+ (or via Docker)
 
@@ -56,6 +59,107 @@
 - **NGINX**: Latest (for reverse proxy)
 - **Let's Encrypt**: For SSL certificates
 - **Monitoring Stack**: Prometheus, Grafana, Loki
+
+---
+
+## Quick Start Deployment
+
+### 🚀 **One-Command Production Deployment**
+
+```bash
+# Clone repository
+git clone https://github.com/pediafor/assessment.git
+cd assessment
+
+# Start complete platform (all services + frontend + events)
+docker-compose up --build
+
+# Access the platform:
+# - Frontend Application: http://localhost:3001
+# - API Gateway: http://localhost:3000
+# - RabbitMQ Management: http://localhost:15672 (admin/admin123)
+```
+
+### ✅ **Verify Complete Deployment**
+
+```bash
+# Check all services are healthy
+curl http://localhost:3000/health
+
+# Test frontend accessibility
+curl http://localhost:3001
+
+# Verify RabbitMQ event bus
+curl -u admin:admin123 http://localhost:15672/api/overview
+```
+
+### 🔄 **Event-Driven Architecture Verification**
+
+The platform includes complete event-driven workflows:
+
+1. **Create Assessment** → Frontend → Gateway → Assessment Service
+2. **Submit Assessment** → Submission Service → **Event: submission.submitted**
+3. **Auto-Grade** → Grading Service → **Event: grading.completed**
+4. **Update Analytics** → Assessment Service → **Real-time statistics**
+
+**Services Included:**
+- ✅ Frontend Application (React/Next.js)
+- ✅ API Gateway with authentication
+- ✅ 5 Core microservices
+- ✅ RabbitMQ event bus
+- ✅ PostgreSQL databases per service
+- ✅ Complete event-driven workflows
+
+---
+
+## Event-Driven Architecture Setup
+
+### RabbitMQ Configuration
+
+The platform uses RabbitMQ for event-driven communication between microservices.
+
+#### **Automatic Setup (Recommended)**
+```bash
+# Docker Compose automatically configures:
+# - RabbitMQ broker with management UI
+# - All necessary exchanges and queues
+# - Service connections and subscriptions
+docker-compose up rabbitmq
+```
+
+#### **Manual Configuration**
+```bash
+# Start RabbitMQ manually
+docker run -d \
+  --name rabbitmq \
+  -p 5672:5672 \
+  -p 15672:15672 \
+  -e RABBITMQ_DEFAULT_USER=admin \
+  -e RABBITMQ_DEFAULT_PASS=admin123 \
+  rabbitmq:3.13-management-alpine
+```
+
+### Event Flow Validation
+
+#### **Test Event Processing**
+```bash
+# 1. Submit an assessment (triggers submission.submitted event)
+curl -X POST http://localhost:3000/api/submissions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer your-token" \
+  -d '{"assessmentId": "test-id", "answers": []}'
+
+# 2. Check assessment statistics (updated via events)
+curl http://localhost:3000/api/assessments/test-id/analytics
+
+# 3. Monitor events in RabbitMQ Management UI
+# Visit: http://localhost:15672 (admin/admin123)
+```
+
+#### **Event Monitoring**
+- **RabbitMQ Management**: http://localhost:15672
+- **Event Exchanges**: submission.events, grading.events, user.events, assessment.events
+- **Live Queues**: Real-time message processing visibility
 
 ---
 

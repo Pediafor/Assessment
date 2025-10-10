@@ -3,22 +3,25 @@
 ## 🎉 **Service Status: OPERATIONAL** 
 [![Build Status](https://img.shields.io/badge/Build-Passing-success)](.)
 [![Service Status](https://img.shields.io/badge/Status-Healthy%20%26%20Running-green)](.)
-[![Tests](https://img.shields.io/badge/Tests-94%2F94%20Passing-success)](.)
+[![Tests](https://img.shields.io/badge/Tests-106%2F106%20Passing-success)](.)
 [![Port](https://img.shields.io/badge/Port-4001%20Active-blue)](.)
 [![Database](https://img.shields.io/badge/Database-Connected%20%26%20Healthy-green)](.)
+[![Events](https://img.shields.io/badge/Events-RabbitMQ%20Connected-orange)](.)
 
-> **Recently Fixed**: Service rebuild resolved startup issues - now fully operational and healthy on port 4001
+> **Latest Update**: Complete event-driven architecture implemented with RabbitMQ integration for real-time assessment analytics and cross-service communication
 
 ## Overview
 
-The Assessment Service is a **production-ready** core microservice in the Pediafor Assessment Platform, implementing comprehensive assessment creation and management capabilities. Built as part of a pure microservices architecture, it provides:
+The Assessment Service is a **production-ready** core microservice in the Pediafor Assessment Platform, implementing comprehensive assessment creation and management capabilities with complete event-driven architecture. Built as part of a pure microservices architecture, it provides:
 
-- **📝 Complete Assessment Management**: Full CRUD operations for assessments, question sets, and questions with 94/94 tests passing
-- **📁 Advanced File Upload System**: Multi-format media support with automatic image processing and thumbnails
+- **📝 Complete Assessment Management**: Full CRUD operations for assessments, question sets, and questions with 106/106 tests passing
+- **� Event-Driven Analytics**: Real-time assessment statistics and analytics via RabbitMQ event processing
+- **🔄 Cross-Service Integration**: Seamless communication with submission, grading, and user services
+- **�📁 Advanced File Upload System**: Multi-format media support with automatic image processing and thumbnails
 - **🔒 Production-Grade Security**: Role-based access control with streamlined gateway authentication
 - **🏛️ Optimized Database Architecture**: Dedicated PostgreSQL database with efficient Prisma ORM operations
 - **🐳 Container Ready**: Production-optimized Docker deployment with Alpine Linux base
-- **🧪 Comprehensive Testing**: Complete test coverage with unit, integration, and API validation
+- **🧪 Comprehensive Testing**: Complete test coverage with unit, integration, and event-driven workflow tests
 - **⚡ High Performance**: Async file processing with optimized database queries and efficient middleware
 
 ## Architecture Overview
@@ -31,12 +34,46 @@ The Assessment Service is a **production-ready** core microservice in the Pediaf
 │ - Route Auth    │◄──►│ - Assessment    │◄──►│ - Assessments   │
 │ - Token Verify  │    │   CRUD          │    │ - Questions     │
 │ - Load Balance  │    │ - File Uploads  │    │ - Media Files   │
-│                 │    │ - Media Proc.   │    │ - Metadata      │
+│                 │    │ - Event Sub.    │    │ - Metadata      │
 └─────────────────┘    └─────────────────┘    └─────────────────┘
         │                        │                      │
+        │                        ▼                      │
+   Port :3000        ┌─────────────────┐            Port :5433
+   (Public API)      │   RabbitMQ      │             (Private)
+                     │   Event Bus     │
+                     │                 │
+                     │ - submission.*  │
+                     │ - grading.*     │
+                     │ - user.*        │
+                     │ - assessment.*  │
+                     └─────────────────┘
+                          Port :5672
+                         (Event Mesh)
+```
+
+### Event-Driven Architecture
+
+```
+┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
+│   Submission    │────►│   Assessment    │────►│   Analytics     │
+│   Service       │     │   Service       │     │   Dashboard     │
+│                 │     │                 │     │                 │
+│ submission.     │     │ - Event Sub     │     │ - Real-time     │
+│ submitted       │     │ - Stats Update  │     │   Updates       │
+│ submission.     │     │ - Analytics     │     │ - Performance   │
+│ graded          │     │ - Completion    │     │   Metrics       │
+└─────────────────┘     └─────────────────┘     └─────────────────┘
         │                        │                      │
-   Port :3000               Port :4001              Port :5433
-   (Public API)              (Internal)              (Private)
+        ▼                        ▼                      ▼
+┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
+│   Grading       │     │   User          │     │   Organization  │
+│   Service       │     │   Service       │     │   Statistics    │
+│                 │     │                 │     │                 │
+│ grading.        │     │ user.           │     │ - Enrollment    │
+│ completed       │     │ registered      │     │ - Activity      │
+│                 │     │                 │     │ - Usage Metrics │
+└─────────────────┘     └─────────────────┘     └─────────────────┘
+```
 ```
 
 ### File Storage Architecture
@@ -56,12 +93,21 @@ The Assessment Service is a **production-ready** core microservice in the Pediaf
 ### Microservices Communication
 
 - **Gateway Service**: Public-facing API gateway with authentication middleware and request routing
-- **Assessment Service**: Internal service handling assessment operations, question management, and file uploads
-- **Submission Service**: Consumer of assessment data for student submission workflows and answer validation
-- **Grading Service**: (Planned) Consumer of assessment data for scoring rubrics and grading algorithms
-- **User Service**: Provider of authentication context via Gateway Service integration
+- **Assessment Service**: Internal service handling assessment operations, question management, file uploads, and event-driven analytics
+- **Submission Service**: Publisher of submission events consumed by assessment service for real-time statistics
+- **Grading Service**: Publisher of grading completion events for assessment analytics and completion tracking
+- **User Service**: Publisher of user registration events for organization statistics and enrollment tracking
+- **RabbitMQ Event Bus**: Central event mesh enabling real-time cross-service communication
 - **Database Isolation**: Dedicated PostgreSQL instance with Prisma schema management
-- **User Context**: Authenticated requests enriched with user information from Gateway
+- **Event-Driven Analytics**: Real-time assessment statistics, completion rates, and performance metrics
+
+### Event Processing Workflow
+
+1. **submission.submitted** → Assessment service updates submission statistics and checks auto-grading settings
+2. **submission.graded** → Assessment service updates completion statistics and calculates analytics
+3. **grading.completed** → Assessment service marks grading complete and publishes assessment.fully_graded when done
+4. **user.registered** → Assessment service updates organization-level enrollment statistics
+5. **assessment.published** → (Future) Trigger submission service to enable student submissions
 
 ## 🚀 Key Features
 
@@ -71,6 +117,14 @@ The Assessment Service is a **production-ready** core microservice in the Pediaf
 - **Metadata Handling**: Assessment settings, instructions, time limits, and scoring configurations
 - **Version Control**: Track assessment changes and maintain data integrity
 - **Soft Delete**: Maintains referential integrity while marking items inactive
+
+### Event-Driven Analytics & Real-Time Processing
+- **Submission Event Processing**: Automatic statistics updates when students submit assessments
+- **Grading Event Integration**: Real-time completion tracking and analytics calculation
+- **User Registration Tracking**: Organization-level enrollment and activity statistics
+- **Assessment Completion Detection**: Automatic detection and publishing of fully graded assessments
+- **Cross-Service Communication**: Seamless integration with submission, grading, and user services via RabbitMQ
+- **Real-Time Statistics**: Live assessment performance metrics and completion rates
 
 ### File Upload & Media Processing
 - **Multi-Format Support**: Images (PNG, JPG, JPEG, GIF, WebP), documents (PDF), and archives
@@ -98,6 +152,7 @@ The Assessment Service is a **production-ready** core microservice in the Pediaf
 ### Runtime
 - **Node.js 18+**: Modern JavaScript runtime with ES modules
 - **Express.js 5.1**: Fast, minimalist web framework with async/await support
+- **RabbitMQ**: Event-driven message broker for real-time cross-service communication
 - **TypeScript 5.9**: Static typing and advanced language features
 - **Prisma 6.1**: Next-generation ORM with type safety and migrations
 

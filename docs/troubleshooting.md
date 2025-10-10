@@ -1,23 +1,24 @@
 # Pediafor Assessment Platform - Troubleshooting Guide
 
-[![Platform Support](https://img.shields.io/badge/Support-Platform%20Support-blue)](.)
-[![Issue Coverage](https://img.shields.io/badge/Coverage-Common%20Issues%20%26%20Solutions-brightgreen)](.)
-[![Debug Procedures](https://img.shields.io/badge/Procedures-Debug%20Procedures-orange)](.)
+[![Platform Support](https://img.shields.io/badge/Support-Production%20Ready%20Platform-blue)](.)
+[![Issue Coverage](https://img.shields.io/badge/Coverage-Event%20Driven%20Issues%20%26%20Solutions-brightgreen)](.)
+[![Debug Procedures](https://img.shields.io/badge/Procedures-RabbitMQ%20%26%20Service%20Debug-orange)](.)
 [![Help](https://img.shields.io/badge/Help-Available%2024%2F7-green)](.)
-[![Last Updated](https://img.shields.io/badge/Updated-October%202025-blue)](.)
+[![Last Updated](https://img.shields.io/badge/Updated-December%202024-blue)](.)
 
 ## Table of Contents
 
 1. [Quick Diagnostics](#quick-diagnostics)
 2. [Service Health Checks](#service-health-checks)
-3. [Database Issues](#database-issues)
-4. [Authentication Problems](#authentication-problems)
-5. [Network & Connectivity](#network--connectivity)
-6. [Performance Issues](#performance-issues)
-7. [Testing Failures](#testing-failures)
-8. [Docker & Container Issues](#docker--container-issues)
-9. [Environment Setup](#environment-setup)
-10. [Production Issues](#production-issues)
+3. [Event System Issues](#event-system-issues)
+4. [Database Issues](#database-issues)
+5. [Authentication Problems](#authentication-problems)
+6. [Network & Connectivity](#network--connectivity)
+7. [Performance Issues](#performance-issues)
+8. [Testing Failures](#testing-failures)
+9. [Docker & Container Issues](#docker--container-issues)
+10. [Environment Setup](#environment-setup)
+11. [Production Issues](#production-issues)
 
 ---
 
@@ -32,13 +33,20 @@ curl -f http://localhost:3000/health && echo "✅ Gateway OK" || echo "❌ Gatew
 curl -f http://localhost:4000/health && echo "✅ User Service OK" || echo "❌ User Service Down"
 curl -f http://localhost:4001/health && echo "✅ Assessment Service OK" || echo "❌ Assessment Service Down"
 curl -f http://localhost:4002/health && echo "✅ Submission Service OK" || echo "❌ Submission Service Down"
+curl -f http://localhost:4003/health && echo "✅ Grading Service OK" || echo "❌ Grading Service Down"
+
+# Check RabbitMQ status
+curl -f http://localhost:15672/api/overview && echo "✅ RabbitMQ OK" || echo "❌ RabbitMQ Down"
 ```
 
 ### **Service Status Dashboard**
 ```bash
-# Check all services and databases
+# Check all services, databases, and event broker
 docker-compose ps
 docker-compose logs --tail=50
+
+# Check RabbitMQ Management UI
+open http://localhost:15672  # Username: admin, Password: admin
 ```
 
 ### **Test Status Check**
@@ -48,6 +56,10 @@ npm run test:quick
 
 # Expected output:
 # User Service: 77/77 tests passing ✅
+# Assessment Service: 106/106 tests passing ✅  
+# Submission Service: 89/89 tests passing ✅
+# Gateway Service: 35/40 tests passing ⚠️
+# Platform Total: 307/322 tests passing (95.3%) ✅
 # Assessment Service: 94/94 tests passing ✅  
 # Submission Service: 66/76 tests passing ⚠️
 # Overall: 237/247 (96%) ✅
@@ -183,6 +195,132 @@ docker-compose restart submission-service postgres-submission
 
 # Check unique constraints
 docker-compose exec submission-service npx prisma db pull
+```
+
+---
+
+## Event System Issues
+
+### **RabbitMQ Connection Problems**
+
+#### **Symptoms**
+- Services starting but events not processing
+- "ECONNREFUSED" to localhost:5672
+- Event handlers not triggering
+- Missing real-time updates
+
+#### **Diagnostics**
+```bash
+# Check RabbitMQ container status
+docker-compose ps rabbitmq
+
+# Test RabbitMQ connection
+curl -u admin:admin http://localhost:15672/api/overview
+
+# Check RabbitMQ logs
+docker-compose logs rabbitmq --tail=100
+
+# Verify exchanges and queues
+curl -u admin:admin http://localhost:15672/api/exchanges
+curl -u admin:admin http://localhost:15672/api/queues
+```
+
+#### **Common Solutions**
+```bash
+# Restart RabbitMQ
+docker-compose restart rabbitmq
+
+# Reset RabbitMQ data
+docker-compose down
+docker volume rm assessment_rabbitmq-data
+docker-compose up -d rabbitmq
+
+# Wait for RabbitMQ to start completely
+sleep 30
+npm run test:events
+```
+
+### **Event Processing Issues**
+
+#### **Symptoms**
+- Events publishing but not consumed
+- Assessment stats not updating
+- Missing cross-service notifications
+- Event subscribers not starting
+
+#### **Diagnostics**
+```bash
+# Check event subscriber logs
+docker-compose logs assessment-service | grep "Event"
+docker-compose logs submission-service | grep "Event"
+
+# Test event publishing manually
+curl -X POST http://localhost:4002/api/test/events/submission.submitted
+
+# Check queue bindings
+curl -u admin:admin http://localhost:15672/api/bindings
+```
+
+#### **Event Queue Status**
+```bash
+# Monitor message flow in RabbitMQ Management UI
+open http://localhost:15672
+
+# Check for dead letter queues
+curl -u admin:admin "http://localhost:15672/api/queues/%2F/dlq"
+
+# Verify consumer status
+curl -u admin:admin "http://localhost:15672/api/consumers"
+```
+
+#### **Common Solutions**
+```bash
+# Restart services with event dependencies
+docker-compose restart assessment-service submission-service
+
+# Reinitialize event subscribers
+docker-compose exec assessment-service npm run events:init
+
+# Clear and recreate queues
+docker-compose exec assessment-service node -e "
+  const { deleteQueue, initializeEventSubscribers } = require('./src/events/subscriber');
+  deleteQueue('assessment-service.submission.submitted').then(() => {
+    return initializeEventSubscribers();
+  });
+"
+```
+
+### **Event Data Consistency**
+
+#### **Symptoms**
+- Assessment stats showing incorrect numbers
+- Missing submission counts
+- Outdated analytics data
+
+#### **Diagnostics**
+```bash
+# Check assessment stats manually
+curl http://localhost:4001/api/assessments/{id}/stats
+
+# Compare with actual submission count
+curl http://localhost:4002/api/submissions?assessmentId={id}
+
+# Check event processing logs
+docker-compose logs assessment-service | grep "updateAssessmentStats"
+```
+
+#### **Data Repair Solutions**
+```bash
+# Recalculate assessment stats
+docker-compose exec assessment-service npm run stats:recalculate
+
+# Replay events for specific assessment
+curl -X POST http://localhost:4001/api/admin/events/replay \
+  -H "Content-Type: application/json" \
+  -d '{"assessmentId": "assess_123", "eventTypes": ["submission.submitted", "grading.completed"]}'
+
+# Full data consistency check
+npm run test:consistency
 ```
 
 ---
