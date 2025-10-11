@@ -2,17 +2,21 @@ import WebSocket from 'ws';
 import { Server as HTTPServer } from 'http';
 import { UserContext, WebSocketAuth } from '../middleware/websocket.auth';
 import { EventSubscriber } from '../config/rabbitmq';
-import { 
-  Http3Server,
-  HttpServer,
-  isWebTransportAvailable,
-  detectWebTransportPolyfill,
-  WebTransportCertificate,
-  WebTransportServerOptions
-} from '../types/webtransport';
-import { generateWebTransportCertificate } from '../utils/certificate';
 import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
+
+// Dynamic imports for optional WebTransport support
+let WebTransportTypes: any = null;
+let generateWebTransportCertificate: any = null;
+
+// Try to load WebTransport dependencies
+try {
+  WebTransportTypes = require('../types/webtransport');
+  const certUtils = require('../utils/certificate');
+  generateWebTransportCertificate = certUtils.generateWebTransportCertificate;
+} catch (error) {
+  console.log('📝 WebTransport dependencies not available, running in WebSocket-only mode');
+}
 
 export interface RealtimeMessage {
   type: 'event' | 'authenticate' | 'subscribe' | 'unsubscribe' | 'error' | 'success';
@@ -44,11 +48,11 @@ export interface EventFilter {
 export class WebTransportRealtimeService {
   private clients = new Map<string, ClientConnection>();
   private eventSubscriber: EventSubscriber | null = null;
-  private webTransportServer: Http3Server | HttpServer | null = null;
+  private webTransportServer: any = null; // Generic type to handle optional WebTransport
   private websocketServer: WebSocket.Server | null = null;
   private readonly pingInterval = 30000; // 30 seconds
   private pingTimer: NodeJS.Timeout | null = null;
-  private certificate: WebTransportCertificate | null = null;
+  private certificate: any = null; // Generic type for certificate
 
   constructor(
     private readonly port: number = 8080,
@@ -671,6 +675,8 @@ export class WebTransportRealtimeService {
     uptime: number;
     webTransportSupported: boolean;
   } {
+    const webTransportSupported = WebTransportTypes && generateWebTransportCertificate ? true : false;
+    
     return {
       clientCount: this.clients.size,
       transports: [
@@ -678,7 +684,7 @@ export class WebTransportRealtimeService {
         ...(this.websocketServer ? ['websocket'] : [])
       ],
       uptime: process.uptime(),
-      webTransportSupported: isWebTransportAvailable()
+      webTransportSupported
     };
   }
 
