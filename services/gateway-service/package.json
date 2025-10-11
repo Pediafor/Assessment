@@ -15,6 +15,7 @@
     "dev:realtime": "ts-node-dev --respawn src/realtime-server.ts",
     "realtime": "ts-node-dev --respawn src/realtime-server.ts",
     "realtime:build": "tsc && node dist/realtime-server.js",
+    "realtime:prod": "npm run build && node dist/realtime-server.js",
     "test": "jest"
   },
   "repository": {

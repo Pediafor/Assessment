@@ -149,7 +149,7 @@ services:
       NODE_ENV: production
       PORT: 4000
       DATABASE_URL: postgresql://userservice_user:userservice_password@user-db:5432/userservice_db
-      RABBITMQ_URL: amqp://admin:pediafor2024@rabbitmq:5672
+      RABBITMQ_URL: amqp://admin:pediafor2024@rabbitmq:5672/pediafor
       PASETO_PRIVATE_KEY: ${PASETO_PRIVATE_KEY}
       PASETO_PUBLIC_KEY: ${PASETO_PUBLIC_KEY}
     ports:
@@ -183,17 +183,48 @@ services:
       SUBMISSION_SERVICE_URL: http://submission-service:4002
       GRADING_SERVICE_URL: http://grading-service:4003
       PASETO_PUBLIC_KEY: ${PASETO_PUBLIC_KEY}
+      RABBITMQ_URL: amqp://admin:pediafor2024@rabbitmq:5672/pediafor
     ports:
       - "3000:3000"
     depends_on:
       redis:
         condition: service_healthy
-      user-service:
+      rabbitmq:
         condition: service_healthy
     networks:
       - pediafor-network
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Real-time Communication Service (WebSocket + WebTransport)
+  realtime-service:
+    build:
+      context: ./services/gateway-service
+      dockerfile: Dockerfile
+    container_name: realtime-service
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 8080
+      RABBITMQ_URL: amqp://admin:pediafor2024@rabbitmq:5672/pediafor
+      PASETO_PUBLIC_KEY: ${PASETO_PUBLIC_KEY}
+      REALTIME_ENABLE_WEBSOCKET: "true"
+      REALTIME_ENABLE_WEBTRANSPORT: "true"
+      WEBTRANSPORT_SECRET: "assessment-platform-secret"
+    ports:
+      - "8080:8080"   # WebSocket port
+      - "8081:8081"   # WebTransport port
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - pediafor-network
+    command: ["npm", "run", "realtime:prod"]
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/health"] 
       interval: 30s
       timeout: 10s
       retries: 3
@@ -208,7 +239,7 @@ services:
       NODE_ENV: production
       PORT: 4001
       DATABASE_URL: postgresql://assessmentservice_user:assessmentservice_password@assessment-db:5432/assessmentservice_db
-      RABBITMQ_URL: amqp://admin:pediafor2024@rabbitmq:5672
+      RABBITMQ_URL: amqp://admin:pediafor2024@rabbitmq:5672/pediafor
     ports:
       - "4001:4001"
     depends_on:
@@ -235,7 +266,7 @@ services:
       NODE_ENV: production
       PORT: 4002
       DATABASE_URL: postgresql://submissionservice_user:submissionservice_password@submission-db:5432/submissionservice_db
-      RABBITMQ_URL: amqp://admin:pediafor2024@rabbitmq:5672
+      RABBITMQ_URL: amqp://admin:pediafor2024@rabbitmq:5672/pediafor
     ports:
       - "4002:4002"
     depends_on:
@@ -262,7 +293,7 @@ services:
       NODE_ENV: production
       PORT: 4003
       DATABASE_URL: postgresql://gradingservice_user:gradingservice_password@grading-db:5432/gradingservice_db
-      RABBITMQ_URL: amqp://admin:pediafor2024@rabbitmq:5672
+      RABBITMQ_URL: amqp://admin:pediafor2024@rabbitmq:5672/pediafor
     ports:
       - "4003:4003"
     depends_on:

@@ -23,5 +23,6 @@ RUN npm ci --omit=dev
 
 COPY --from=build /usr/src/app/dist ./dist
 COPY --from=build /usr/src/app/prisma ./prisma
+COPY --from=build /usr/src/app/node_modules/.prisma ./node_modules/.prisma
 
 CMD ["node", "dist/server.js"]

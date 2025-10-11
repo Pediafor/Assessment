@@ -4,11 +4,14 @@ FROM node:20-alpine AS build
 # Set working directory
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
+# Use simplified package.json for Docker (without problematic native modules)
+COPY package.docker.json ./package.json
 
 # Install ALL dependencies (including dev dependencies for building)
 RUN npm ci
+
+# Now copy the actual package.json for runtime compatibility
+COPY package*.json ./
 
 # Copy TypeScript configuration and source code
 COPY tsconfig.json ./
@@ -23,10 +26,10 @@ FROM node:20-alpine AS production
 # Set working directory
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
+# Use simplified package.json for production
+COPY package.docker.json ./package.json
 
-# Install only production dependencies
+# Install production dependencies
 RUN npm ci --only=production && npm cache clean --force
 
 # Copy built application from build stage
