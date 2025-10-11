@@ -33,7 +33,7 @@
 ### ⚡ **Modern Technology Stack**
 - **Backend**: Node.js, TypeScript, Express.js with PostgreSQL
 - **Frontend**: Next.js 14+ App Router, React 18, Tailwind CSS
-- **Real-time**: WebSocket support, live updates, instant feedback
+- **Real-time**: **WebTransport + WebSocket** dual-protocol server for cutting-edge performance
 - **Container-Ready**: Docker deployment with health monitoring
 
 ---
@@ -110,6 +110,38 @@ graph TB
 Student Submits → Event Published → Auto Grading → Analytics Update → Teacher Dashboard
      ↓               ↓                    ↓              ↓                ↓
 File Upload → submission.submitted → grading.completed → assessment.stats → Live Updates
+```
+
+---
+
+## 🌐 **Next-Generation Real-time Communication**
+
+### **🚀 WebTransport + WebSocket Dual-Protocol Server**
+
+Pediafor includes a cutting-edge real-time communication system that supports both WebTransport (HTTP/3) and WebSocket protocols:
+
+#### **WebTransport Server (Port 8081)**
+- **HTTP/3 + QUIC**: Next-generation protocol for superior performance
+- **0-RTT Connections**: Faster connection establishment
+- **Multiplexed Streams**: No head-of-line blocking
+- **Built-in Security**: TLS 1.3 encryption by default
+
+#### **WebSocket Server (Port 8080)**
+- **Universal Compatibility**: Traditional WebSocket fallback
+- **Real-time Updates**: Live assessment data, grades, and notifications
+- **Authentication**: PASETO token-based secure connections
+- **Event Broadcasting**: Role-based message filtering
+
+#### **Features**
+- **Automatic Fallback**: WebTransport first, WebSocket backup
+- **Certificate Management**: Self-signed SSL certificates for development
+- **Session Handling**: Proper connection lifecycle management
+- **RabbitMQ Integration**: Event-driven real-time updates
+
+```typescript
+// Example: Real-time connection (client-side)
+const transport = new WebTransport('https://localhost:8081');
+// Automatically falls back to WebSocket if WebTransport unavailable
 ```
 
 ---
