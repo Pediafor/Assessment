@@ -3,6 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
+import { createServer } from 'http';
 import { createProxyMiddleware } from 'http-proxy-middleware';
 import { authenticateGateway } from './middleware/auth.middleware';
 
@@ -49,7 +50,9 @@ app.get('/', (req, res) => {
       'Request Authentication',
       'User Context Injection',
       'Load Balancing',
-      'Security Headers'
+      'Security Headers',
+      'Real-time WebSocket Communication',
+      'Event Broadcasting'
     ],
     routes: {
       auth: '/api/auth/* → UserService',
@@ -57,6 +60,10 @@ app.get('/', (req, res) => {
       assessments: '/api/assessments/* → AssessmentService',
       submissions: '/api/submissions/* → SubmissionService',
       grading: '/api/grading/* → GradingService'
+    },
+    realtime: {
+      websocket: '/ws',
+      stats: '/ws/stats'
     },
     health: '/health'
   });
@@ -138,6 +145,15 @@ app.use((req, res) => {
   });
 });
 
+// Real-time service status endpoint (Placeholder)
+app.get('/ws/stats', (req, res) => {
+  res.json({ 
+    message: 'Real-time service runs separately',
+    note: 'Use npm run realtime to start the WebTransport/WebSocket server',
+    port: process.env.REALTIME_PORT || 8080
+  });
+});
+
 // Global error handler
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
   console.error('Gateway error:', err);
@@ -149,10 +165,49 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
   });
 });
 
-app.listen(PORT, () => {
-  console.log(`🚀 Gateway Service running on port ${PORT}`);
-  console.log(`🔗 Proxying to services:`, services);
-  console.log(`📋 Health check: http://localhost:${PORT}/health`);
+// Create HTTP server
+const server = createServer(app);
+
+async function startServer() {
+  try {
+    console.log('🌐 Real-time service available separately via npm run realtime');
+  } catch (error) {
+    console.error('❌ Server initialization error:', error);
+  }
+
+  // Start HTTP server
+  server.listen(PORT, () => {
+    console.log(`🚀 Gateway Service running on port ${PORT}`);
+    console.log(`🔗 Proxying to services:`, services);
+    console.log(`📋 Health check: http://localhost:${PORT}/health`);
+    console.log(`🌐 Real-time server: Run 'npm run realtime' for WebSocket/WebTransport`);
+    console.log(`📊 Real-time stats: http://localhost:${PORT}/ws/stats`);
+  });
+}
+
+// Handle graceful shutdown
+process.on('SIGTERM', async () => {
+  console.log('🔄 SIGTERM received, shutting down gracefully...');
+  
+  server.close(() => {
+    console.log('✅ Gateway Service shut down');
+    process.exit(0);
+  });
+});
+
+process.on('SIGINT', async () => {
+  console.log('🔄 SIGINT received, shutting down gracefully...');
+  
+  server.close(() => {
+    console.log('✅ Gateway Service shut down');
+    process.exit(0);
+  });
+});
+
+// Start the server
+startServer().catch(error => {
+  console.error('❌ Failed to start Gateway Service:', error);
+  process.exit(1);
 });
 
 export default app;
