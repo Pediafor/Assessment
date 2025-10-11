@@ -9,7 +9,12 @@
   "scripts": {
     "build": "tsc",
     "start": "node dist/server.js",
+    "start:realtime": "node dist/realtime-server.js",
+    "start:all": "npm run start & npm run start:realtime",
     "dev": "ts-node-dev --respawn src/server.ts",
+    "dev:realtime": "ts-node-dev --respawn src/realtime-server.ts",
+    "realtime": "ts-node-dev --respawn src/realtime-server.ts",
+    "realtime:build": "tsc && node dist/realtime-server.js",
     "test": "jest"
   },
   "repository": {
@@ -23,21 +28,31 @@
   },
   "homepage": "https://github.com/Pediafor/Assessment/tree/main#readme",
   "dependencies": {
+    "@fails-components/webtransport": "^1.4.2",
+    "@fails-components/webtransport-transport-http3-quiche": "^1.4.2",
+    "amqplib": "^0.10.3",
     "cors": "^2.8.5",
     "dotenv": "^17.2.2",
     "express": "^4.21.2",
     "helmet": "^8.1.0",
     "http-proxy-middleware": "^3.0.5",
     "morgan": "^1.10.1",
-    "paseto": "^3.1.4"
+    "paseto": "^3.1.4",
+    "selfsigned": "^3.0.1",
+    "uuid": "^9.0.1",
+    "ws": "^8.14.2"
   },
   "devDependencies": {
+    "@types/amqplib": "^0.10.1",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",
     "@types/jest": "^30.0.0",
     "@types/morgan": "^1.9.10",
-    "@types/node": "^24.5.2",
+    "@types/node": "^24.7.1",
+    "@types/selfsigned": "^2.0.4",
     "@types/supertest": "^6.0.3",
+    "@types/uuid": "^9.0.7",
+    "@types/ws": "^8.5.8",
     "jest": "^30.2.0",
     "supertest": "^7.1.4",
     "ts-jest": "^29.4.4",
