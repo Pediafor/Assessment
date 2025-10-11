@@ -11,8 +11,20 @@
 - **Health Monitoring**: ✅ Service health checks and status reporting
 - **Error Handling**: ✅ Comprehensive error responses and logging
 - **Docker Ready**: ✅ Containerized deployment with proper networking
+- **🎉 Real-time Communication**: ✅ **WebTransport + WebSocket dual-protocol server** (NEW!)
+
+### 🚀 Latest Achievement: WebTransport + WebSocket Real-time Server
+- ✅ **WebTransport Server**: HTTP/3 + QUIC protocol support on port 8081
+- ✅ **WebSocket Server**: Traditional WebSocket fallback on port 8080
+- ✅ **Dual Protocol**: Both servers running simultaneously for maximum compatibility
+- ✅ **Certificate Management**: Automatic self-signed certificate generation
+- ✅ **Session Handling**: WebTransport session management with fallback support
+- ✅ **Production Ready**: Real library integration with `@fails-components/webtransport`
 
 ### Recent Achievements (October 2025)
+- 🎉 **NEW: WebTransport Implementation**: Successfully deployed real WebTransport server with HTTP/3 support
+- ✅ **Dual-Protocol Architecture**: WebTransport primary + WebSocket fallback for universal compatibility
+- ✅ **Certificate Generation**: Automatic SSL certificate creation and management
 - ✅ **Fixed Authentication Middleware**: Resolved public route detection for both test and production environments
 - ✅ **Complete Test Suite**: All authentication and routing tests now passing
 - ✅ **Production Configuration**: Updated service URLs for both local development and Docker deployment
@@ -28,6 +40,37 @@ The Gateway Service is the public-facing API gateway for the Pediafor Assessment
 - **⚡ Load Balancing**: Future-ready for horizontal scaling
 - **🛡️ Security Layer**: CORS, rate limiting, and request validation
 - **📊 Request Monitoring**: Centralized logging and metrics collection
+- **🚀 Real-time Communication**: WebTransport + WebSocket dual-protocol server
+
+## 🌟 Real-time Communication Server
+
+The Gateway Service now includes a cutting-edge real-time communication server with **WebTransport + WebSocket dual-protocol support**:
+
+### 🎯 Protocol Support
+- **WebTransport (HTTP/3)**: Port 8081 - Next-generation protocol with QUIC transport
+- **WebSocket (HTTP/1.1)**: Port 8080 - Traditional real-time communication fallback
+- **Dual Protocol**: Both servers run simultaneously for maximum compatibility
+
+### 🔧 Features
+- **Automatic Certificate Generation**: Self-signed certificates for WebTransport SSL/TLS
+- **Session Management**: WebTransport session handling with authentication integration
+- **Event Broadcasting**: Role-based message filtering (STUDENT/TEACHER/ADMIN)
+- **RabbitMQ Integration**: Optional message queue integration with graceful fallback
+- **Health Monitoring**: Real-time server status and connection monitoring
+
+### 🚀 WebTransport Advantages
+- **HTTP/3 + QUIC**: Superior performance with multiplexing and 0-RTT connections
+- **No Head-of-Line Blocking**: Better handling of packet loss
+- **Streams & Datagrams**: Multiple data transmission modes
+- **Built-in Security**: TLS 1.3 encryption by default
+- **Future-Proof**: Cutting-edge protocol for next-generation applications
+
+### 📡 Real-time Server Endpoints
+```
+WebTransport: https://localhost:8081 (HTTP/3 + HTTP/2)
+WebSocket:    ws://localhost:8080/realtime
+Health Check: http://localhost:8080/health
+```
 
 ## Architecture Overview
 
