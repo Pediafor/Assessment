@@ -16,17 +16,17 @@ $ErrorActionPreference = "Continue"
 
 function Write-Header {
     param($Message)
-    Write-Host "`n🚀 $Message" -ForegroundColor Cyan
-    Write-Host "=" * ($Message.Length + 3) -ForegroundColor Cyan
+    Write-Host "`n[START] $Message" -ForegroundColor Cyan
+    Write-Host "=" * ($Message.Length + 8) -ForegroundColor Cyan
 }
 
 function Write-Step {
     param($Message, $Status = "INFO")
     $icon = switch ($Status) {
-        "SUCCESS" { "✅" }
-        "ERROR" { "❌" }
-        "WARNING" { "⚠️" }
-        default { "ℹ️" }
+        "SUCCESS" { "[OK]" }
+        "ERROR" { "[ERROR]" }
+        "WARNING" { "[WARN]" }
+        default { "[INFO]" }
     }
     Write-Host "$icon $Message" -ForegroundColor $(if ($Status -eq "ERROR") { "Red" } elseif ($Status -eq "SUCCESS") { "Green" } elseif ($Status -eq "WARNING") { "Yellow" } else { "Cyan" })
 }
@@ -50,12 +50,14 @@ function Start-Platform {
         # Quick health check
         .\scripts\system-health.ps1
         
-        Write-Host "`n🌐 Platform URLs:" -ForegroundColor Magenta
+        Write-Host "`nPlatform URLs:" -ForegroundColor Magenta
         Write-Host "   Gateway:       http://localhost:3000" -ForegroundColor Green
         Write-Host "   User Service:  http://localhost:4000" -ForegroundColor Green
         Write-Host "   Assessment:    http://localhost:4001" -ForegroundColor Green
         Write-Host "   Submission:    http://localhost:4002" -ForegroundColor Green
         Write-Host "   Grading:       http://localhost:4003" -ForegroundColor Green
+        Write-Host "   Realtime WS:   ws://localhost:8080/realtime" -ForegroundColor Green
+        Write-Host "   Realtime WT:   https://localhost:8081" -ForegroundColor Green
         Write-Host "   RabbitMQ UI:   http://localhost:15672 (admin/pediafor2024)" -ForegroundColor Green
         
     } else {
@@ -93,11 +95,11 @@ function Show-Status {
     Write-Header "Platform Status"
     
     # Show container status
-    Write-Host "🐳 Container Status:" -ForegroundColor Magenta
+    Write-Host "Container Status:" -ForegroundColor Magenta
     docker-compose ps
     
     # Show system health
-    Write-Host "`n🏥 System Health:" -ForegroundColor Magenta
+    Write-Host "`nSystem Health:" -ForegroundColor Magenta
     .\scripts\system-health.ps1 -ShowDetails
 }
 

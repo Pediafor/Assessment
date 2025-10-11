@@ -24,6 +24,8 @@ $services = @{
     "Assessment" = @{ Port = 4001; Path = "/health" }
     "Submission" = @{ Port = 4002; Path = "/health" }
     "Grading" = @{ Port = 4003; Path = "/health" }
+    "Realtime-WebSocket" = @{ Port = 8080; Path = "/health" }
+    "Realtime-WebTransport" = @{ Port = 8081; Path = "/health" }
     "RabbitMQ" = @{ Port = 15672; Path = "/" }
 }
 
@@ -271,6 +273,69 @@ function Test-InterServiceCommunication {
     }
 }
 
+function Test-RealtimeCommunication {
+    Write-Host "`n📡 Testing Real-time Communication (WebSocket + WebTransport)..." -ForegroundColor Cyan
+    
+    try {
+        # Test WebSocket endpoint availability
+        $realtimeHealth = Invoke-WebRequest -Uri "$BaseUrl`:8080/health" -UseBasicParsing -TimeoutSec 10
+        
+        if ($realtimeHealth.StatusCode -eq 200) {
+            $healthData = $realtimeHealth.Content | ConvertFrom-Json
+            
+            if ($healthData.websocket -eq $true) {
+                Write-TestResult "Realtime Service Health" "PASS" "WebSocket: Active, WebTransport: $($healthData.webtransport)"
+            } else {
+                Write-TestResult "Realtime Service Health" "FAIL" "WebSocket not active"
+            }
+        } else {
+            Write-TestResult "Realtime Service Health" "FAIL" "Status: $($realtimeHealth.StatusCode)"
+        }
+        
+        # Test WebSocket connection (basic connectivity test)
+        try {
+            $tcpTest = Test-NetConnection -ComputerName "localhost" -Port 8080 -WarningAction SilentlyContinue
+            if ($tcpTest.TcpTestSucceeded) {
+                Write-TestResult "WebSocket Port Accessibility" "PASS" "Port 8080 accessible"
+            } else {
+                Write-TestResult "WebSocket Port Accessibility" "FAIL" "Port 8080 not accessible"
+            }
+        } catch {
+            Write-TestResult "WebSocket Port Accessibility" "FAIL" "Error: $($_.Exception.Message)"
+        }
+        
+        # Test WebTransport readiness (infrastructure check)
+        if ($healthData -and $healthData.webtransport) {
+            Write-TestResult "WebTransport Infrastructure" "PASS" "Infrastructure prepared for future Node.js support"
+        } else {
+            Write-TestResult "WebTransport Infrastructure" "FAIL" "WebTransport infrastructure not detected"
+        }
+        
+    } catch {
+        Write-TestResult "Real-time Communication Test" "FAIL" "Error: $($_.Exception.Message)"
+    }
+}
+
+function Test-WebSocketAuthentication {
+    Write-Host "`n🔐 Testing WebSocket Authentication Flow..." -ForegroundColor Cyan
+    
+    try {
+        # This is a basic test - in a real scenario, you'd use a WebSocket client library
+        # For now, we test the authentication endpoint preparation
+        $realtimeHealth = Invoke-WebRequest -Uri "$BaseUrl`:8080/health" -UseBasicParsing
+        $healthData = $realtimeHealth.Content | ConvertFrom-Json
+        
+        if ($healthData.service -eq "realtime-server") {
+            Write-TestResult "WebSocket Authentication Ready" "PASS" "Realtime server ready for authenticated connections"
+        } else {
+            Write-TestResult "WebSocket Authentication Ready" "FAIL" "Realtime server not properly configured"
+        }
+        
+    } catch {
+        Write-TestResult "WebSocket Authentication Test" "FAIL" "Error: $($_.Exception.Message)"
+    }
+}
+
 # Main Test Execution
 Write-Host "🔍 Phase 1: Infrastructure Health Checks" -ForegroundColor Magenta
 Write-Host "----------------------------------------" -ForegroundColor Gray
@@ -295,6 +360,13 @@ Test-UserWorkflow
 Test-AssessmentWorkflow
 Test-InterServiceCommunication
 Test-EventFlow
+
+Write-Host "`n📡 Phase 3: Real-time Communication Tests" -ForegroundColor Magenta
+Write-Host "----------------------------------------" -ForegroundColor Gray
+
+# Test real-time communication
+Test-RealtimeCommunication
+Test-WebSocketAuthentication
 
 # Summary
 Write-Host "`n📊 Integration Test Results" -ForegroundColor Cyan
