@@ -1,8 +1,12 @@
+import path from 'path';
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  experimental: {
-    typedRoutes: true,
-  },
+  // Keep React strict mode enabled
+  reactStrictMode: true,
+  typedRoutes: true,
+  // Silence workspace root warning when multiple lockfiles exist (monorepo-style workspace)
+  outputFileTracingRoot: path.join(process.cwd(), '..'),
   images: {
     domains: ['localhost'],
   },
