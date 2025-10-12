@@ -1,0 +1,43 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body { height: 100%; }
+
+/* Theme tokens */
+:root {
+	--bg: 255 255 255;           /* white */
+	--fg: 17 24 39;              /* gray-900 */
+	--muted: 107 114 128;        /* gray-500 */
+	--card: 249 250 251;         /* gray-50 */
+	--primary: 0 102 204;        /* brand blue */
+	--primary-foreground: 255 255 255;
+	--border: 229 231 235;       /* gray-200 */
+	--ring: 59 130 246;          /* blue-500 */
+}
+
+.dark {
+	--bg: 15 23 42;              /* slate-900 */
+	--fg: 248 250 252;            /* slate-50 */
+	--muted: 203 213 225;         /* slate-300 */
+	--card: 30 41 59;             /* slate-800 */
+	--primary: 51 136 221;        /* lighter brand */
+	--primary-foreground: 255 255 255;
+	--border: 51 65 85;           /* slate-700 */
+	--ring: 59 130 246;           /* blue-500 */
+}
+
+@layer base {
+	* { @apply border-border; }
+	html { color-scheme: light dark; }
+	body { @apply bg-background text-foreground; }
+}
+
+@layer utilities {
+	.bg-background { background-color: rgb(var(--bg)); }
+	.text-foreground { color: rgb(var(--fg)); }
+	.text-muted { color: rgb(var(--muted)); }
+	.bg-card { background-color: rgb(var(--card)); }
+	.border-border { border-color: rgb(var(--border)); }
+	.ring-brand { --tw-ring-color: rgb(var(--ring)); }
+}
