@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { RoleGuard } from "@/components/role-guard";
 import { AssessmentHeader } from "./assessment-header";
@@ -8,6 +8,7 @@ import { QuestionRenderer } from "./question-renderer";
 import { AssessmentFooter } from "./assessment-footer";
 import { sampleAssessment, sectionTimedAssessment } from "./sample";
 import type { Assessment } from "./types";
+import { saveSubmissionProgress, startSubmission, submitSubmission } from "@/lib/services/assessments";
 
 export function AssessmentPlayer({ id }: { id: string }) {
   const router = useRouter();
@@ -34,6 +35,8 @@ export function AssessmentPlayer({ id }: { id: string }) {
   const [lockedSections, setLockedSections] = useState<Set<number>>(new Set());
   const [showReview, setShowReview] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [submissionId, setSubmissionId] = useState<string | null>(null);
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const total = flatQuestions.length;
   const current = useMemo(() => flatQuestions[index - 1], [flatQuestions, index]);
@@ -76,6 +79,22 @@ export function AssessmentPlayer({ id }: { id: string }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [assessment.id, total]);
 
+  // Start or resume server-side submission (best-effort)
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await startSubmission(assessment.id);
+        if (!cancelled && res?.submissionId) setSubmissionId(res.submissionId);
+      } catch {
+        // fallback to local-only mode
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [assessment.id]);
+
   // Autosave draft
   useEffect(() => {
     const key = `draft-${assessment.id}`;
@@ -84,6 +103,26 @@ export function AssessmentPlayer({ id }: { id: string }) {
       JSON.stringify({ answers, index, flags: Array.from(flags), lockedSectionsIndices: Array.from(lockedSections) })
     );
   }, [answers, index, flags, lockedSections, assessment.id]);
+
+  // Debounced remote save (best-effort)
+  useEffect(() => {
+    if (!submissionId) return; // only when server submission exists
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(() => {
+      const payload = {
+        index,
+        answers,
+        flags: Array.from(flags),
+        lockedSections: Array.from(lockedSections),
+      } as const;
+      saveSubmissionProgress(submissionId, payload).catch(() => {
+        // ignore errors; local draft persists
+      });
+    }, 800);
+    return () => {
+      if (saveTimer.current) clearTimeout(saveTimer.current);
+    };
+  }, [answers, index, flags, lockedSections, submissionId]);
 
   const onChange = (next: unknown) => setAnswers((s) => ({ ...s, [current.id]: next }));
   const onFlag = (f: boolean) =>
@@ -116,6 +155,16 @@ export function AssessmentPlayer({ id }: { id: string }) {
   const handleTimerElapsed = () => {
     if (hasSections) {
       saveDraft();
+      if (submissionId) {
+        // persist immediately on section boundary
+        const payload = {
+          index,
+          answers,
+          flags: Array.from(flags),
+          lockedSections: Array.from(lockedSections),
+        } as const;
+        saveSubmissionProgress(submissionId, payload).catch(() => {});
+      }
       setLockedSections((prev) => {
         const next = new Set(prev);
         for (let s = 0; s <= sectionIndex; s++) next.add(s);
@@ -126,11 +175,17 @@ export function AssessmentPlayer({ id }: { id: string }) {
         goToSectionStart(nextSection);
       } else {
         setSubmitted(true);
+        if (submissionId) {
+          submitSubmission(submissionId).catch(() => {});
+        }
         router.push(`/student/assessment/${assessment.id}/submitted`);
       }
     } else {
       saveDraft();
       setSubmitted(true);
+      if (submissionId) {
+        submitSubmission(submissionId).catch(() => {});
+      }
       router.push(`/student/assessment/${assessment.id}/submitted`);
     }
   };
@@ -377,6 +432,9 @@ export function AssessmentPlayer({ id }: { id: string }) {
           onReview={() => setShowReview(true)}
           onSubmit={() => {
             setSubmitted(true);
+            if (submissionId) {
+              submitSubmission(submissionId).catch(() => {});
+            }
             router.push(`/student/assessment/${assessment.id}/submitted`);
           }}
         />
