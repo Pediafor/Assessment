@@ -8,7 +8,7 @@ import { QuestionRenderer } from "./question-renderer";
 import { AssessmentFooter } from "./assessment-footer";
 import { sampleAssessment, sectionTimedAssessment } from "./sample";
 import type { Assessment } from "./types";
-import { saveSubmissionProgress, startSubmission, submitSubmission } from "@/lib/services/assessments";
+import { getSubmission, saveSubmissionProgress, startSubmission, submitSubmission } from "@/lib/services/assessments";
 
 export function AssessmentPlayer({ id }: { id: string }) {
   const router = useRouter();
@@ -85,7 +85,21 @@ export function AssessmentPlayer({ id }: { id: string }) {
     (async () => {
       try {
         const res = await startSubmission(assessment.id);
-        if (!cancelled && res?.submissionId) setSubmissionId(res.submissionId);
+        if (!cancelled && res?.submissionId) {
+          setSubmissionId(res.submissionId);
+          // Try hydrating from server if answers exist
+          try {
+            const sub = await getSubmission(res.submissionId);
+            const srvAnswers = sub?.answers;
+            const meta = (sub as any)?.metadata;
+            if (!cancelled && srvAnswers && typeof srvAnswers === "object") {
+              setAnswers(srvAnswers as any);
+              if (meta?.index) setIndex(Math.min(Math.max(1, Number(meta.index) || 1), total));
+              if (Array.isArray(meta?.flags)) setFlags(new Set<number>(meta.flags));
+              if (Array.isArray(meta?.lockedSections)) setLockedSections(new Set<number>(meta.lockedSections));
+            }
+          } catch {}
+        }
       } catch {
         // fallback to local-only mode
       }
