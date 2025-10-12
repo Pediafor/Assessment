@@ -1,6 +1,7 @@
 "use client";
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { clearToken, getToken, setToken } from "@/lib/auth";
+import { apiLogin, apiLogout } from "@/lib/auth-api";
 
 export type UserRole = "admin" | "teacher" | "student";
 
@@ -36,7 +37,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const login = useCallback(async (email: string, _password: string) => {
+  const login = useCallback(async (email: string, password: string) => {
+    const mode = process.env.NEXT_PUBLIC_AUTH_MODE ?? "mock";
+    if (mode === "api") {
+      const r = await apiLogin(email, password);
+      const role = (r ?? roleFromEmail(email.toLowerCase()));
+      if (!role) throw new Error("Unable to resolve user role");
+      if (typeof window !== "undefined") localStorage.setItem("auth_role", role);
+      setRole(role);
+      return role;
+    }
+    // mock fallback
     const r = roleFromEmail(email.toLowerCase());
     if (!r) throw new Error("Invalid credentials (use admin@, teacher@ or student@)");
     setToken("dummy-token");
@@ -46,7 +57,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const logout = useCallback(() => {
-    clearToken();
+    const mode = process.env.NEXT_PUBLIC_AUTH_MODE ?? "mock";
+    if (mode === "api") {
+      apiLogout().catch(() => {});
+    } else {
+      clearToken();
+    }
     if (typeof window !== "undefined") localStorage.removeItem("auth_role");
     setRole(null);
     if (typeof window !== "undefined") {

@@ -1,42 +1,47 @@
 # 🎨 Pediafor Assessment Platform - Frontend
 
-[![Framework](https://img.shields.io/badge/Framework-Next.js%2014%2B-black?logo=nextdotjs)](.)
+[![Framework](https://img.shields.io/badge/Framework-Next.js%2015-black?logo=nextdotjs)](.)
 [![Architecture](https://img.shields.io/badge/Architecture-Single%20Page%20Application-blue)](.)
 [![Design System](https://img.shields.io/badge/Design-Tailwind%20%2B%20Shadcn%2Fui-06B6D4)](.)
 [![Accessibility](https://img.shields.io/badge/Accessibility-WCAG%202.1%20AA-green)](.)
 [![Status](https://img.shields.io/badge/Status-In%20Development-orange)](.)
 
-> **🚧 Frontend Development in Progress**  
-> This README serves as our comprehensive development blueprint. The architecture and designs outlined here will guide our systematic frontend implementation using Next.js 14+ App Router, React 18, and modern web technologies.
+> **� Current Status**
+> Frontend scaffold is in place and running with Next.js 15 App Router and React 19. We’ve implemented role-based layouts and a robust assessment-taking flow (sections, timers, autosave, review, forward-only). API integration is the next milestone.
 
 ---
 
 ## 🚀 Quick Start
 
 ### **Current Status**
-The frontend is currently in active development. The directory structure and configuration files are in place, ready for systematic implementation following this architecture guide.
+The frontend compiles and runs. Major UX for the student taking flow is implemented with sample data; API wiring is upcoming.
 
 ```bash
 # Install dependencies
 npm install
 
+# Configure environment
+cp .env.example .env.local
+# set NEXT_PUBLIC_API_URL to point to gateway/service API
+# set NEXT_PUBLIC_AUTH_MODE=mock (default) or api
+
 # Start development server
 npm run dev
 
-# Visit http://localhost:3001 (basic structure only)
+# Visit http://localhost:3001
 ```
 
 ### **What's Ready**
-- ✅ **Project Structure**: Complete directory hierarchy with .gitkeep files
-- ✅ **Configuration**: Next.js, TypeScript, Tailwind CSS, ESLint, Prettier setup
-- ✅ **Component Foundation**: shadcn/ui integration ready
-- ✅ **Architecture Blueprint**: Complete design specification (this document)
+- ✅ Next.js 15 + React 19 scaffold with Tailwind and TS
+- ✅ Role-based layouts (student/teacher/admin) with dummy auth toggle
+- ✅ Assessment player: sections, per-section/overall timers, autosave/restore, review modal, forward-only, read-only locked sections, desktop vertical nav
+- ✅ Submitted confirmation page and .well-known DevTools route
 
 ### **What's Coming**
-- 🚧 **Authentication System**: Login, register, password management
-- 🚧 **Role-Based Dashboards**: Student, Teacher, Admin interfaces
-- 🚧 **Assessment Interface**: Taking and building assessments
-- 🚧 **Real-time Updates**: WebTransport (with WebSocket fallback) for backend events
+- 🚧 API wiring for auth and student flows (save/submit)
+- 🚧 Results integration and teacher/admin data flows
+- 🚧 Testing (Jest/Playwright) and lint/format tooling
+- 🚧 Realtime updates (WebTransport/WebSocket)
 
 ---
 
