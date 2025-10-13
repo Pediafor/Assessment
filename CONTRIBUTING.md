@@ -11,8 +11,8 @@ First of all, **thank you** for considering contributing to Pediafor! 💙 This 
 ### 2. Clone your fork
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/assessment-app.git
-cd assessment-app
+git clone https://github.com/YOUR_USERNAME/assessment.git
+cd assessment
 ```
 
 ### 3. Create a feature branch
@@ -62,28 +62,12 @@ Follow [Conventional Commits](https://www.conventionalcommits.org/).
 
 - **TypeScript** (all v1 services: user, assessment, submission, grading, gateway)
 
-### Linters & Formatters
-
-- **ESLint + Prettier** for code quality and formatting
-- Run checks locally before pushing:
-
-```bash
-npm run lint
-npm run test
-```
-
 ---
 
 ## ✅ Development Setup
 
-### Install dependencies
-
-```bash
-npm install
-```
-
 ### Setup environment
-Copy `.env.example` → `.env` and configure your values.
+Copy `.env.example` → `.env` in each service and configure your values.
 
 ### Run local dev servers
 
@@ -91,6 +75,7 @@ Copy `.env.example` → `.env` and configure your values.
 
 ```bash
 cd services/user-service
+npm install
 npm run dev
 ```
 
@@ -102,22 +87,15 @@ docker-compose up
 
 ---
 
-## 📊 Feature Status
-
-Check the [README.md](README.md) for the feature roadmap and development status.
-
-👉 **If you want to work on something, please open an Issue first to avoid overlap.**
-
----
-
 ## 🧪 Testing
 
 - Use **Jest** for unit and integration tests
 - Write tests for new features
-- Run tests locally before opening a PR:
+- Run tests locally for the service you are working on before opening a PR:
 
 ```bash
-npm run test
+cd services/<service-name>
+npm test
 ```
 
 ---
@@ -132,15 +110,7 @@ npm run test
 ## 🛡 License
 
 By contributing, you agree that your contributions will be licensed under the **Apache License 2.0**.
-This ensures freedom, transparency, and compatibility with both open-source and commercial ecosystems.
 
 ---
 
-## 🌍 Community
-
-* Website → [pediafor.com](https://pediafor.com)
-* GitHub → [github.com/pediafor](https://github.com/pediafor)
-
----
-
-<p align="center">✨ Together, we’re building the foundation of the future of education. ✨</p>
+*Last Updated: October 13, 2025*
