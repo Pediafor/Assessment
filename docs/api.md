@@ -12,11 +12,13 @@
 1. [Authentication](#authentication)
 2. [User Service API](#user-service-api)
 3. [Assessment Service API](#assessment-service-api)
-4. [Submission Service API](#submission-service-api)
-5. [Grading Service API](#grading-service-api)
-6. [Error Handling](#error-handling)
-7. [Rate Limiting](#rate-limiting)
-8. [Examples](#examples)
+4. [Media Service API](#media-service-api)
+5. [Submission Service API](#submission-service-api)
+6. [File Service API](#file-service-api)
+7. [Grading Service API](#grading-service-api)
+8. [Error Handling](#error-handling)
+9. [Rate Limiting](#rate-limiting)
+10. [Examples](#examples)
 
 ---
 
@@ -28,7 +30,7 @@ All API requests (except registration and login) require authentication via PASE
 
 #### 1. Cookie-Based Authentication (Recommended for Web)
 ```http
-Cookie: token=v4.public.eyJ...
+Cookie: sessionId=user-uuid-here
 ```
 
 #### 2. Bearer Token Authentication (API/Mobile)
@@ -42,8 +44,8 @@ Authorization: Bearer v4.public.eyJ...
   "sub": "user-uuid-here",
   "email": "user@example.com", 
   "role": "STUDENT" | "TEACHER" | "ADMIN",
-  "iat": "2025-10-06T12:00:00Z",
-  "exp": "2025-10-06T16:00:00Z"
+  "iat": "2025-10-13T12:00:00Z",
+  "exp": "2025-10-13T16:00:00Z"
 }
 ```
 
@@ -51,7 +53,7 @@ Authorization: Bearer v4.public.eyJ...
 
 #### Register User
 ```http
-POST /api/auth/register
+POST /api/users/register
 Content-Type: application/json
 
 {
@@ -66,17 +68,14 @@ Content-Type: application/json
 **Response (201 Created):**
 ```json
 {
-  "success": true,
-  "data": {
-    "user": {
-      "id": "user_01HQRS2...",
-      "email": "student@university.edu",
-      "firstName": "John",
-      "lastName": "Doe",
-      "role": "STUDENT",
-      "createdAt": "2025-10-06T12:00:00Z"
-    },
-    "token": "v4.public.eyJ..."
+  "message": "User registered successfully",
+  "user": {
+    "id": "user_01HQRS2...",
+    "email": "student@university.edu",
+    "firstName": "John",
+    "lastName": "Doe",
+    "role": "STUDENT",
+    "createdAt": "2025-10-13T12:00:00Z"
   }
 }
 ```
@@ -95,31 +94,39 @@ Content-Type: application/json
 **Response (200 OK):**
 ```json
 {
-  "success": true,
-  "data": {
-    "user": {
-      "id": "user_01HQRS2...",
-      "email": "student@university.edu", 
-      "firstName": "John",
-      "lastName": "Doe",
-      "role": "STUDENT"
-    },
-    "token": "v4.public.eyJ..."
-  }
+  "message": "Login successful",
+  "user": {
+    "id": "user_01HQRS2...",
+    "email": "student@university.edu", 
+    "firstName": "John",
+    "lastName": "Doe",
+    "role": "STUDENT"
+  },
+  "accessToken": "v4.public.eyJ..."
+}
+```
+
+#### Refresh Token
+```http
+POST /api/auth/refresh
+```
+
+**Response (200 OK):**
+```json
+{
+  "accessToken": "v4.public.eyJ..."
 }
 ```
 
 #### Logout User
 ```http
 POST /api/auth/logout
-Authorization: Bearer v4.public.eyJ...
 ```
 
 **Response (200 OK):**
 ```json
 {
-  "success": true,
-  "message": "Logged out successfully"
+  "message": "Logout successful"
 }
 ```
 
@@ -131,51 +138,65 @@ Base URL: `/api/users`
 
 ### Get User Profile
 ```http
-GET /api/users/profile/:id
+GET /api/users/:id
 Authorization: Bearer v4.public.eyJ...
 ```
 
 **Response (200 OK):**
 ```json
 {
-  "success": true,
-  "data": {
     "id": "user_01HQRS2...",
     "email": "student@university.edu",
     "firstName": "John", 
     "lastName": "Doe",
     "role": "STUDENT",
-    "lastLoginAt": "2025-10-06T11:30:00Z",
-    "createdAt": "2025-10-05T14:22:00Z",
-    "updatedAt": "2025-10-06T11:30:00Z"
-  }
+    "lastLoginAt": "2025-10-13T11:30:00Z",
+    "createdAt": "2025-10-12T14:22:00Z",
+    "updatedAt": "2025-10-13T11:30:00Z"
 }
 ```
 
 ### Update User Profile
 ```http
-PUT /api/users/profile/:id
+PUT /api/users/:id
 Authorization: Bearer v4.public.eyJ...
 Content-Type: application/json
 
 {
   "firstName": "Jonathan",
-  "lastName": "Smith"
+  "lastName": "Smith",
+  "profilePicture": "https://example.com/new-profile.jpg",
+  "metadata": {
+    "bio": "A short bio"
+  }
 }
 ```
 
 **Response (200 OK):**
 ```json
 {
-  "success": true,
-  "data": {
+  "message": "User updated successfully",
+  "user": {
     "id": "user_01HQRS2...",
     "email": "student@university.edu",
     "firstName": "Jonathan",
     "lastName": "Smith",
     "role": "STUDENT",
-    "updatedAt": "2025-10-06T12:15:00Z"
+    "updatedAt": "2025-10-13T12:15:00Z"
   }
+}
+```
+
+### Delete User
+```http
+DELETE /api/users/:id
+Authorization: Bearer v4.public.eyJ...
+```
+
+**Response (200 OK):**
+```json
+{
+  "message": "User deleted successfully"
 }
 ```
 
@@ -188,25 +209,17 @@ Authorization: Bearer v4.public.eyJ...
 **Response (200 OK):**
 ```json
 {
-  "success": true,
-  "data": {
-    "users": [
-      {
-        "id": "user_01HQRS2...",
-        "email": "student1@university.edu",
-        "firstName": "John",
-        "lastName": "Doe", 
-        "role": "STUDENT",
-        "createdAt": "2025-10-05T14:22:00Z"
-      }
-    ],
-    "meta": {
-      "page": 1,
-      "limit": 20,
-      "total": 150,
-      "totalPages": 8
+  "users": [
+    {
+      "id": "user_01HQRS2...",
+      "email": "student1@university.edu",
+      "firstName": "John",
+      "lastName": "Doe", 
+      "role": "STUDENT",
+      "createdAt": "2025-10-12T14:22:00Z"
     }
-  }
+  ],
+  "total": 150
 }
 ```
 
@@ -234,15 +247,7 @@ Authorization: Bearer v4.public.eyJ...
         "description": "Basic programming concepts assessment",
         "status": "PUBLISHED",
         "createdBy": "teacher_01HQR...",
-        "createdAt": "2025-10-05T10:00:00Z",
-        "questionSets": [
-          {
-            "id": "questionset_01HQR...",
-            "name": "Multiple Choice Questions",
-            "questionCount": 10,
-            "timeLimit": 30
-          }
-        ]
+        "createdAt": "2025-10-12T10:00:00Z"
       }
     ],
     "meta": {
@@ -251,7 +256,8 @@ Authorization: Bearer v4.public.eyJ...
       "total": 25,
       "totalPages": 3
     }
-  }
+  },
+  "timestamp": "2025-10-13T12:00:00Z"
 }
 ```
 
@@ -273,40 +279,11 @@ Authorization: Bearer v4.public.eyJ...
     "status": "PUBLISHED",
     "createdBy": "teacher_01HQR...",
     "settings": {
-      "timeLimit": 60,
-      "attemptsAllowed": 1,
-      "randomizeQuestions": true,
-      "showResults": false
-    },
-    "questionSets": [
-      {
-        "id": "questionset_01HQR...",
-        "name": "Multiple Choice Questions",
-        "description": "Basic programming concepts",
-        "timeLimit": 30,
-        "questions": [
-          {
-            "id": "question_01HQR...",
-            "type": "MULTIPLE_CHOICE",
-            "content": "What is a variable in programming?",
-            "points": 2.0,
-            "options": [
-              {
-                "id": "option_01HQR...",
-                "content": "A container for storing data",
-                "isCorrect": true
-              },
-              {
-                "id": "option_01HQR...",
-                "content": "A programming language",
-                "isCorrect": false
-              }
-            ]
-          }
-        ]
-      }
-    ]
-  }
+      "duration": 60,
+      "maxAttempts": 1
+    }
+  },
+  "timestamp": "2025-10-13T12:00:00Z"
 }
 ```
 
@@ -321,10 +298,8 @@ Content-Type: application/json
   "description": "HTML, CSS, and JavaScript basics",
   "instructions": "Complete all sections within the time limit",
   "settings": {
-    "timeLimit": 90,
-    "attemptsAllowed": 2,
-    "randomizeQuestions": false,
-    "showResults": true
+    "duration": 90,
+    "maxAttempts": 2
   }
 }
 ```
@@ -339,8 +314,54 @@ Content-Type: application/json
     "description": "HTML, CSS, and JavaScript basics",
     "status": "DRAFT",
     "createdBy": "teacher_01HQR...",
-    "createdAt": "2025-10-06T12:00:00Z"
-  }
+    "createdAt": "2025-10-13T12:00:00Z"
+  },
+  "message": "Assessment created successfully",
+  "timestamp": "2025-10-13T12:00:00Z"
+}
+```
+
+### Update Assessment (Teacher/Admin)
+```http
+PUT /api/assessments/:id
+Authorization: Bearer v4.public.eyJ...
+Content-Type: application/json
+
+{
+  "title": "Advanced Web Development",
+  "description": "Advanced topics in web development"
+}
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "assessment_01HQS...",
+    "title": "Advanced Web Development",
+    "description": "Advanced topics in web development",
+    "status": "DRAFT",
+    "createdBy": "teacher_01HQR...",
+    "updatedAt": "2025-10-13T12:15:00Z"
+  },
+  "message": "Assessment updated successfully",
+  "timestamp": "2025-10-13T12:15:00Z"
+}
+```
+
+### Delete Assessment (Teacher/Admin)
+```http
+DELETE /api/assessments/:id
+Authorization: Bearer v4.public.eyJ...
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Assessment deleted successfully",
+  "timestamp": "2025-10-13T12:20:00Z"
 }
 ```
 
@@ -357,9 +378,65 @@ Authorization: Bearer v4.public.eyJ...
   "data": {
     "id": "assessment_01HQS...",
     "status": "PUBLISHED",
-    "publishedAt": "2025-10-06T12:15:00Z"
-  }
+    "publishedAt": "2025-10-13T12:15:00Z"
+  },
+  "message": "Assessment published successfully",
+  "timestamp": "2025-10-13T12:15:00Z"
 }
+```
+
+### Duplicate Assessment (Teacher/Admin)
+```http
+POST /api/assessments/:id/duplicate
+Authorization: Bearer v4.public.eyJ...
+```
+
+**Response (201 Created):**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "assessment_01HQT...",
+    "title": "Copy of Web Development Fundamentals",
+    "status": "DRAFT"
+  },
+  "message": "Assessment duplicated successfully",
+  "timestamp": "2025-10-13T12:30:00Z"
+}
+```
+
+---
+
+## Media Service API
+
+Base URL: `/api/media`
+
+### Upload Question Media
+```http
+POST /api/media/question
+Authorization: Bearer v4.public.eyJ...
+Content-Type: multipart/form-data
+```
+
+### Upload Option Media
+```http
+POST /api/media/option
+Authorization: Bearer v4.public.eyJ...
+Content-Type: multipart/form-data
+```
+
+### Upload Audio
+```http
+POST /api/media/audio
+Authorization: Bearer v4.public.eyJ...
+Content-Type: multipart/form-data
+```
+
+### Upload Video
+```http
+POST /api/media/video
+Authorization: Bearer v4.public.eyJ...
+Content-Type: multipart/form-data
 ```
 
 ---
@@ -375,8 +452,7 @@ Authorization: Bearer v4.public.eyJ...
 Content-Type: application/json
 
 {
-  "assessmentId": "assessment_01HQR...",
-  "autoSave": false
+  "assessmentId": "assessment_01HQR..."
 }
 ```
 
@@ -389,26 +465,21 @@ Content-Type: application/json
     "userId": "user_01HQRS2...",
     "assessmentId": "assessment_01HQR...",
     "status": "DRAFT",
-    "answers": null,
-    "createdAt": "2025-10-06T12:00:00Z"
-  }
+    "createdAt": "2025-10-13T12:00:00Z"
+  },
+  "message": "Submission created successfully"
 }
 ```
 
-### Save Answers (Autosave)
+### Save Answers
 ```http
-POST /api/submissions/:id/save-answers
+POST /api/submissions/:id/answers
 Authorization: Bearer v4.public.eyJ...
 Content-Type: application/json
 
 {
   "answers": {
-    "question_01HQR001": "A container for storing data",
-    "question_01HQR002": ["option1", "option3"],
-    "question_01HQR003": {
-      "type": "essay",
-      "content": "Variables are fundamental building blocks..."
-    }
+    "question_01HQR001": "A container for storing data"
   }
 }
 ```
@@ -419,16 +490,9 @@ Content-Type: application/json
   "success": true,
   "data": {
     "id": "submission_01HQT...",
-    "answers": {
-      "question_01HQR001": "A container for storing data",
-      "question_01HQR002": ["option1", "option3"],
-      "question_01HQR003": {
-        "type": "essay",
-        "content": "Variables are fundamental building blocks..."
-      }
-    },
-    "updatedAt": "2025-10-06T12:05:00Z"
-  }
+    "updatedAt": "2025-10-13T12:05:00Z"
+  },
+  "message": "Answers saved successfully"
 }
 ```
 
@@ -445,8 +509,9 @@ Authorization: Bearer v4.public.eyJ...
   "data": {
     "id": "submission_01HQT...",
     "status": "SUBMITTED",
-    "submittedAt": "2025-10-06T12:30:00Z"
-  }
+    "submittedAt": "2025-10-13T12:30:00Z"
+  },
+  "message": "Submission submitted successfully"
 }
 ```
 
@@ -465,22 +530,14 @@ Authorization: Bearer v4.public.eyJ...
     "userId": "user_01HQRS2...",
     "assessmentId": "assessment_01HQR...",
     "status": "SUBMITTED",
-    "answers": {
-      "question_01HQR001": "A container for storing data",
-      "question_01HQR002": ["option1", "option3"]
-    },
-    "score": null,
-    "maxScore": null,
-    "submittedAt": "2025-10-06T12:30:00Z",
-    "createdAt": "2025-10-06T12:00:00Z",
-    "updatedAt": "2025-10-06T12:30:00Z"
+    "submittedAt": "2025-10-13T12:30:00Z"
   }
 }
 ```
 
-### List Submissions (Teachers/Admins)
+### List Submissions
 ```http
-GET /api/submissions?assessmentId=assessment_01HQR...&page=1&limit=20
+GET /api/submissions?assessmentId=assessment_01HQR...
 Authorization: Bearer v4.public.eyJ...
 ```
 
@@ -488,120 +545,104 @@ Authorization: Bearer v4.public.eyJ...
 ```json
 {
   "success": true,
-  "data": {
-    "submissions": [
-      {
-        "id": "submission_01HQT...",
-        "userId": "user_01HQRS2...",
-        "assessmentId": "assessment_01HQR...",
-        "status": "SUBMITTED",
-        "score": 8.5,
-        "maxScore": 10.0,
-        "submittedAt": "2025-10-06T12:30:00Z",
-        "user": {
-          "firstName": "John",
-          "lastName": "Doe",
-          "email": "student@university.edu"
-        }
-      }
-    ],
-    "meta": {
-      "page": 1,
-      "limit": 20,
-      "total": 45,
-      "totalPages": 3
+  "data": [
+    {
+      "id": "submission_01HQT...",
+      "userId": "user_01HQRS2...",
+      "status": "SUBMITTED"
     }
+  ],
+  "meta": {
+    "page": 1,
+    "limit": 10,
+    "total": 1
   }
 }
 ```
 
 ---
 
+## File Service API
+
+Base URL: `/api`
+
+### Upload File
+```http
+POST /api/submissions/:submissionId/files
+Authorization: Bearer v4.public.eyJ...
+Content-Type: multipart/form-data
+```
+
+### Get Submission Files
+```http
+GET /api/submissions/:submissionId/files
+Authorization: Bearer v4.public.eyJ...
+```
+
+### Get File Stats
+```http
+GET /api/submissions/:submissionId/files/stats
+Authorization: Bearer v4.public.eyJ...
+```
+
+### Get File Details
+```http
+GET /api/files/:fileId
+Authorization: Bearer v4.public.eyJ...
+```
+
+### Download File
+```http
+GET /api/files/:fileId/download
+Authorization: Bearer v4.public.eyJ...
+```
+
+### Delete File
+```http
+DELETE /api/files/:fileId
+Authorization: Bearer v4.public.eyJ...
+```
+
+---
+
 ## Grading Service API
 
-Base URL: `/api/grading` (Ready for Implementation)
+Base URL: `/api/grade`
 
-### Grade Submission (Automated)
+### Grade Submission
 ```http
-POST /api/grading/submissions/:id/grade
+POST /api/grade
 Authorization: Bearer v4.public.eyJ...
 Content-Type: application/json
 
 {
-  "gradingMethod": "AUTOMATED",
-  "settings": {
-    "partialCredit": true,
-    "penaltyForIncorrect": 0.25
-  }
+  "submissionId": "submission_01HQT...",
+  "forceRegrade": false
 }
 ```
 
-**Expected Response (201 Created):**
-```json
-{
-  "success": true,
-  "data": {
-    "id": "grade_01HQU...",
-    "submissionId": "submission_01HQT...",
-    "totalScore": 8.5,
-    "maxScore": 10.0,
-    "percentage": 85.0,
-    "gradedAt": "2025-10-06T12:45:00Z",
-    "gradedBy": null,
-    "questionGrades": [
-      {
-        "questionId": "question_01HQR001",
-        "pointsEarned": 2.0,
-        "maxPoints": 2.0,
-        "isCorrect": true,
-        "feedback": "Correct answer!"
-      },
-      {
-        "questionId": "question_01HQR002", 
-        "pointsEarned": 1.5,
-        "maxPoints": 2.0,
-        "isCorrect": false,
-        "feedback": "Partial credit awarded"
-      }
-    ]
-  }
-}
-```
-
-### Get Grade
+### Get Grade by Submission
 ```http
-GET /api/grading/submissions/:id
+GET /api/grade/submission/:submissionId
 Authorization: Bearer v4.public.eyJ...
 ```
 
-### Assessment Statistics (Teachers)
+### Get Grades by User
 ```http
-GET /api/grading/assessment/:id/stats
+GET /api/grade/user/:userId
 Authorization: Bearer v4.public.eyJ...
 ```
 
-**Expected Response:**
-```json
-{
-  "success": true,
-  "data": {
-    "assessmentId": "assessment_01HQR...",
-    "totalSubmissions": 45,
-    "averageScore": 7.8,
-    "medianScore": 8.0,
-    "statusBreakdown": {
-      "SUBMITTED": 5,
-      "GRADED": 40
-    },
-    "scoreDistribution": {
-      "90-100": 12,
-      "80-89": 15,
-      "70-79": 10,
-      "60-69": 5,
-      "below-60": 3
-    }
-  }
-}
+### Get Grades by Assessment
+```http
+GET /api/grade/assessment/:assessmentId
+Authorization: Bearer v4.public.eyJ...
+```
+
+### Get My Grades
+```http
+GET /api/grade/my-grades
+Authorization: Bearer v4.public.eyJ...
 ```
 
 ---
@@ -614,233 +655,13 @@ Authorization: Bearer v4.public.eyJ...
   "success": false,
   "error": {
     "code": "VALIDATION_ERROR",
-    "message": "Invalid input provided",
-    "details": [
-      {
-        "field": "email",
-        "message": "Email is required"
-      }
-    ],
-    "timestamp": "2025-10-06T12:00:00Z",
-    "path": "/api/auth/register"
-  }
-}
-```
-
-### HTTP Status Codes
-
-| Status Code | Description | Example |
-|-------------|-------------|---------|
-| `200` | Success | Request completed successfully |
-| `201` | Created | Resource created successfully |
-| `400` | Bad Request | Invalid input, validation errors |
-| `401` | Unauthorized | Missing or invalid authentication |
-| `403` | Forbidden | Insufficient permissions |
-| `404` | Not Found | Resource not found |
-| `409` | Conflict | Resource already exists |
-| `422` | Unprocessable Entity | Valid format but semantic errors |
-| `429` | Too Many Requests | Rate limit exceeded |
-| `500` | Internal Server Error | Server-side error |
-
-### Common Error Codes
-
-| Error Code | Description | HTTP Status |
-|------------|-------------|-------------|
-| `AUTHENTICATION_REQUIRED` | Missing authentication token | 401 |
-| `INVALID_TOKEN` | Token invalid or expired | 401 |
-| `INSUFFICIENT_PERMISSIONS` | User lacks required permissions | 403 |
-| `VALIDATION_ERROR` | Input validation failed | 400 |
-| `RESOURCE_NOT_FOUND` | Requested resource not found | 404 |
-| `DUPLICATE_RESOURCE` | Resource already exists | 409 |
-| `RATE_LIMIT_EXCEEDED` | Too many requests | 429 |
-
----
-
-## Rate Limiting
-
-### Current Limits
-- **Authentication endpoints**: 5 requests per minute
-- **General API endpoints**: 100 requests per 15 minutes  
-- **File upload endpoints**: 10 requests per minute
-- **Burst limit**: 200 requests per hour
-
-### Rate Limit Headers
-```http
-X-RateLimit-Limit: 100
-X-RateLimit-Remaining: 95
-X-RateLimit-Reset: 1696608000
-X-RateLimit-Window: 900
-```
-
-### Rate Limit Exceeded Response
-```json
-{
-  "success": false,
-  "error": {
-    "code": "RATE_LIMIT_EXCEEDED",
-    "message": "Too many requests. Please try again later.",
-    "retryAfter": 300,
-    "timestamp": "2025-10-06T12:00:00Z"
-  }
+    "message": "Invalid input provided"
+  },
+  "timestamp": "2025-10-13T12:00:00Z"
 }
 ```
 
 ---
 
-## Examples
-
-### Complete Student Workflow
-
-#### 1. Student Registration & Login
-```bash
-# Register
-curl -X POST https://api.pediafor.com/api/auth/register \
-  -H "Content-Type: application/json" \
-  -d '{
-    "email": "student@university.edu",
-    "password": "SecurePassword123!",
-    "firstName": "John",
-    "lastName": "Doe", 
-    "role": "STUDENT"
-  }'
-
-# Login
-curl -X POST https://api.pediafor.com/api/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{
-    "email": "student@university.edu",
-    "password": "SecurePassword123!"
-  }'
-```
-
-#### 2. View Available Assessments
-```bash
-curl -X GET "https://api.pediafor.com/api/assessments?status=PUBLISHED" \
-  -H "Authorization: Bearer v4.public.eyJ..."
-```
-
-#### 3. Start Assessment (Create Submission)
-```bash
-curl -X POST https://api.pediafor.com/api/submissions \
-  -H "Authorization: Bearer v4.public.eyJ..." \
-  -H "Content-Type: application/json" \
-  -d '{
-    "assessmentId": "assessment_01HQR...",
-    "autoSave": true
-  }'
-```
-
-#### 4. Save Answers (During Assessment)
-```bash
-curl -X POST https://api.pediafor.com/api/submissions/submission_01HQT.../save-answers \
-  -H "Authorization: Bearer v4.public.eyJ..." \
-  -H "Content-Type: application/json" \
-  -d '{
-    "answers": {
-      "question_01HQR001": "A container for storing data",
-      "question_01HQR002": ["option1", "option3"]
-    }
-  }'
-```
-
-#### 5. Submit Assessment
-```bash
-curl -X POST https://api.pediafor.com/api/submissions/submission_01HQT.../submit \
-  -H "Authorization: Bearer v4.public.eyJ..."
-```
-
-### Teacher Workflow
-
-#### 1. Create Assessment
-```bash
-curl -X POST https://api.pediafor.com/api/assessments \
-  -H "Authorization: Bearer v4.public.eyJ..." \
-  -H "Content-Type: application/json" \
-  -d '{
-    "title": "Programming Fundamentals Quiz",
-    "description": "Basic programming concepts",
-    "settings": {
-      "timeLimit": 60,
-      "attemptsAllowed": 1
-    }
-  }'
-```
-
-#### 2. Publish Assessment
-```bash
-curl -X POST https://api.pediafor.com/api/assessments/assessment_01HQS.../publish \
-  -H "Authorization: Bearer v4.public.eyJ..."
-```
-
-#### 3. View Student Submissions
-```bash
-curl -X GET "https://api.pediafor.com/api/submissions?assessmentId=assessment_01HQS..." \
-  -H "Authorization: Bearer v4.public.eyJ..."
-```
-
----
-
-## SDK and Client Libraries
-
-### JavaScript/TypeScript SDK (Recommended)
-```bash
-npm install @pediafor/assessment-sdk
-```
-
-```typescript
-import { PediaforSDK } from '@pediafor/assessment-sdk';
-
-const client = new PediaforSDK({
-  baseURL: 'https://api.pediafor.com',
-  apiKey: 'your-api-key-here'
-});
-
-// Authenticate
-const { user, token } = await client.auth.login({
-  email: 'student@university.edu',
-  password: 'SecurePassword123!'
-});
-
-// Get assessments
-const assessments = await client.assessments.list({
-  status: 'PUBLISHED'
-});
-
-// Create submission
-const submission = await client.submissions.create({
-  assessmentId: 'assessment_01HQR...'
-});
-```
-
-### Python SDK
-```bash
-pip install pediafor-assessment-sdk
-```
-
-```python
-from pediafor import PediaforClient
-
-client = PediaforClient(
-    base_url='https://api.pediafor.com',
-    api_key='your-api-key-here'
-)
-
-# Authenticate
-response = client.auth.login(
-    email='student@university.edu',
-    password='SecurePassword123!'
-)
-
-# Get assessments
-assessments = client.assessments.list(status='PUBLISHED')
-
-# Create submission
-submission = client.submissions.create(
-    assessment_id='assessment_01HQR...'
-)
-```
-
----
-
-**API Documentation Version**: 1.0 | **Last Updated**: October 6, 2025  
+**API Documentation Version**: 1.0 | **Last Updated**: October 13, 2025
 **Support**: [api-support@pediafor.com](mailto:api-support@pediafor.com) | **Status Page**: [status.pediafor.com](https://status.pediafor.com)
