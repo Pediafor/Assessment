@@ -1,6 +1,8 @@
 import prisma from "../prismaClient";
 import { UserRole } from "@prisma/client";
 import { UserEventPublisher } from "../events/publisher";
+import { sendEmail } from "../utils/email";
+import crypto from "crypto";
 
 interface CreateUserData {
   email: string;
@@ -25,6 +27,8 @@ interface GetUsersOptions {
 
 // Register new user
 export async function registerUser(userData: CreateUserData) {
+  const emailVerificationToken = crypto.randomBytes(32).toString("hex");
+
   const user = await prisma.user.create({
     data: {
       email: userData.email,
@@ -33,9 +37,19 @@ export async function registerUser(userData: CreateUserData) {
       lastName: userData.lastName,
       role: userData.role || 'STUDENT',
       isActive: true,
+      emailVerificationToken,
       createdAt: new Date(),
       updatedAt: new Date()
     }
+  });
+
+  // Send verification email
+  const verificationLink = `${process.env.FRONTEND_URL}/verify-email?token=${emailVerificationToken}`;
+  await sendEmail({
+    to: user.email,
+    subject: 'Verify Your Email Address',
+    text: `Please click this link to verify your email address: ${verificationLink}`,
+    html: `<p>Please click this link to verify your email address: <a href="${verificationLink}">${verificationLink}</a></p>`,
   });
 
   // Publish user registration event
@@ -66,6 +80,47 @@ export async function getUserByEmail(email: string) {
     where: {
       email: email.toLowerCase(),
       isActive: true
+    }
+  });
+}
+
+// Find user by email verification token
+export async function getUserByEmailVerificationToken(token: string) {
+  return await prisma.user.findFirst({
+    where: {
+      emailVerificationToken: token
+    }
+  });
+}
+
+// Find user by reset token
+export async function getUserByResetToken(token: string) {
+  return await prisma.user.findFirst({
+    where: {
+      resetPasswordToken: token,
+      resetTokenExpiry: {
+        gt: new Date()
+      }
+    }
+  });
+}
+
+// Reset password
+export async function resetPassword(token: string, newPassword: string) {
+  const user = await getUserByResetToken(token);
+  if (!user) {
+    return null;
+  }
+
+  const passwordHash = await hashPassword(newPassword);
+
+  return await prisma.user.update({
+    where: { id: user.id },
+    data: {
+      passwordHash,
+      resetPasswordToken: null,
+      resetTokenExpiry: null,
+      updatedAt: new Date()
     }
   });
 }
@@ -192,6 +247,18 @@ export async function removeRefreshToken(userId: string) {
     where: { id: userId },
     data: {
       refreshToken: null,
+      updatedAt: new Date()
+    }
+  });
+}
+
+// Store password reset token
+export async function storePasswordResetToken(userId: string, token: string, expiry: Date) {
+  return await prisma.user.update({
+    where: { id: userId },
+    data: {
+      resetPasswordToken: token,
+      resetTokenExpiry: expiry,
       updatedAt: new Date()
     }
   });

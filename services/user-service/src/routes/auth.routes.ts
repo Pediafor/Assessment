@@ -124,4 +124,67 @@ router.post("/logout", async (req, res) => {
   }
 });
 
+// Forgot password
+router.post("/forgot-password", async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ error: "Email is required" });
+    }
+
+    await initiatePasswordReset(email);
+
+    // Always return a success message to prevent email enumeration
+    res.json({ message: "If a user with that email exists, a password reset link has been sent." });
+
+  } catch (error) {
+    console.error("Forgot password error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Reset password
+router.post("/reset-password", async (req, res) => {
+  try {
+    const { token, newPassword } = req.body;
+    if (!token || !newPassword) {
+      return res.status(400).json({ error: "Token and new password are required" });
+    }
+
+    const user = await resetPassword(token, newPassword);
+
+    if (!user) {
+      return res.status(400).json({ error: "Invalid or expired token" });
+    }
+
+    res.json({ message: "Password reset successful" });
+
+  } catch (error) {
+    console.error("Reset password error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Verify email
+router.get("/verify-email", async (req, res) => {
+  try {
+    const { token } = req.query;
+    if (!token) {
+      return res.status(400).json({ error: "Token is required" });
+    }
+
+    const user = await verifyEmail(token as string);
+
+    if (!user) {
+      return res.status(400).json({ error: "Invalid or expired token" });
+    }
+
+    res.json({ message: "Email verified successfully" });
+
+  } catch (error) {
+    console.error("Email verification error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 export default router;

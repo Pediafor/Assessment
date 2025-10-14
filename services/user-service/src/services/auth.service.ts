@@ -1,5 +1,8 @@
 import { generateAccessToken, generateRefreshToken, verifyToken } from "../utils/paseto";
 import prisma from "../prismaClient"; 
+import { getUserByEmail, storePasswordResetToken, getUserByEmailVerificationToken } from "./user.service";
+import { sendEmail } from "../utils/email";
+import crypto from "crypto";
 
 export async function issueTokens(userId: string) {
   const accessToken = await generateAccessToken({ userId });
@@ -48,4 +51,42 @@ export async function refreshAccessToken(userId: string) {
   });
 
   return { accessToken };
+}
+
+export async function initiatePasswordReset(email: string) {
+  const user = await getUserByEmail(email);
+  if (!user) {
+    // Don't reveal that the user doesn't exist
+    return;
+  }
+
+  const resetToken = crypto.randomBytes(32).toString("hex");
+  const resetTokenExpiry = new Date(Date.now() + 3600000); // 1 hour from now
+
+  await storePasswordResetToken(user.id, resetToken, resetTokenExpiry);
+
+  // Send password reset email
+  const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
+  await sendEmail({
+    to: user.email,
+    subject: 'Password Reset Request',
+    text: `Please click this link to reset your password: ${resetLink}`,
+    html: `<p>Please click this link to reset your password: <a href="${resetLink}">${resetLink}</a></p>`,
+  });
+}
+
+export async function verifyEmail(token: string) {
+  const user = await getUserByEmailVerificationToken(token);
+  if (!user) {
+    return null;
+  }
+
+  return await prisma.user.update({
+    where: { id: user.id },
+    data: {
+      isEmailVerified: true,
+      emailVerificationToken: null,
+      updatedAt: new Date()
+    }
+  });
 }
