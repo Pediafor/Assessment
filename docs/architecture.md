@@ -96,8 +96,6 @@ graph TB
     subgraph "Future Services"
         ANALYTICS[📊 Analytics Service<br/>🔄 Development<br/><br/>📈 Usage Metrics<br/>📊 Performance Insights<br/>🎯 User Behavior<br/>📋 Custom Reports]
         
-    NOTIFICATION[🔔 Notification Service<br/>✅ Production Ready<br/><br/>📧 Email Alerts<br/>📱 Push Notifications (future)<br/>💬 In-app Messages (future)<br/>⏰ Scheduled Reminders (future)]
-        
         AI[🤖 AI Service<br/>🔄 Future<br/><br/>🎯 Question Generation<br/>📝 Auto-feedback<br/>🔍 Plagiarism Detection<br/>📊 Predictive Analytics]
     end
     
