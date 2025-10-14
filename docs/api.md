@@ -16,9 +16,10 @@
 5. [Submission Service API](#submission-service-api)
 6. [File Service API](#file-service-api)
 7. [Grading Service API](#grading-service-api)
-8. [Error Handling](#error-handling)
-9. [Rate Limiting](#rate-limiting)
-10. [Examples](#examples)
+8. [Notification Service API](#notification-service-api)
+9. [Error Handling](#error-handling)
+10. [Rate Limiting](#rate-limiting)
+11. [Examples](#examples)
 
 ---
 
@@ -261,6 +262,9 @@ Authorization: Bearer v4.public.eyJ...
 }
 ```
 
+Notes:
+- Students will only see assessments with status=PUBLISHED (created by any teacher). Teachers see their own by default; Admins see all. Status filtering applies for teachers/admins.
+
 ### Get Assessment Details
 ```http
 GET /api/assessments/:id
@@ -484,6 +488,9 @@ Content-Type: application/json
 }
 ```
 
+Notes:
+- Request body may contain additional fields (e.g., metadata such as current index/flags) but the service persists only the `answers` object.
+
 **Response (200 OK):**
 ```json
 {
@@ -559,6 +566,9 @@ Authorization: Bearer v4.public.eyJ...
   }
 }
 ```
+
+Notes:
+- Students will only receive their own submissions. Teachers/Admins can filter by assessmentId, studentId, and status.
 
 ---
 
@@ -644,6 +654,27 @@ Authorization: Bearer v4.public.eyJ...
 GET /api/grade/my-grades
 Authorization: Bearer v4.public.eyJ...
 ```
+
+---
+
+## Notification Service API
+
+Base URL: `/`
+
+### Health Check
+```http
+GET /health
+```
+
+### Behavior
+- Subscribes to `grading.completed` events from RabbitMQ (exchange: `grading`, routing key: `grading.completed`).
+- On event, fetches the student by `studentId` from User Service and sends an email using configured SMTP credentials.
+
+### Environment Variables
+- `AMQP_URL`: RabbitMQ connection string
+- `USER_SERVICE_URL`: Internal URL to the User Service (e.g., http://user-service:4000 or http://localhost:4000)
+- `FRONTEND_URL`: Base URL for deep links in emails
+- `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_USER`, `EMAIL_PASS`, `EMAIL_FROM`: SMTP settings
 
 ---
 

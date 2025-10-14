@@ -22,6 +22,7 @@ The Pediafor Assessment Platform implements a comprehensive event-driven archite
 - **Assessment Service**: Consumes submission, grading, and user events for analytics and statistics.
 - **Grading Service**: Consumes submission events to trigger auto-grading.
 - **Gateway Service**: Consumes all events to push real-time updates to clients via WebSockets.
+ - **Notification Service**: Consumes `grading.completed` to send email notifications to students.
 
 ## Event Types
 
@@ -49,6 +50,9 @@ The Pediafor Assessment Platform implements a comprehensive event-driven archite
 - `grading.completed`
 - `grading.failed`
 
+### Notification Events (Consumed by Notification Service)
+- `grading.completed` → Sends an email to the student with score summary and link to results.
+
 ---
 
-*Documentation last updated: October 13, 2025*
+*Documentation last updated: October 14, 2025*
