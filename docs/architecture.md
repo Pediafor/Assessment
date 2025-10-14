@@ -1,7 +1,7 @@
 # Pediafor Assessment Platform - Comprehensive Architecture
 
 [![Platform Status](https://img.shields.io/badge/Platform-Production%20Ready-success)](.)
-[![Services](https://img.shields.io/badge/Services-6%20Microservices-blue)](.)
+[![Services](https://img.shields.io/badge/Services-7%20Microservices-blue)](.)
 [![Test Coverage](https://img.shields.io/badge/Tests-High%20Test%20Coverage-success)](.)
 [![Architecture](https://img.shields.io/badge/Pattern-Event%20Driven%20Microservices-orange)](.)
 [![Authentication](https://img.shields.io/badge/Auth-PASETO%20V4-green)](.)
@@ -90,12 +90,13 @@ graph TB
         GRADING[🎯 Grading Service<br/>Port 4003<br/>✅ Production Ready<br/><br/>🤖 Auto-Grading<br/>📊 Score Calculation<br/>📈 Analytics Engine<br/>🔍 Performance Analysis<br/>📋 Report Generation]
 
         REALTIME[⚡ Realtime Service<br/>Port 8080<br/>✅ Production Ready<br/><br/>🔌 WebSocket<br/>🚀 WebTransport<br/>📡 Real-time Events]
+        NOTIFICATION[🔔 Notification Service<br/>Port 4005<br/>✅ Production Ready<br/><br/>📧 Email Notifications]
     end
     
     subgraph "Future Services"
         ANALYTICS[📊 Analytics Service<br/>🔄 Development<br/><br/>📈 Usage Metrics<br/>📊 Performance Insights<br/>🎯 User Behavior<br/>📋 Custom Reports]
         
-        NOTIFICATION[🔔 Notification Service<br/>🔄 Planned<br/><br/>📧 Email Alerts<br/>📱 Push Notifications<br/>💬 In-app Messages<br/>⏰ Scheduled Reminders]
+    NOTIFICATION[🔔 Notification Service<br/>✅ Production Ready<br/><br/>📧 Email Alerts<br/>📱 Push Notifications (future)<br/>💬 In-app Messages (future)<br/>⏰ Scheduled Reminders (future)]
         
         AI[🤖 AI Service<br/>🔄 Future<br/><br/>🎯 Question Generation<br/>📝 Auto-feedback<br/>🔍 Plagiarism Detection<br/>📊 Predictive Analytics]
     end
@@ -138,6 +139,7 @@ graph TB
     GATEWAY --> SUBMISSION
     GATEWAY --> GRADING
     GATEWAY --> REALTIME
+    GATEWAY -.-> NOTIFICATION
     
     %% Database connections
     USER --> DB1
@@ -171,7 +173,7 @@ graph TB
     SUBMISSION --> QUEUE
     GRADING --> QUEUE
     REALTIME --> QUEUE
-    NOTIFICATION -.-> QUEUE
+    NOTIFICATION --> QUEUE
     
     %% Monitoring
     GATEWAY --> METRICS
@@ -194,9 +196,9 @@ graph TB
     classDef database fill:#e2e3e5,stroke:#6c757d,stroke-width:2px,color:#000
     classDef infrastructure fill:#d1ecf1,stroke:#17a2b8,stroke-width:2px,color:#000
     
-    class GATEWAY,USER,ASSESSMENT,SUBMISSION,GRADING,REALTIME production
+    class GATEWAY,USER,ASSESSMENT,SUBMISSION,GRADING,REALTIME,NOTIFICATION production
     class ANALYTICS development
-    class NOTIFICATION,AI planned
+    class NOTIFICATION production
     class DB1,DB2,DB3,DB4,REDIS,QUEUE,STORAGE database
     class LB,FIREWALL,METRICS,LOGS infrastructure
 ```
@@ -366,4 +368,4 @@ Gateway Routing Rules:
 
 ---
 
-*Architecture Documentation v1.1 - October 13, 2025*
+*Architecture Documentation v1.2 - October 14, 2025*

@@ -2,7 +2,7 @@
 
 [![Platform Status](https://img.shields.io/badge/Platform-Production%20Ready-success)](.)
 [![Test Coverage](https://img.shields.io/badge/Tests-High%20Test%20Coverage-success)](.)
-[![Services](https://img.shields.io/badge/Services-6%20Backend%20%2B%20Frontend-blue)](.)
+[![Services](https://img.shields.io/badge/Services-7%20Backend%20%2B%20Frontend-blue)](.)
 [![Events](https://img.shields.io/badge/Events-RabbitMQ%20Powered-orange)](.)
 [![Documentation](https://img.shields.io/badge/Documentation-Complete-brightgreen)](.)
 
@@ -29,8 +29,9 @@ Welcome to the comprehensive documentation for the Pediafor Assessment Platform 
 | [📤 Submission Service](./submission-service.md) | ✅ Production | Complete |
 | [🎯 Grading Service](./grading-service.md) | ✅ Production | Complete |
 | [⚡ Realtime Service](./gateway-service.md) | ✅ Production | Complete |
+| [🔔 Notification Service](./notification-service.md) | ✅ Production | Consumes grading events and sends email notifications |
 | [🎨 Frontend Application](../frontend/README.md) | ✅ Production | Complete |
 
 ---
 
-*Last Updated: October 13, 2025*
+*Last Updated: October 14, 2025*
