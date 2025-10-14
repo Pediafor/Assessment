@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  notification-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: notification-service
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 4005
+      AMQP_URL: amqp://admin:pediafor2024@rabbitmq:5672/pediafor
+      USER_SERVICE_URL: http://user-service:4000
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      user-service:
+        condition: service_healthy
+    networks:
+      - pediafor-network
+
+networks:
+  pediafor-network:
+    external: true
