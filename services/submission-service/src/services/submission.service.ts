@@ -10,6 +10,7 @@ import {
   UserContext 
 } from '../types';
 import { getSubmissionEventPublisher } from '../events/publisher';
+import { getAssessmentById } from './assessment.service';
 
 export class SubmissionService {
   
@@ -18,6 +19,16 @@ export class SubmissionService {
     // Validate input
     if (!data.assessmentId || data.assessmentId.trim() === '') {
       throw new ValidationError('Assessment ID is required');
+    }
+
+    // Check assessment deadline
+    const assessment = await getAssessmentById(data.assessmentId);
+    if (!assessment) {
+      throw new NotFoundError('Assessment not found');
+    }
+
+    if (assessment.deadline && new Date() > new Date(assessment.deadline)) {
+      throw new ValidationError('The deadline for this assessment has passed');
     }
 
     // Check if submission already exists for this student and assessment

@@ -1,9 +1,8 @@
-import { PrismaClient } from '@prisma/client';
 import { UserContext, ValidationError, NotFoundError, UnauthorizedError } from '../types';
+import prisma from '../prismaClient';
 import fs from 'fs';
 import path from 'path';
 
-const prisma = new PrismaClient();
 
 export interface CreateFileRequest {
   submissionId: string;
@@ -202,8 +201,8 @@ export class FileService {
   async getFileStats(submissionId: string, user: UserContext) {
     const files = await this.getSubmissionFiles(submissionId, user);
 
-    const totalSize = files.reduce((sum, file) => sum + file.fileSize, 0);
-    const fileTypes = files.reduce((types, file) => {
+  const totalSize = files.reduce((sum: number, file: { fileSize: number }) => sum + file.fileSize, 0);
+  const fileTypes = files.reduce((types: Record<string, number>, file: { originalName: string }) => {
       const ext = path.extname(file.originalName).toLowerCase();
       types[ext] = (types[ext] || 0) + 1;
       return types;
@@ -213,7 +212,7 @@ export class FileService {
       totalFiles: files.length,
       totalSize,
       fileTypes,
-      files: files.map(file => ({
+  files: files.map((file: { id: string; originalName: string; fileSize: number; mimeType: string; createdAt: Date }) => ({
         id: file.id,
         originalName: file.originalName,
         fileSize: file.fileSize,
