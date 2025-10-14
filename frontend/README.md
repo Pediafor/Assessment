@@ -35,6 +35,7 @@ npm run dev
 - ✅ Next.js 15 + React 19 scaffold with Tailwind and TS
 - ✅ Role-based layouts (student/teacher/admin) with dummy auth toggle
 - ✅ Assessment player: sections, per-section/overall timers, autosave/restore, review modal, forward-only, read-only locked sections, desktop vertical nav
+- ✅ Results: `/student/results` list and `/student/results/[id]` detail wired to API (GET /submissions and GET /submissions/:id)
 - ✅ Submitted confirmation page and .well-known DevTools route
 
 ### **What's Coming**
@@ -95,7 +96,6 @@ npm run dev          # Start development server
 npm run build        # Build for production
 npm run start        # Start production server
 npm run lint         # Run ESLint
-npm run type-check   # Run TypeScript checks
 npm test             # Run tests (when implemented)
 ```
 
@@ -116,6 +116,14 @@ frontend/
 ```
 
 ---
+
+## 🧪 Testing Notes (Docker-backed)
+
+- Backend services use PostgreSQL via Docker for integration tests. Ensure Docker Desktop is running on your machine before executing backend tests.
+- To run service tests locally:
+  - Start required DB containers per service README (e.g., `docker-compose up -d submission-db`).
+  - In each service folder, run `npm ci` and then `npm test`.
+- If Docker is not available, tests that depend on Postgres will fail with “Can’t reach database server at localhost:5432”. In that case, skip running those tests until Docker is available.
 
 ## 🏗️ Application Architecture
 
@@ -788,11 +796,11 @@ const useEventSubscription = () => {
 
 | Action | API Endpoint | Page/Component | Permissions | Events Triggered |
 |--------|-------------|----------------|-------------|------------------|
-| **View Assessments** | `GET /assessments` | Dashboard, Assessments | Student | None |
+| **View Assessments** | `GET /assessments?status=PUBLISHED` | Dashboard, Assessments | Student | None |
 | **Start Assessment** | `POST /submissions` | Assessment Detail | Student | `submission.started` |
-| **Save Answer** | `PUT /submissions/:id` | Assessment Taking | Student | `answer.saved` |
+| **Save Answer** | `POST /submissions/:id/answers` | Assessment Taking | Student | `answer.saved` |
 | **Submit Assessment** | `POST /submissions/:id/submit` | Assessment Taking | Student | `submission.submitted` |
-| **View Results** | `GET /submissions/:id/results` | Results | Student | None |
+| **View Results** | `GET /submissions` and `GET /submissions/:id` | Results | Student | None |
 | **Update Profile** | `PUT /users/profile` | Profile | Student | `user.updated` |
 | **Change Password** | `PUT /users/password` | Profile | Student | `password.changed` |
 

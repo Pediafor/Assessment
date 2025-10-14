@@ -23,7 +23,7 @@
 - **Community-Driven**: Built by educators, for educators
 
 ### 🏗️ **Production-Ready Architecture** 
-- **Event-Driven Microservices**: 6 independent services with RabbitMQ messaging
+- **Event-Driven Microservices**: 7 independent services with RabbitMQ messaging
 - **High Test Coverage**: Comprehensive test suites for all services
 - **Scalable by Design**: Handle thousands of concurrent users
 - **Security-First**: PASETO V4 tokens, FERPA/GDPR compliant
@@ -79,6 +79,7 @@ docker-compose up --build
 - [🔧 Development Setup](docs/development.md)
 - [🚀 Deployment Guide](docs/deployment.md)
 - [📡 API Documentation](docs/api.md)
+- [🔔 Notification Service](docs/notification-service.md)
 - [🤝 Contributing Guide](CONTRIBUTING.md)
 
 ---
@@ -111,6 +112,7 @@ docker-compose up --build
 | **Submission Management** | ✅ Implemented | CRUD, file uploads, autosave |
 | **Automated Grading** | ✅ Implemented | MCQ, True/False |
 | **Event-Driven Architecture** | ✅ Implemented | RabbitMQ, events for all services |
+| **Email Notifications** | ✅ Implemented | Notification Service consumes grading.completed and emails students |
 | **Real-time Notifications** | 🟡 Partially Implemented | WebSocket/WebTransport server is in place |
 | **Frontend** | 🟡 In Development | Basic structure and some components are ready |
 
@@ -135,4 +137,4 @@ Licensed under the [Apache License 2.0](LICENSE).
 
 ---
 
-*Last Updated: October 13, 2025*
+*Last Updated: October 14, 2025*
