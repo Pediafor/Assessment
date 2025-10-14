@@ -116,6 +116,49 @@ router.get(
 );
 
 /**
+ * Update feedback for a submission
+ * PUT /api/grade/submission/:submissionId/feedback
+ */
+router.put(
+  '/submission/:submissionId/feedback',
+  [
+    param('submissionId').isString().notEmpty().withMessage('Submission ID is required'),
+    body('feedback').isString().notEmpty().withMessage('Feedback is required'),
+    handleValidationErrors
+  ],
+  async (req: express.Request, res: express.Response): Promise<void> => {
+    try {
+      const userContext = req.user as UserContext;
+      const { submissionId } = req.params;
+      const { feedback } = req.body;
+
+      // Authorization: Only teachers and admins can update feedback
+      if (!['teacher', 'admin'].includes(userContext.role)) {
+        res.status(403).json({
+          success: false,
+          error: 'Insufficient permissions to update feedback'
+        });
+        return;
+      }
+
+      const result = await gradingService.updateFeedback(submissionId, feedback, userContext.userId);
+
+      if (result.success) {
+        res.status(200).json(result);
+      } else {
+        res.status(400).json(result);
+      }
+    } catch (error) {
+      console.error('Error in update feedback endpoint:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Internal server error'
+      });
+    }
+  }
+);
+
+/**
  * Get grades by user ID
  * GET /api/grade/user/:userId
  */

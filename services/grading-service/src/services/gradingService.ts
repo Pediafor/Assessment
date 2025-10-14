@@ -421,6 +421,52 @@ export class GradingService {
   }
 
   /**
+   * Update feedback for a submission
+   */
+  async updateFeedback(submissionId: string, feedback: string, gradedBy: string): Promise<GradingResponse> {
+    try {
+      const updatedGrade = await this.prisma.grade.update({
+        where: { submissionId },
+        data: {
+          feedback,
+          gradedBy,
+          isAutomated: false,
+          updatedAt: new Date(),
+        },
+        include: { questionGrades: true },
+      });
+
+      // Publish feedback updated event
+      const eventPublisher = getGradingEventPublisher();
+      await eventPublisher.ensureConnection();
+      await eventPublisher.publishFeedbackUpdated({
+        submissionId,
+        assessmentId: updatedGrade.assessmentId,
+        studentId: updatedGrade.userId,
+        feedback,
+        updatedBy: gradedBy,
+        updatedAt: updatedGrade.updatedAt.toISOString(),
+      }, {
+        correlationId: `feedback-${submissionId}-${Date.now()}`,
+        userId: gradedBy,
+        source: 'grading-service',
+      });
+
+      return {
+        success: true,
+        grade: this.mapPrismaGradeToResult(updatedGrade),
+        message: 'Feedback updated successfully',
+      };
+    } catch (error) {
+      console.error('Error updating feedback:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error occurred',
+      };
+    }
+  }
+
+  /**
    * Cleanup resources
    */
   async disconnect(): Promise<void> {

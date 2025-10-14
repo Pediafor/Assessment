@@ -36,6 +36,22 @@ class GradingEventPublisher {
     }
   }
 
+  async publishFeedbackUpdated(
+    feedbackData: any,
+    metadata?: Partial<EventMetadata>
+  ): Promise<void> {
+    try {
+      const event = createGradingEvent('grading.feedback.updated', feedbackData, metadata);
+      
+      await this.rabbitMQ.publish('grading.events', 'grading.feedback.updated', event);
+      
+      console.log(`📤 Published grading.feedback.updated event for submission ${feedbackData.submissionId}`);
+    } catch (error) {
+      console.error('❌ Failed to publish grading.feedback.updated event:', error);
+      throw error;
+    }
+  }
+
   async ensureConnection(): Promise<void> {
     if (!this.rabbitMQ.isConnected()) {
       await this.rabbitMQ.connect();
