@@ -25,75 +25,12 @@ const handleValidationErrors = (req: Request, res: Response, next: NextFunction)
 };
 
 /**
- * POST /assessments - Create new assessment
- */
-router.post(
-  '/',
-  requireTeacherOrAdmin,
-  [
-    body('title')
-      .isLength({ min: 3, max: 200 })
-      .withMessage('Title must be between 3 and 200 characters'),
-    body('description')
-      .optional()
-      .isLength({ max: 1000 })
-      .withMessage('Description must not exceed 1000 characters'),
-    body('instructions')
-      .optional()
-      .isLength({ max: 2000 })
-      .withMessage('Instructions must not exceed 2000 characters'),
-    body('settings.duration')
-      .optional()
-      .isInt({ min: 1 })
-      .withMessage('Duration must be a positive integer'),
-    body('settings.maxAttempts')
-      .optional()
-      .isInt({ min: 1 })
-      .withMessage('Max attempts must be a positive integer'),
-  ],
-  handleValidationErrors,
-  async (req: Request, res: Response) => {
-    const assessment = await assessmentService.createAssessment(req.body, req.user);
-    
-    // Publish assessment created event (async, don't block response)
-    setImmediate(async () => {
-      try {
-        await eventPublisher.publishAssessmentCreated({
-          assessmentId: assessment.id,
-          title: assessment.title,
-          description: assessment.description || '',
-          type: 'mixed', // Default to mixed type for now
-          createdBy: req.user.id,
-          timeLimit: assessment.settings?.duration,
-          totalMarks: 0, // Will be calculated based on questions
-          status: assessment.status.toLowerCase() as 'draft' | 'published' | 'archived'
-        }, {
-          userId: req.user.id,
-          requestId: req.headers['x-request-id'] as string,
-          sessionId: req.headers['x-session-id'] as string
-        });
-      } catch (eventError) {
-        console.error('Failed to publish assessment created event:', eventError);
-      }
-    });
-    
-    const response: ApiResponse = {
-      success: true,
-      data: assessment,
-      message: 'Assessment created successfully',
-      timestamp: new Date().toISOString(),
-    };
-    
-    res.status(201).json(response);
-  }
-);
-
-/**
- * GET /assessments - Get all assessments
+ * GET /assessments - Get assessments
+ * - Students: only PUBLISHED
+ * - Teachers/Admins: own/all with optional status filter
  */
 router.get(
   '/',
-  requireTeacherOrAdmin,
   [
     query('page')
       .optional()
@@ -105,26 +42,37 @@ router.get(
       .withMessage('Limit must be between 1 and 100'),
     query('status')
       .optional()
-      .isIn(['DRAFT', 'PUBLISHED', 'ARCHIVED', 'SCHEDULED'])
-      .withMessage('Status must be one of: DRAFT, PUBLISHED, ARCHIVED, SCHEDULED'),
+      .isString()
+      .withMessage('Status must be a string'),
+    handleValidationErrors
   ],
-  handleValidationErrors,
-  async (req: Request, res: Response) => {
-    const page = parseInt(req.query.page as string) || 1;
-    const limit = parseInt(req.query.limit as string) || 10;
-    const status = req.query.status as string;
-
-    const result = await assessmentService.getAssessments(req.user, page, limit, status);
-    
-    const response: ApiResponse = {
-      success: true,
-      data: result,
-      timestamp: new Date().toISOString(),
-    };
-    
-    res.json(response);
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const result = await assessmentService.getAssessments(
+        req.user,
+        req.query.page ? parseInt(req.query.page as string) : 1,
+        req.query.limit ? parseInt(req.query.limit as string) : 10,
+        req.query.status as string
+      );
+      const response: ApiResponse = {
+        success: true,
+        data: {
+          assessments: result.items,
+          meta: result.pagination,
+        },
+        timestamp: new Date().toISOString(),
+      };
+      res.json(response);
+    } catch (error) {
+      next(error);
+    }
   }
 );
+
+/**
+ * GET /assessments - Get all assessments
+ */
+// Removed duplicate route: consolidated into the role-aware GET /assessments above
 
 /**
  * GET /assessments/:id - Get assessment by ID
@@ -173,6 +121,17 @@ router.put(
       .optional()
       .isLength({ max: 2000 })
       .withMessage('Instructions must not exceed 2000 characters'),
+    body('deadline')
+      .optional()
+      .isISO8601()
+      .withMessage('Deadline must be a valid ISO 8601 date')
+      .toDate()
+      .custom((value) => {
+        if (value < new Date()) {
+          throw new Error('Deadline must be in the future');
+        }
+        return true;
+      }),
   ],
   handleValidationErrors,
   async (req: Request, res: Response) => {

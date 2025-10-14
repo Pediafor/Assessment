@@ -24,6 +24,7 @@ export class AssessmentService {
           instructions: data.instructions,
           createdBy: user.id,
           settings: data.settings as any || {},
+          deadline: data.deadline,
         },
       });
 
@@ -119,9 +120,21 @@ export class AssessmentService {
     
     const where: any = {
       isActive: true,
-      ...(user.role !== 'ADMIN' && { createdBy: user.id }),
-      ...(status && { status: status as any }),
     };
+
+    // Role-based visibility
+    if (user.role === 'STUDENT') {
+      // Students can only see published assessments (created by any teacher)
+      where.status = 'PUBLISHED';
+    } else {
+      // Teachers see only their own by default; Admins see all
+      if (user.role !== 'ADMIN') {
+        where.createdBy = user.id;
+      }
+      if (status) {
+        where.status = status as any;
+      }
+    }
 
     const [assessments, total] = await Promise.all([
       prisma.assessment.findMany({
@@ -171,6 +184,7 @@ export class AssessmentService {
         ...(data.instructions !== undefined && { instructions: data.instructions }),
         ...(data.settings && { settings: data.settings as any }),
         ...(data.status && { status: data.status as any }),
+        ...(data.deadline !== undefined && { deadline: data.deadline }),
         updatedAt: new Date(),
       },
     });

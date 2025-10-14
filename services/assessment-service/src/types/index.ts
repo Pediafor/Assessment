@@ -114,6 +114,7 @@ export interface CreateAssessmentRequest {
   description?: string;
   instructions?: string;
   settings?: AssessmentSettings;
+  deadline?: Date;
 }
 
 export interface UpdateAssessmentRequest {
@@ -122,6 +123,7 @@ export interface UpdateAssessmentRequest {
   instructions?: string;
   settings?: AssessmentSettings;
   status?: string;
+  deadline?: Date;
 }
 
 export interface AssessmentSettings {

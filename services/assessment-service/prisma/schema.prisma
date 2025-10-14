@@ -15,6 +15,7 @@ model Assessment {
   createdBy   String            // User ID from gateway headers
   status      AssessmentStatus  @default(DRAFT)
   settings    Json?             // Assessment configuration
+  deadline    DateTime?         // Assessment submission deadline
   
   // Timestamps
   createdAt   DateTime          @default(now())
