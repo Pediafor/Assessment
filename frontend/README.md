@@ -1095,16 +1095,19 @@ export function AssessmentForm({ assessment, onSubmit }: AssessmentFormProps) {
 
 ### **Phase 1: Foundation (Weeks 1-2)**
 - ✅ Project structure and configuration
-- 🚧 Authentication system (login/register/forgot password)
-- 🚧 Base UI components (shadcn/ui integration)
-- 🚧 Layout components (header, navigation, footer)
-- 🚧 Theme system (dark/light mode)
+- ✅ Layout components (header, footer, role-based layouts)
+- ✅ Query + caching (TanStack Query) and realtime transport (WT primary, WS fallback)
+- ✅ Results wiring (list/detail with live updates)
+- ✅ Testing scaffold (Jest) and initial hook test
+- ✅ Base UI components (Button, Input, Card, Badge, Skeleton, Spinner, Empty)
+- ✅ Theme system (dark/light with semantic tokens)
+- 🚧 Authentication system (basic routes scaffolded; API-backed flows next)
 
 ### **Phase 2: Student Experience (Weeks 3-4)**
-- 📝 Student dashboard
-- 📝 Assessment listing and filtering
+- � Student dashboard (initial version implemented)
+- 📝 Assessment listing and filtering (status filter added; search and subject filters next)
 - 📝 Assessment taking interface
-- 📝 Results viewing
+- 📝 Results viewing (in progress via Query + realtime)
 - 📝 Profile management
 
 ### **Phase 3: Teacher Experience (Weeks 5-6)**
