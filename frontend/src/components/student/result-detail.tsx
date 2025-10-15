@@ -1,42 +1,50 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { getSubmission } from "@/lib/services/assessments";
+import { RealtimeClient } from "@/lib/realtime";
+import { useQueryClient } from "@tanstack/react-query";
+import { useSubmissionQuery } from "@/hooks/useSubmissions";
 
 export function ResultDetailClient({ id }: { id: string }) {
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [data, setData] = useState<any>(null);
+  const qc = useQueryClient();
+  const { data, isLoading, isError, error } = useSubmissionQuery(id);
+  const [updated, setUpdated] = useState(false);
 
+  // Realtime subscription: invalidate on grading.completed
+  const rt = useMemo(() => new RealtimeClient(), []);
   useEffect(() => {
-    let cancelled = false;
+    let unsub: (() => void) | undefined;
     (async () => {
       try {
-        const sub = await getSubmission(id);
-        if (!cancelled) {
-          setData(sub);
-          setLoading(false);
-        }
-      } catch (e: any) {
-        if (!cancelled) {
-          setError(e?.message || "Failed to load submission");
-          setLoading(false);
-        }
-      }
+        await rt.connect();
+        unsub = rt.subscribe('grading.completed', async (evt: any) => {
+          if (evt?.submissionId === id) {
+            await qc.invalidateQueries({ queryKey: ['submission', id] });
+            setUpdated(true);
+            setTimeout(() => setUpdated(false), 2500);
+          }
+        });
+      } catch {}
     })();
     return () => {
-      cancelled = true;
+      unsub?.();
+      rt.disconnect();
     };
-  }, [id]);
+  }, [id, qc, rt]);
 
-  if (loading) return <div className="text-sm text-muted">Loading…</div>;
-  if (error) return <div className="text-sm text-rose-600">{error}</div>;
+  if (isLoading) return <div className="text-sm text-muted">Loading…</div>;
+  if (isError) return <div className="text-sm text-rose-600">{(error as any)?.message || 'Failed to load submission'}</div>;
   if (!data) return <div className="text-sm text-muted">Not found.</div>;
 
   const score = data.score != null && data.maxScore != null ? `${data.score}/${data.maxScore}` : data.score ?? "—";
 
   return (
     <div className="space-y-3">
+      {updated ? (
+        <div className="rounded-md border border-green-300 bg-green-50 px-3 py-2 text-xs text-green-700">
+          Updated with latest grading result
+        </div>
+      ) : null}
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">Submission {data.id}</h1>
         <Link href="/student/results" className="text-sm underline-offset-2 hover:underline">Back to Results</Link>

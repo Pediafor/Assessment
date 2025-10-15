@@ -317,6 +317,12 @@ services:
       PORT: 4005
       AMQP_URL: amqp://admin:pediafor2024@rabbitmq:5672/pediafor
       USER_SERVICE_URL: http://user-service:4000
+      FRONTEND_URL: http://localhost:3000
+      EMAIL_HOST: smtp
+      EMAIL_PORT: 587
+      EMAIL_USER: user
+      EMAIL_PASS: pass
+    EMAIL_FROM: '"Pediafor" <noreply@pediafor.local>'
     depends_on:
       rabbitmq:
         condition: service_healthy

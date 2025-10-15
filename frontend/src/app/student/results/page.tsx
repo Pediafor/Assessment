@@ -1,30 +1,11 @@
 "use client";
-import { useEffect, useState } from "react";
 import Link from "next/link";
-import { listMySubmissions } from "@/lib/services/assessments";
+import { useMySubmissionsQuery } from "@/hooks/useSubmissions";
 
 type Row = { id: string; assessmentId?: string; title?: string; submittedAt?: string | null; score?: number | null; maxScore?: number | null; status?: string };
 
 export default function StudentResults() {
-  const [rows, setRows] = useState<Row[] | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const data = await listMySubmissions();
-        if (!cancelled) setRows(data && data.length ? data : []);
-      } catch (e: any) {
-        if (!cancelled) {
-          setError(e?.message || "Failed to load results");
-          setRows([]);
-        }
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  const { data: rows, isLoading, isError, error } = useMySubmissionsQuery();
 
   const badge = (status?: string) => {
     const s = status?.toLowerCase();
@@ -36,11 +17,11 @@ export default function StudentResults() {
     return <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs ${cls}`}>{status || "—"}</span>;
   };
 
-  if (rows == null) {
+  if (isLoading || rows == null) {
     return <div className="text-sm text-muted">Loading results…</div>;
   }
-  if (error) {
-    return <div className="text-sm text-rose-600">{error}</div>;
+  if (isError) {
+    return <div className="text-sm text-rose-600">{(error as any)?.message || 'Failed to load results'}</div>;
   }
   if (!rows.length) {
     return <div className="text-sm text-muted">No results yet.</div>;
@@ -59,7 +40,7 @@ export default function StudentResults() {
           </tr>
         </thead>
         <tbody>
-          {rows.map((r) => (
+          {(rows as Row[]).map((r) => (
             <tr key={r.id} className="border-t hover:bg-card/60">
               <td className="p-3 font-medium">
                 <Link href={{ pathname: "/student/results/[id]", query: { id: r.id } }} className="underline-offset-2 hover:underline">{r.id}</Link>

@@ -6,7 +6,7 @@
 [![Accessibility](https://img.shields.io/badge/Accessibility-WCAG%202.1%20AA-green)](.)
 [![Status](https://img.shields.io/badge/Status-In%20Development-orange)](.)
 
-> **� Current Status**
+> **✅ Current Status**
 > Frontend scaffold is in place and running with Next.js 15 App Router and React 19. We’ve implemented role-based layouts and a robust assessment-taking flow (sections, timers, autosave, review, forward-only). API integration is the next milestone.
 
 ---
@@ -22,7 +22,8 @@ npm install
 
 # Configure environment
 cp .env.example .env.local
-# set NEXT_PUBLIC_API_URL to point to gateway/service API
+# set NEXT_PUBLIC_GATEWAY_URL to your gateway base URL (default http://localhost:3000)
+# set NEXT_PUBLIC_REALTIME_URL to your realtime endpoint (e.g., ws://localhost:8080/realtime)
 # set NEXT_PUBLIC_AUTH_MODE=mock (default) or api
 
 # Start development server
@@ -35,7 +36,8 @@ npm run dev
 - ✅ Next.js 15 + React 19 scaffold with Tailwind and TS
 - ✅ Role-based layouts (student/teacher/admin) with dummy auth toggle
 - ✅ Assessment player: sections, per-section/overall timers, autosave/restore, review modal, forward-only, read-only locked sections, desktop vertical nav
-- ✅ Results: `/student/results` list and `/student/results/[id]` detail wired to API (GET /submissions and GET /submissions/:id)
+- ✅ Results: `/student/results` list and `/student/results/[id]` detail wired via TanStack Query
+- ✅ Realtime: WebTransport primary with WebSocket fallback; results detail auto-refreshes on grading events
 - ✅ Submitted confirmation page and .well-known DevTools route
 
 ### **What's Coming**
@@ -96,7 +98,8 @@ npm run dev          # Start development server
 npm run build        # Build for production
 npm run start        # Start production server
 npm run lint         # Run ESLint
-npm test             # Run tests (when implemented)
+npm test             # Run unit tests (Jest)
+npm run test:e2e     # Run e2e tests (Playwright)
 ```
 
 ### **Project Structure Overview**

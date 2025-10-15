@@ -423,17 +423,15 @@ export class WebTransportRealtimeService {
 
     // Subscribe to all event types from backend services
     const eventTypes = [
-      'user.created',
-      'user.updated',
-      'user.deleted',
-      'assessment.created',
-      'assessment.updated',
-      'assessment.deleted',
-      'assessment.published',
-      'submission.created',
-      'submission.updated',
-      'submission.graded',
-      'grade.updated',
+      // user
+      'user.created', 'user.updated', 'user.deleted',
+      // assessment lifecycle
+      'assessment.created', 'assessment.updated', 'assessment.deleted', 'assessment.published',
+      // submission lifecycle
+      'submission.created', 'submission.updated', 'submission.submitted', 'submission.graded',
+      // grading
+      'grading.completed', 'grading.failed', 'grading.feedback.updated',
+      // notifications
       'notification.created'
     ];
 
@@ -534,15 +532,17 @@ export class WebTransportRealtimeService {
   }
 
   private isUserInCourse(userId: string, courseId: string): boolean {
-    // TODO: Implement course membership check
-    // This would typically query the database or cache
-    return true; // Placeholder - allow all for now
+    // Tightened placeholder: deny when missing identifiers
+    if (!userId || !courseId) return false;
+    // TODO: Integrate with user-service/course membership
+    return true;
   }
 
   private isTeacherOfAssessment(teacherId: string, assessmentId: string): boolean {
-    // TODO: Implement teacher-assessment relationship check
-    // This would typically query the database or cache
-    return true; // Placeholder - allow all for now
+    // Tightened placeholder: deny when missing identifiers
+    if (!teacherId || !assessmentId) return false;
+    // TODO: Integrate with assessment-service for ownership
+    return true;
   }
 
   private sendMessageToClient(client: ClientConnection, message: RealtimeMessage): void {
@@ -557,8 +557,27 @@ export class WebTransportRealtimeService {
           console.warn(`⚠️ WebSocket client ${client.id} not ready for message`);
         }
       } else if (client.transport === 'webtransport') {
-        // TODO: Implement WebTransport message sending when available
-        console.log(`📡 WebTransport message queued for client ${client.id}`);
+        // Attempt to send using unidirectional streams or datagrams when available
+        const session: any = client.connection;
+        try {
+          if (session?.createUnidirectionalStream) {
+            (async () => {
+              const stream = await session.createUnidirectionalStream();
+              const writer = stream.getWriter();
+              const encoder = new TextEncoder();
+              await writer.write(encoder.encode(messageString));
+              await writer.close();
+            })().catch((e: any) => console.warn(`⚠️ WebTransport stream send failed for ${client.id}:`, e));
+          } else if (session?.datagrams?.writable) {
+            const writer = session.datagrams.writable.getWriter();
+            const encoder = new TextEncoder();
+            writer.write(encoder.encode(messageString)).finally(() => writer.releaseLock());
+          } else {
+            console.log(`📡 WebTransport session not writable for ${client.id}`);
+          }
+        } catch (e) {
+          console.warn(`⚠️ WebTransport send not supported in current runtime for ${client.id}`);
+        }
       }
     } catch (error) {
       console.error(`❌ Error sending message to client ${client.id}:`, error);

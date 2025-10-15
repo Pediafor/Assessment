@@ -22,9 +22,11 @@ Event-driven email notifications for grading results.
 
 ## Event Binding
 
-- Exchange: `grading` (type: topic)
+- Exchange: `grading.events` (type: topic)
 - Routing Key: `grading.completed`
 - Queue: `grading.completed.notification` (durable)
+
+Email includes a direct link to the student's result page using `FRONTEND_URL` and submission id: `${FRONTEND_URL}/student/results/:submissionId`.
 
 ## Local Development (Docker-backed)
 

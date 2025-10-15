@@ -6,7 +6,8 @@ export interface EventHandler {
 
 export interface RabbitMQConfig {
   url: string;
-  exchange: string;
+  exchange: string; // primary exchange for publishing (back-compat)
+  exchangeList: string[]; // list of exchanges to subscribe to
   exchangeType: 'topic' | 'direct' | 'fanout' | 'headers';
   durable: boolean;
   autoDelete: boolean;
@@ -19,14 +20,20 @@ export class EventSubscriber {
   private subscriptions = new Map<string, EventHandler[]>();
 
   constructor(config?: Partial<RabbitMQConfig>) {
+    const exchangesEnv = process.env.RABBITMQ_EXCHANGES || '';
+    const exchangeList = exchangesEnv
+      ? exchangesEnv.split(',').map(s => s.trim()).filter(Boolean)
+      : ['assessment.events', 'submission.events', 'grading.events'];
+
     this.config = {
       url: process.env.RABBITMQ_URL || 'amqp://admin:pediafor2024@localhost:5672/pediafor',
-      exchange: process.env.RABBITMQ_EXCHANGE || 'assessment_events',
+      exchange: process.env.RABBITMQ_EXCHANGE || exchangeList[0],
+      exchangeList,
       exchangeType: 'topic',
       durable: true,
       autoDelete: false,
       ...config
-    };
+    } as RabbitMQConfig;
   }
 
   async connect(): Promise<void> {
@@ -35,17 +42,18 @@ export class EventSubscriber {
       this.connection = await amqp.connect(this.config.url);
       this.channel = await this.connection.createChannel();
 
-      // Declare exchange
-      await this.channel.assertExchange(
-        this.config.exchange,
-        this.config.exchangeType,
-        {
-          durable: this.config.durable,
-          autoDelete: this.config.autoDelete
-        }
-      );
-
-      console.log(`✅ Connected to RabbitMQ exchange: ${this.config.exchange}`);
+      // Declare all exchanges
+      for (const ex of this.config.exchangeList) {
+        await this.channel.assertExchange(
+          ex,
+          this.config.exchangeType,
+          {
+            durable: this.config.durable,
+            autoDelete: this.config.autoDelete
+          }
+        );
+        console.log(`✅ Connected to RabbitMQ exchange: ${ex}`);
+      }
 
       // Handle connection errors
       this.connection.on('error', (error: Error) => {
@@ -68,15 +76,18 @@ export class EventSubscriber {
     }
 
     try {
-      // Create a queue for this event type
-      const queueName = `realtime_${eventType}_${Date.now()}`;
+      // Create a queue for this event type (ephemeral, autoDelete)
+      const suffix = Math.random().toString(36).substr(2, 6);
+      const queueName = `realtime.${eventType}.${Date.now()}.${suffix}`;
       const queue = await this.channel.assertQueue(queueName, {
         exclusive: true,
         autoDelete: true
       });
 
-      // Bind queue to exchange with routing key
-      await this.channel.bindQueue(queue.queue, this.config.exchange, eventType);
+      // Bind queue to all configured exchanges with the routing key
+      for (const ex of this.config.exchangeList) {
+        await this.channel.bindQueue(queue.queue, ex, eventType);
+      }
 
       // Start consuming messages
       await this.channel.consume(queue.queue, async (message: any) => {

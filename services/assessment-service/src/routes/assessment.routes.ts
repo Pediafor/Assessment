@@ -200,6 +200,25 @@ router.post(
 );
 
 /**
+ * GET /assessments/:id/ownership/:teacherId - Check if teacher owns this assessment
+ * Note: Simple check without auth for realtime filtering; secure routes use middleware above.
+ */
+router.get(
+  '/:id/ownership/:teacherId',
+  async (req: Request, res: Response) => {
+    try {
+      const { id, teacherId } = req.params;
+      const svc = new AssessmentService();
+      const assessment = await svc.getAssessmentByIdInternal(id);
+      const owns = !!assessment && assessment.createdBy === teacherId;
+      res.json({ owns });
+    } catch (e) {
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  }
+);
+
+/**
  * POST /assessments/:id/duplicate - Duplicate assessment
  */
 router.post(

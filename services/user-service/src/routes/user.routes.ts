@@ -189,4 +189,16 @@ router.get("/", authenticateToken, injectUserContext, requireRole(['ADMIN']), as
   }
 });
 
+// Quick lookup: is user a member of a course
+router.get("/:id/courses/:courseId/membership", async (req, res) => {
+  try {
+    const { id, courseId } = req.params;
+    // TODO: Implement when course/enrollment schema exists. Stubbed to false.
+    res.json({ member: false, userId: id, courseId });
+  } catch (error) {
+    console.error("Membership check error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 export default router;

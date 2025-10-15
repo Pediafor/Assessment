@@ -1,34 +1,15 @@
 "use client";
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { listAssessments, type AssessmentListItem } from "@/lib/services/assessments";
+import { useAssessmentsQuery } from "@/hooks/useSubmissions";
+import type { AssessmentListItem } from "@/lib/services/assessments";
 export default function StudentAssessments() {
-  const [data, setData] = useState<AssessmentListItem[] | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  useEffect(() => {
-    let mounted = true;
-    (async () => {
-      try {
-        const items = await listAssessments();
-        if (!mounted) return;
-        if (items && items.length) setData(items);
-        else setData([
-          { id: "SAMPLE-001", title: "Sample Assessment (All Types)", due: "2025-10-20", status: "Assigned" },
-          { id: "SAMPLE-SECTIONED-001", title: "Section-Timed Sample", due: "2025-10-22", status: "Assigned" },
-        ]);
-      } catch (e: any) {
-        if (!mounted) return;
-        setError(e?.message || "Failed to load assessments");
-        setData([
-          { id: "SAMPLE-001", title: "Sample Assessment (All Types)", due: "2025-10-20", status: "Assigned" },
-          { id: "SAMPLE-SECTIONED-001", title: "Section-Timed Sample", due: "2025-10-22", status: "Assigned" },
-        ]);
-      }
-    })();
-    return () => {
-      mounted = false;
-    };
-  }, []);
+  const { data: fetched, isLoading, isError, error } = useAssessmentsQuery();
+  const data: AssessmentListItem[] = (fetched && fetched.length)
+    ? fetched
+    : [
+        { id: "SAMPLE-001", title: "Sample Assessment (All Types)", due: "2025-10-20", status: "Assigned" },
+        { id: "SAMPLE-SECTIONED-001", title: "Section-Timed Sample", due: "2025-10-22", status: "Assigned" },
+      ];
   const badge = (status: string) => {
     const map: Record<string, string> = {
       "Assigned": "bg-blue-100 text-blue-700",
@@ -39,10 +20,10 @@ export default function StudentAssessments() {
     };
     return <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs ${map[status] || "bg-gray-100 text-gray-700"}`}>{status}</span>;
   };
-  if (!data && !error) return <div>Loading assessments…</div>;
+  if (isLoading) return <div>Loading assessments…</div>;
   return (
     <div className="space-y-4">
-      {error && <div className="rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800">{error}</div>}
+      {isError && <div className="rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800">{(error as any)?.message || 'Failed to load assessments'}</div>}
       <div className="rounded-md border overflow-x-auto">
         <table className="min-w-full text-sm">
           <thead className="bg-card text-muted">

@@ -5,6 +5,7 @@ import { createServer } from 'http';
 async function startRealtimeServer() {
   console.log('🚀 Starting Assessment Platform Realtime Server');
   console.log('📋 Features: WebTransport (prepared) + WebSocket (active)');
+  console.log('📦 Exchanges:', process.env.RABBITMQ_EXCHANGES || 'assessment.events,submission.events,grading.events');
   
   try {
     // Create Express app for health checks

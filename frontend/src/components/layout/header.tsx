@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import Image from "next/image";
 import type { Route } from "next";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useState } from "react";
@@ -26,7 +27,14 @@ export function Header() {
           >
             <Menu size={18} />
           </button>
-          <Link href="/" className="font-semibold">Pediafor</Link>
+          <Link href="/" className="font-semibold flex items-center gap-2" aria-label="Pediafor Home">
+            <span className="hidden dark:inline">
+              <Image src="/logos/dark/logo.svg" alt="Pediafor" width={128} height={32} priority />
+            </span>
+            <span className="inline dark:hidden">
+              <Image src="/logos/light/logo.svg" alt="Pediafor" width={128} height={32} priority />
+            </span>
+          </Link>
           {/* Desktop nav shows role links only when logged in */}
           <nav className="hidden lg:flex items-center gap-4 text-sm text-muted">
             {role && (
