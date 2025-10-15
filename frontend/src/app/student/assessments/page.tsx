@@ -1,9 +1,11 @@
 "use client";
 import Link from "next/link";
 import { useAssessmentsQuery } from "@/hooks/useSubmissions";
+import { useState } from "react";
 import type { AssessmentListItem } from "@/lib/services/assessments";
 export default function StudentAssessments() {
-  const { data: fetched, isLoading, isError, error } = useAssessmentsQuery();
+  const [status, setStatus] = useState<string>('PUBLISHED');
+  const { data: fetched, isLoading, isError, error } = useAssessmentsQuery({ status });
   const data: AssessmentListItem[] = (fetched && fetched.length)
     ? fetched
     : [
@@ -23,6 +25,18 @@ export default function StudentAssessments() {
   if (isLoading) return <div>Loading assessments…</div>;
   return (
     <div className="space-y-4">
+      <div className="flex items-center gap-3">
+        <label className="text-sm">Filter:</label>
+        <select
+          className="border rounded-md px-2 py-1 text-sm bg-background"
+          value={status}
+          onChange={(e) => setStatus(e.target.value)}
+        >
+          <option value="PUBLISHED">Published</option>
+          <option value="ASSIGNED">Assigned</option>
+          <option value="DRAFT">Draft</option>
+        </select>
+      </div>
       {isError && <div className="rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800">{(error as any)?.message || 'Failed to load assessments'}</div>}
       <div className="rounded-md border overflow-x-auto">
         <table className="min-w-full text-sm">

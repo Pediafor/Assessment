@@ -13,9 +13,28 @@ export default function StudentHome() {
   const assigned = assessments ?? [];
   const completed = (submissions ?? []).filter((s) => (s.status || "").toLowerCase().includes("complete"));
   const inProgress = (submissions ?? []).filter((s) => (s.status || "").toLowerCase().includes("progress"));
+  const dueSoon = assigned.filter(a => a.due && (new Date(a.due).getTime() - Date.now()) < 1000 * 60 * 60 * 24 * 3); // 3 days
 
   return (
     <div className="space-y-10">
+      <section aria-label="Summary" className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="rounded-md border p-4">
+          <div className="text-sm text-muted">Assigned</div>
+          <div className="text-2xl font-semibold">{aLoading ? '—' : assigned.length}</div>
+        </div>
+        <div className="rounded-md border p-4">
+          <div className="text-sm text-muted">In Progress</div>
+          <div className="text-2xl font-semibold">{sLoading ? '—' : inProgress.length}</div>
+        </div>
+        <div className="rounded-md border p-4">
+          <div className="text-sm text-muted">Completed</div>
+          <div className="text-2xl font-semibold">{sLoading ? '—' : completed.length}</div>
+        </div>
+        <div className="rounded-md border p-4">
+          <div className="text-sm text-muted">Due soon (3d)</div>
+          <div className="text-2xl font-semibold">{aLoading ? '—' : dueSoon.length}</div>
+        </div>
+      </section>
       <section aria-labelledby="assigned-heading">
         <h2 id="assigned-heading" className="text-xl font-semibold mb-3">Assigned</h2>
         {aLoading ? (

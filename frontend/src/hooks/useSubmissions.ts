@@ -19,9 +19,9 @@ export function useMySubmissionsQuery() {
   });
 }
 
-export function useAssessmentsQuery() {
+export function useAssessmentsQuery(opts?: { status?: string; search?: string }) {
   return useQuery<AssessmentListItem[]>({
-    queryKey: ['assessments', { status: 'PUBLISHED' }],
+    queryKey: ['assessments', { status: opts?.status || 'PUBLISHED', q: opts?.search || '' }],
     queryFn: () => listAssessments(),
     staleTime: 30_000,
   });
