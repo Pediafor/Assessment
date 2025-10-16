@@ -5,7 +5,9 @@ import { useState } from "react";
 import type { AssessmentListItem } from "@/lib/services/assessments";
 export default function StudentAssessments() {
   const [status, setStatus] = useState<string>('PUBLISHED');
-  const { data: fetched, isLoading, isError, error } = useAssessmentsQuery({ status });
+  const [subject, setSubject] = useState<string>('');
+  const [search, setSearch] = useState<string>('');
+  const { data: fetched, isLoading, isError, error } = useAssessmentsQuery({ status, subject, search });
   const data: AssessmentListItem[] = (fetched && fetched.length)
     ? fetched
     : [
@@ -25,17 +27,37 @@ export default function StudentAssessments() {
   if (isLoading) return <div>Loading assessments…</div>;
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-3">
-        <label className="text-sm">Filter:</label>
-        <select
-          className="border rounded-md px-2 py-1 text-sm bg-background"
-          value={status}
-          onChange={(e) => setStatus(e.target.value)}
-        >
-          <option value="PUBLISHED">Published</option>
-          <option value="ASSIGNED">Assigned</option>
-          <option value="DRAFT">Draft</option>
-        </select>
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="flex items-center gap-2">
+          <label className="text-sm">Status</label>
+          <select
+            className="border rounded-md px-2 py-1 text-sm bg-background"
+            value={status}
+            onChange={(e) => setStatus(e.target.value)}
+          >
+            <option value="PUBLISHED">Published</option>
+            <option value="ASSIGNED">Assigned</option>
+            <option value="DRAFT">Draft</option>
+          </select>
+        </div>
+        <div className="flex items-center gap-2">
+          <label className="text-sm">Subject</label>
+          <input
+            className="border rounded-md px-2 py-1 text-sm bg-background"
+            placeholder="e.g., Math"
+            value={subject}
+            onChange={(e) => setSubject(e.target.value)}
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <label className="text-sm">Search</label>
+          <input
+            className="border rounded-md px-2 py-1 text-sm bg-background"
+            placeholder="Title or code"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
       </div>
       {isError && <div className="rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800">{(error as any)?.message || 'Failed to load assessments'}</div>}
       <div className="rounded-md border overflow-x-auto">

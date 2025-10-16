@@ -1,7 +1,7 @@
 "use client";
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { clearToken, getToken, setToken } from "@/lib/auth";
-import { apiLogin, apiLogout } from "@/lib/auth-api";
+import { apiLogin, apiLogout, apiMe } from "@/lib/auth-api";
 
 export type UserRole = "admin" | "teacher" | "student";
 
@@ -31,7 +31,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const t = getToken();
       const r = typeof window !== "undefined" ? (localStorage.getItem("auth_role") as UserRole | null) : null;
-      if (t && r) setRole(r);
+      if (t && r) {
+        setRole(r);
+      } else if (t && !r && (process.env.NEXT_PUBLIC_AUTH_MODE ?? 'mock') === 'api') {
+        // Try to resolve role from API session
+  apiMe().then((me: { role: UserRole } | null) => {
+          if (me?.role) {
+            if (typeof window !== 'undefined') localStorage.setItem('auth_role', me.role);
+            setRole(me.role);
+          }
+        }).catch(() => {
+          // token might be invalid; clear it to avoid loops
+          clearToken();
+        }).finally(() => setLoading(false));
+        return; // loading handled in finally above
+      }
     } finally {
       setLoading(false);
     }

@@ -2,11 +2,13 @@
 import React from "react";
 import Link from "next/link";
 import { useAssessmentsQuery, useMySubmissionsQuery } from "@/hooks/useSubmissions";
+import { useRealtimeInvalidation } from "@/hooks/useRealtimeInvalidation";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Empty } from "@/components/ui/empty";
 import { Badge } from "@/components/ui/badge";
 
 export default function StudentHome() {
+  useRealtimeInvalidation();
   const { data: assessments, isLoading: aLoading } = useAssessmentsQuery({ status: "PUBLISHED" });
   const { data: submissions, isLoading: sLoading } = useMySubmissionsQuery();
 
@@ -71,8 +73,11 @@ export default function StudentHome() {
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {inProgress.slice(0, 3).map((r) => (
               <Link key={r.id} href={`/student/assessment/${r.assessmentId || r.id}`} className="rounded-md border p-4 hover:bg-card">
-                <div className="font-medium">{r.title || r.assessmentId || r.id}</div>
-                <div className="mt-1 text-xs text-muted">Continue where you left off</div>
+                <div className="flex items-center justify-between">
+                  <div className="font-medium line-clamp-1">{r.title || r.assessmentId || r.id}</div>
+                  <span className="text-xs text-muted">Continue</span>
+                </div>
+                <div className="mt-1 text-xs text-muted">Resume where you left off</div>
               </Link>
             ))}
           </div>

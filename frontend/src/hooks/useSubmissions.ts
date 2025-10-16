@@ -19,10 +19,10 @@ export function useMySubmissionsQuery() {
   });
 }
 
-export function useAssessmentsQuery(opts?: { status?: string; search?: string }) {
+export function useAssessmentsQuery(opts?: { status?: string; search?: string; subject?: string }) {
   return useQuery<AssessmentListItem[]>({
-    queryKey: ['assessments', { status: opts?.status || 'PUBLISHED', q: opts?.search || '' }],
-    queryFn: () => listAssessments(),
+    queryKey: ['assessments', { status: opts?.status || 'PUBLISHED', q: opts?.search || '', subject: opts?.subject || '' }],
+    queryFn: () => listAssessments({ status: opts?.status, search: opts?.search, subject: opts?.subject }),
     staleTime: 30_000,
   });
 }
