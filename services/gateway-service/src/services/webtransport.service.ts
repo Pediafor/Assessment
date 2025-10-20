@@ -338,10 +338,15 @@ export class WebTransportRealtimeService {
       this.clients.delete(clientId);
     });
 
+    // Send welcome handshake
+    try {
+      this.sendSuccessToClient(clientConnection, 'Welcome', { hello: true, server: 'realtime', protocol: 'v1' });
+    } catch {}
+
     // Store client connection if authenticated
     if (userContext) {
       this.clients.set(clientId, clientConnection);
-      this.sendSuccessToClient(clientConnection, 'Connected successfully');
+      this.sendSuccessToClient(clientConnection, 'Connected successfully', { authenticated: true });
     } else {
       // Send authentication required message
       this.sendErrorToClient(clientConnection, 'Authentication required');
@@ -395,13 +400,18 @@ export class WebTransportRealtimeService {
   }
 
   private async handleSubscription(client: ClientConnection, message: RealtimeMessage): Promise<void> {
+    // Require authentication
+    if (!client.userId || client.userId === 'unauthenticated' || client.userContext?.id === 'anonymous') {
+      this.sendErrorToClient(client, 'Authenticate first');
+      return;
+    }
     if (!message.eventType) {
       this.sendErrorToClient(client, 'Event type required for subscription');
       return;
     }
 
     client.subscriptions.add(message.eventType);
-    this.sendSuccessToClient(client, `Subscribed to ${message.eventType}`);
+    this.sendSuccessToClient(client, `Subscribed to ${message.eventType}`, { eventType: message.eventType, status: 'subscribed' });
     console.log(`📡 Client ${client.id} subscribed to ${message.eventType}`);
   }
 
@@ -412,7 +422,7 @@ export class WebTransportRealtimeService {
     }
 
     client.subscriptions.delete(message.eventType);
-    this.sendSuccessToClient(client, `Unsubscribed from ${message.eventType}`);
+    this.sendSuccessToClient(client, `Unsubscribed from ${message.eventType}`, { eventType: message.eventType, status: 'unsubscribed' });
     console.log(`📡 Client ${client.id} unsubscribed from ${message.eventType}`);
   }
 
@@ -584,10 +594,10 @@ export class WebTransportRealtimeService {
     }
   }
 
-  private sendSuccessToClient(client: ClientConnection, message: string): void {
+  private sendSuccessToClient(client: ClientConnection, message: string, extraData: Record<string, unknown> = {}): void {
     this.sendMessageToClient(client, {
       type: 'success',
-      data: { message },
+      data: { message, ...extraData },
       timestamp: Date.now()
     });
   }
