@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import amqplib from 'amqplib';
 import prisma from '../prismaClient';
 
 const router = Router();
@@ -44,3 +45,40 @@ router.post('/read', async (req, res) => {
 });
 
 export default router;
+
+// Dev-only: simulate a new notification and publish to RabbitMQ
+router.post('/_simulate', async (req, res) => {
+  try {
+    if (process.env.ALLOW_SIMULATE !== 'true') {
+      return res.status(404).json({ success: false, error: 'Not found' });
+    }
+
+    const userId = (req.body && req.body.userId) || getUserId(req);
+    if (!userId) return res.status(400).json({ success: false, error: 'userId required' });
+
+    const title = req.body?.title || 'Test notification';
+    const body = req.body?.body || 'This is a simulated notification.';
+
+    const record = await prisma.notification.create({ data: { userId, title, body } });
+
+    try {
+      const amqpUrl = process.env.AMQP_URL || process.env.RABBITMQ_URL || 'amqp://localhost';
+      const connection = await amqplib.connect(amqpUrl);
+      const channel = await connection.createChannel();
+      const exchange = 'notification.events';
+      await channel.assertExchange(exchange, 'topic', { durable: true });
+      const payload = { id: record.id, userId: record.userId, title: record.title, createdAt: record.createdAt };
+      channel.publish(exchange, 'notification.created', Buffer.from(JSON.stringify(payload)), { persistent: true });
+      await channel.close();
+      await connection.close();
+    } catch (e) {
+      // Non-fatal: event bus unavailable
+      console.warn('⚠️ Failed to publish simulate notification.created:', e);
+    }
+
+    return res.json({ success: true, data: record });
+  } catch (e: any) {
+    console.error('simulate error:', e);
+    return res.status(500).json({ success: false, error: 'Internal error' });
+  }
+});

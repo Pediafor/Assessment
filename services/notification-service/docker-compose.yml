@@ -12,6 +12,7 @@ services:
       AMQP_URL: amqp://admin:pediafor2024@pediafor-rabbitmq:5672/pediafor
       # Reach user-service over its compose network by service/container name
       USER_SERVICE_URL: http://user-service:4000
+      ALLOW_SIMULATE: "true"
     ports:
       - "4005:4005"
     networks:
