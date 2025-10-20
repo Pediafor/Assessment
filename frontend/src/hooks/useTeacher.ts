@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { AnalyticsApi, GradesApi, UsersApi, api } from '@/lib/api';
+import { AnalyticsApi, GradesApi, UsersApi, SubmissionsApi, api } from '@/lib/api';
 
 export function useTeacherAssessments(params?: { status?: string; search?: string; subject?: string }) {
   const { status, search, subject } = params || {};
@@ -22,13 +22,13 @@ export function useGradingQueue() {
   });
 }
 
-export function useTeacherStudents(params?: { page?: number; limit?: number }) {
+export function useTeacherStudents(params?: { page?: number; limit?: number; q?: string }) {
   return useQuery({
     queryKey: ['teacher-students', params ?? {}],
     queryFn: async () => {
       const res = await api.get('/users/students', { params });
-      const data = res?.data ?? res;
-      return Array.isArray(data?.users) ? data.users : (Array.isArray(data) ? data : []);
+      // Return full shape { users, total }
+      return res?.data ?? res;
     },
   });
 }
@@ -39,6 +39,32 @@ export function useTeacherOverview() {
     queryFn: async () => {
       const res = await AnalyticsApi.teacherOverview();
       return res?.data ?? res ?? {};
+    },
+  });
+}
+
+export function useStudentDetail(id?: string) {
+  return useQuery({
+    queryKey: ['student-detail', id],
+    enabled: !!id,
+    queryFn: async () => {
+      const res = await api.get(`/users/students/${id}`);
+      const data = (res as any)?.data ?? res;
+      return data?.user ?? data;
+    },
+  });
+}
+
+export function useStudentSubmissions(studentId?: string, limit: number = 5) {
+  return useQuery({
+    queryKey: ['student-submissions', studentId, limit],
+    enabled: !!studentId,
+    queryFn: async () => {
+      const res = await SubmissionsApi.list({ studentId, limit, sortBy: 'createdAt', sortOrder: 'desc' });
+      const data = (res as any);
+      // Support either { data, meta } or array
+      const items = Array.isArray(data?.data) ? data.data : (Array.isArray(data) ? data : data?.submissions ?? []);
+      return items;
     },
   });
 }

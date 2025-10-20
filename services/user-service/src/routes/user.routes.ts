@@ -1,5 +1,5 @@
 import express from "express";
-import { registerUser, getUserById, updateUser, deleteUser, getAllUsers } from "../services/user.service";
+import { registerUser, getUserById, updateUser, deleteUser, getAllUsers, getUsersPage } from "../services/user.service";
 import { hashPassword } from "../utils/hash";
 import { authenticateToken, requireRole, requireOwnership, injectUserContext } from "../middleware/auth.middleware";
 
@@ -162,24 +162,21 @@ router.delete("/:id", authenticateToken, injectUserContext, requireOwnership, as
 // Get all users (admin functionality) - Protected: only admins can list all users
 router.get("/", authenticateToken, injectUserContext, requireRole(['ADMIN']), async (req, res) => {
   try {
-    const { page = 1, limit = 10, role } = req.query;
-    
-    const users = await getAllUsers({
+    const { page = 1, limit = 10, role, q } = req.query as any;
+
+    const { users, total } = await getUsersPage({
       page: parseInt(page as string),
       limit: parseInt(limit as string),
-      role: role as string
+      role: role as string,
+      q: q as string,
     });
 
-    // Remove sensitive data from all users
     const sanitizedUsers = users.map(user => {
-      const { passwordHash: _, refreshToken: __, ...userResponse } = user;
+      const { passwordHash: _, refreshToken: __, resetPasswordToken: ___, resetTokenExpiry: ____, ...userResponse } = user as any;
       return userResponse;
     });
 
-    res.json({
-      users: sanitizedUsers,
-      total: sanitizedUsers.length
-    });
+    res.json({ users: sanitizedUsers, total });
 
   } catch (error) {
     console.error("Get all users error:", error);
@@ -192,26 +189,40 @@ router.get("/", authenticateToken, injectUserContext, requireRole(['ADMIN']), as
 // List students (teacher/admin) - Protected: teachers and admins can list students they manage
 router.get("/students", authenticateToken, injectUserContext, requireRole(['TEACHER', 'ADMIN']), async (req, res) => {
   try {
-    const { page = 1, limit = 10 } = req.query;
+    const { page = 1, limit = 10, q } = req.query as any;
 
-    const users = await getAllUsers({
+    const { users, total } = await getUsersPage({
       page: parseInt(page as string),
       limit: parseInt(limit as string),
-      role: 'STUDENT'
+      role: 'STUDENT',
+      q: q as string,
     });
 
     const sanitizedUsers = users.map(user => {
-      const { passwordHash: _, refreshToken: __, ...userResponse } = user;
+      const { passwordHash: _, refreshToken: __, resetPasswordToken: ___, resetTokenExpiry: ____, ...userResponse } = user as any;
       return userResponse;
     });
 
-    res.json({
-      users: sanitizedUsers,
-      total: sanitizedUsers.length
-    });
+    res.json({ users: sanitizedUsers, total });
   } catch (error) {
     console.error("Get students error:", error);
     res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Teacher/Admin: get student detail by ID (sanitized)
+router.get("/students/:id", authenticateToken, injectUserContext, requireRole(['TEACHER', 'ADMIN']), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = await getUserById(id);
+    if (!user || user.role !== 'STUDENT') {
+      return res.status(404).json({ error: 'Student not found' });
+    }
+    const { passwordHash: _, refreshToken: __, resetPasswordToken: ___, resetTokenExpiry: ____, ...userResponse } = user as any;
+    res.json({ user: userResponse });
+  } catch (error) {
+    console.error('Get student detail error:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 

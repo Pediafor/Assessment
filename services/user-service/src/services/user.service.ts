@@ -24,6 +24,7 @@ interface GetUsersOptions {
   page: number;
   limit: number;
   role?: string;
+  q?: string; // optional search across email, firstName, lastName
 }
 
 // Register new user
@@ -218,6 +219,40 @@ export async function getAllUsers(options: GetUsersOptions) {
       createdAt: 'desc'
     }
   });
+}
+
+// Get users with pagination and optional search and total count
+export async function getUsersPage(options: GetUsersOptions) {
+  const { page, limit, role, q } = options;
+
+  const where: any = {
+    isActive: true,
+  };
+
+  if (role) {
+    where.role = role.toUpperCase();
+  }
+
+  if (q && q.trim().length > 0) {
+    const term = q.trim();
+    where.OR = [
+      { email: { contains: term, mode: 'insensitive' } },
+      { firstName: { contains: term, mode: 'insensitive' } },
+      { lastName: { contains: term, mode: 'insensitive' } },
+    ];
+  }
+
+  const [total, users] = await Promise.all([
+    prisma.user.count({ where }),
+    prisma.user.findMany({
+      where,
+      skip: (page - 1) * limit,
+      take: limit,
+      orderBy: { createdAt: 'desc' },
+    }),
+  ]);
+
+  return { users, total, page, limit };
 }
 
 // Update last login
