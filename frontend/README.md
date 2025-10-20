@@ -7,14 +7,14 @@
 [![Status](https://img.shields.io/badge/Status-In%20Development-orange)](.)
 
 > **✅ Current Status**
-> Frontend scaffold is in place and running with Next.js 15 App Router and React 19. We’ve implemented role-based layouts and a robust assessment-taking flow (sections, timers, autosave, review, forward-only). API integration is the next milestone.
+> Frontend scaffold is in place and running with Next.js 15 App Router and React 19. We’ve implemented role-based layouts, API-backed auth flows (login, register, forgot/reset), teacher dashboard basics, and a robust assessment-taking flow (sections, timers, autosave, review, forward-only).
 
 ---
 
 ## 🚀 Quick Start
 
 ### **Current Status**
-The frontend compiles and runs. Major UX for the student taking flow is implemented with sample data; API wiring is upcoming.
+The frontend compiles and runs. Auth pages are wired to the API in development via Next.js rewrites. Student taking flow is implemented with API calls for submissions and auto-save.
 
 ```bash
 # Install dependencies
@@ -24,6 +24,7 @@ npm install
 cp .env.example .env.local
 # set NEXT_PUBLIC_GATEWAY_URL to your gateway base URL (default http://localhost:3000)
 # set NEXT_PUBLIC_REALTIME_URL to your realtime endpoint (e.g., ws://localhost:8080/realtime)
+# set NEXT_PUBLIC_API_URL (optional; defaults to NEXT_PUBLIC_GATEWAY_URL + "/api")
 # set NEXT_PUBLIC_AUTH_MODE=mock (default) or api
 
 # Start development server
@@ -42,11 +43,16 @@ npm run dev
 - ✅ Submitted confirmation page and .well-known DevTools route
 
 ### **What's Coming**
-- 🚧 API wiring for auth and student flows (save/submit)
+- 🚧 Student flows polish (additional validations, error states)
 - 🚧 Notifications API endpoint: `GET /api/notifications?scope=me&limit=50&after=<cursor>` returns `{ success, data: { notifications: Notification[], nextCursor? } }`; `POST /api/notifications/:id/read` to mark read.
-- 🚧 Results integration and teacher/admin data flows
+- 🚧 Results integration and teacher/admin data flows (expanded)
 - 🚧 Testing (Jest/Playwright) and lint/format tooling
 - 🚧 Realtime updates (WebTransport/WebSocket)
+  
+### **Recently Implemented**
+- ✅ Auth pages wired to API (login/register/forgot/reset) with basic tests
+- ✅ Teacher dashboard metrics and grading queue (API-backed when available)
+- ✅ Teacher assessments page filters (status/search/subject) with URL sync
 
 ---
 
