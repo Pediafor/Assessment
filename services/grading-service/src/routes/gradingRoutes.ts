@@ -68,6 +68,41 @@ router.post(
 );
 
 /**
+ * Get grading queue (items requiring manual review)
+ * GET /api/grade/queue
+ */
+router.get(
+  '/queue',
+  async (req: express.Request, res: express.Response): Promise<void> => {
+    try {
+      const userContext = req.user as UserContext;
+
+      // Authorization: Only teachers and admins can access the grading queue
+      if (!['teacher', 'admin'].includes(userContext.role)) {
+        res.status(403).json({
+          success: false,
+          error: 'Insufficient permissions to view grading queue'
+        });
+        return;
+      }
+
+      const items = await gradingService.getManualGradingQueue();
+
+      res.status(200).json({
+        success: true,
+        data: { items }
+      });
+    } catch (error) {
+      console.error('Error fetching grading queue:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Internal server error'
+      });
+    }
+  }
+);
+
+/**
  * Get grade by submission ID
  * GET /api/grade/submission/:submissionId
  */
@@ -159,6 +194,51 @@ router.put(
 );
 
 /**
+ * Manually grade a specific question within a submission
+ * PUT /api/grade/submission/:submissionId/question/:questionId
+ */
+router.put(
+  '/submission/:submissionId/question/:questionId',
+  [
+    param('submissionId').isString().notEmpty().withMessage('Submission ID is required'),
+    param('questionId').isString().notEmpty().withMessage('Question ID is required'),
+    body('pointsEarned').isFloat({ min: 0 }).withMessage('pointsEarned must be a non-negative number'),
+    body('feedback').optional().isString().withMessage('feedback must be a string'),
+    handleValidationErrors
+  ],
+  async (req: express.Request, res: express.Response): Promise<void> => {
+    try {
+      const userContext = req.user as UserContext;
+      const { submissionId, questionId } = req.params;
+      const { pointsEarned, feedback } = req.body as { pointsEarned: number; feedback?: string };
+
+      if (!['teacher', 'admin'].includes(userContext.role)) {
+        res.status(403).json({ success: false, error: 'Insufficient permissions to grade' });
+        return;
+      }
+
+      const result = await gradingService.manualGradeQuestion({
+        submissionId,
+        questionId,
+        pointsEarned: Number(pointsEarned),
+        feedback: feedback ?? null,
+        gradedBy: userContext.userId
+      });
+
+      if (!result.success) {
+        res.status(400).json(result);
+        return;
+      }
+
+      res.status(200).json(result);
+    } catch (error) {
+      console.error('Error in manual question grading endpoint:', error);
+      res.status(500).json({ success: false, error: 'Internal server error' });
+    }
+  }
+);
+
+/**
  * Get grades by user ID
  * GET /api/grade/user/:userId
  */
@@ -233,6 +313,40 @@ router.get(
       });
     } catch (error) {
       console.error('Error fetching grades by assessment:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Internal server error'
+      });
+    }
+  }
+);
+
+/**
+ * Teacher overview analytics
+ * GET /api/grade/analytics/teacher/overview
+ */
+router.get(
+  '/analytics/teacher/overview',
+  async (req: express.Request, res: express.Response): Promise<void> => {
+    try {
+      const userContext = req.user as UserContext;
+
+      if (!['teacher', 'admin'].includes(userContext.role)) {
+        res.status(403).json({
+          success: false,
+          error: 'Insufficient permissions to view analytics'
+        });
+        return;
+      }
+
+      const overview = await gradingService.getTeacherOverviewStats();
+
+      res.status(200).json({
+        success: true,
+        data: overview
+      });
+    } catch (error) {
+      console.error('Error fetching teacher overview analytics:', error);
       res.status(500).json({
         success: false,
         error: 'Internal server error'

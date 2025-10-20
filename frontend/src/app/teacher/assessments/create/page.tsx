@@ -31,7 +31,7 @@ export default function CreateAssessmentPage() {
             className="grid gap-3"
             onSubmit={form.handleSubmit(async (vals) => {
               try {
-                await api.post('/api/assessments', vals);
+                await api.post('/assessments', vals);
                 success('Assessment created');
                 router.push('/teacher/assessments');
               } catch {

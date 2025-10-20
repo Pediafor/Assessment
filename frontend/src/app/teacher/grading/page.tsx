@@ -1,5 +1,6 @@
 "use client";
 import { useGradingQueue } from '@/hooks/useTeacher';
+import Link from 'next/link';
 
 export default function TeacherGrading() {
   const { data: fetched = [], isLoading } = useGradingQueue();
@@ -28,7 +29,11 @@ export default function TeacherGrading() {
             <div className="text-sm text-muted">Submitted: {q.submitted}</div>
             <div className="mt-2">{badge(q.status!)}</div>
             <div className="mt-3">
-              <button className="rounded-md border px-3 py-2 text-sm hover:bg-card">Open</button>
+              {q.submissionId ? (
+                <Link href={("/teacher/grading/" + String(q.submissionId)) as any} className="rounded-md border px-3 py-2 text-sm hover:bg-card inline-block">Open</Link>
+              ) : (
+                <button className="rounded-md border px-3 py-2 text-sm hover:bg-card" disabled>Open</button>
+              )}
             </div>
           </div>
         ))}

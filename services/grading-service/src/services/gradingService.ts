@@ -467,6 +467,139 @@ export class GradingService {
   }
 
   /**
+   * Return a lightweight queue of items requiring manual grading.
+   * For now, derive from grades that contain any question with isCorrect === null or text/file types.
+   * In a more complete system, we'd query submissions in 'submitted' state with manual questions.
+   */
+  async getManualGradingQueue(): Promise<Array<{
+    id: string;
+    submissionId: string;
+    assessmentId: string;
+    studentId: string;
+    submittedAt?: string;
+    status: 'New' | 'Pending' | 'Urgent';
+    assessment?: string;
+    student?: string;
+  }>> {
+    try {
+      // Heuristic: find latest grades where some question needs manual review
+      const grades = await this.prisma.grade.findMany({
+        include: { questionGrades: true },
+        orderBy: { gradedAt: 'desc' },
+        take: 50,
+      });
+
+      const needsManual = grades.filter(g =>
+        g.questionGrades.some(q => q.isCorrect === null)
+      );
+
+      return needsManual.map(g => ({
+        id: g.id,
+        submissionId: g.submissionId,
+        assessmentId: g.assessmentId,
+        studentId: g.userId,
+        status: 'New',
+        submittedAt: g.gradedAt?.toISOString(),
+      }));
+    } catch (error) {
+      console.error('Error building manual grading queue:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Compute simple teacher overview statistics.
+   */
+  async getTeacherOverviewStats(): Promise<{ avgScore: number | null; completed: number; pendingGrading: number; }>{
+    try {
+      const [count, aggregates] = await Promise.all([
+        this.prisma.grade.count(),
+        this.prisma.grade.aggregate({ _avg: { percentage: true } }),
+      ]);
+
+      // Pending grading heuristic: question grades with isCorrect === null
+      const pendingGrading = await this.prisma.questionGrade.count({ where: { isCorrect: null } });
+
+      return {
+        avgScore: aggregates._avg.percentage ? Number(aggregates._avg.percentage) : null,
+        completed: count,
+        pendingGrading,
+      };
+    } catch (error) {
+      console.error('Error computing teacher overview stats:', error);
+      return { avgScore: null, completed: 0, pendingGrading: 0 };
+    }
+  }
+
+  /**
+   * Manually grade a specific question within a submission grade.
+   */
+  async manualGradeQuestion(params: {
+    submissionId: string;
+    questionId: string;
+    pointsEarned: number;
+    feedback: string | null;
+    gradedBy: string;
+  }): Promise<GradingResponse> {
+    const { submissionId, questionId, pointsEarned, feedback, gradedBy } = params;
+    try {
+      // Find existing grade
+      const grade = await this.prisma.grade.findUnique({
+        where: { submissionId },
+        include: { questionGrades: true },
+      });
+      if (!grade) {
+        return { success: false, error: 'Grade not found for submission' };
+      }
+
+      // Find the question grade and its maxPoints
+      const qg = grade.questionGrades.find(q => q.questionId === questionId);
+      if (!qg) {
+        return { success: false, error: 'Question not found in grade' };
+      }
+      const boundedPoints = Math.max(0, Math.min(pointsEarned, qg.maxPoints));
+
+      // Update the question grade
+      await this.prisma.questionGrade.update({
+        where: { id: qg.id },
+        data: {
+          pointsEarned: boundedPoints,
+          isCorrect: null, // manual grading may not be strictly true/false
+          feedback: feedback,
+        },
+      });
+
+      // Recalculate totals
+      const updatedQGs = await this.prisma.questionGrade.findMany({ where: { gradeId: grade.id } });
+      const totalScore = updatedQGs.reduce((sum, item) => sum + (item.pointsEarned ?? 0), 0);
+      const maxScore = updatedQGs.reduce((sum, item) => sum + (item.maxPoints ?? 0), 0);
+      const percentage = maxScore > 0 ? (totalScore / maxScore) * 100 : 0;
+
+      const updatedGrade = await this.prisma.grade.update({
+        where: { id: grade.id },
+        data: {
+          totalScore,
+          maxScore,
+          percentage,
+          gradedBy,
+          isAutomated: false,
+          updatedAt: new Date(),
+        },
+        include: { questionGrades: true },
+      });
+
+      return {
+        success: true,
+        grade: this.mapPrismaGradeToResult(updatedGrade),
+        message: 'Question graded successfully',
+      };
+    } catch (error) {
+      console.error('Error in manualGradeQuestion:', error);
+      return { success: false, error: error instanceof Error ? error.message : 'Unknown error occurred' };
+    }
+  }
+
+  /**
    * Cleanup resources
    */
   async disconnect(): Promise<void> {

@@ -128,8 +128,22 @@ app.use('/api/auth', createProxyMiddleware({
   pathRewrite: { '^/api/auth': '/auth' },
 }));
 
+// Public user registration alias without /api prefix
+app.use('/users/register', createProxyMiddleware({
+  target: services.user,
+  changeOrigin: true,
+  pathRewrite: (path) => `/users${path.replace(/^\/users/, '')}`,
+}));
+
 // Protected routes: apply auth per-route to avoid mount path side-effects
 app.use('/api/users', authenticateGateway, createProxyMiddleware({
+  target: services.user,
+  changeOrigin: true,
+  pathRewrite: (path) => `/users${path}`,
+}));
+
+// Non-/api alias: /users -> user service (protected)
+app.use('/users', authenticateGateway, createProxyMiddleware({
   target: services.user,
   changeOrigin: true,
   pathRewrite: (path) => `/users${path}`,
@@ -142,8 +156,22 @@ app.use('/api/assessments', authenticateGateway, createProxyMiddleware({
   pathRewrite: (path) => `/assessments${path}`,
 }));
 
+// Non-/api alias: /assessments -> assessment service (protected)
+app.use('/assessments', authenticateGateway, createProxyMiddleware({
+  target: services.assessment,
+  changeOrigin: true,
+  pathRewrite: (path) => `/assessments${path}`,
+}));
+
 // Route to SubmissionService (this service expects '/api/submissions' path)
 app.use('/api/submissions', authenticateGateway, createProxyMiddleware({
+  target: services.submission,
+  changeOrigin: true,
+  pathRewrite: (path) => `/api/submissions${path}`,
+}));
+
+// Non-/api alias: /submissions -> submission service (protected)
+app.use('/submissions', authenticateGateway, createProxyMiddleware({
   target: services.submission,
   changeOrigin: true,
   pathRewrite: (path) => `/api/submissions${path}`,
@@ -156,8 +184,29 @@ app.use('/api/grade', authenticateGateway, createProxyMiddleware({
   pathRewrite: (path) => `/api/grade${path}`,
 }));
 
+// Non-/api alias: /grade -> grading service (protected)
+app.use('/grade', authenticateGateway, createProxyMiddleware({
+  target: services.grading,
+  changeOrigin: true,
+  pathRewrite: (path) => `/api/grade${path}`,
+}));
+
+// Back-compat alias: /api/grades -> grading service
+app.use('/api/grades', authenticateGateway, createProxyMiddleware({
+  target: services.grading,
+  changeOrigin: true,
+  pathRewrite: (path) => `/api/grade${path.replace(/^\/api\/grades/, '')}`,
+}));
+
 // Notifications REST proxy to notification-service
 app.use('/api/notifications', authenticateGateway, createProxyMiddleware({
+  target: services.notification,
+  changeOrigin: true,
+  pathRewrite: (path) => `/api/notifications${path}`,
+}));
+
+// Non-/api alias: /notifications -> notification service (protected)
+app.use('/notifications', authenticateGateway, createProxyMiddleware({
   target: services.notification,
   changeOrigin: true,
   pathRewrite: (path) => `/api/notifications${path}`,

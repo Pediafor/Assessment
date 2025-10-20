@@ -83,11 +83,11 @@ api.interceptors.response.use(
 );
 
 export const SubmissionsApi = {
-  list: (params?: Record<string, any>) => api.get('/api/submissions', { params }).then(r => r.data),
-  get: (id: string) => api.get(`/api/submissions/${id}`).then(r => r.data),
-  create: (payload: { assessmentId: string }) => api.post('/api/submissions', payload).then(r => r.data),
-  saveAnswers: (id: string, answers: any) => api.post(`/api/submissions/${id}/answers`, { answers }).then(r => r.data),
-  submit: (id: string) => api.post(`/api/submissions/${id}/submit`).then(r => r.data),
+  list: (params?: Record<string, any>) => api.get('/submissions', { params }).then(r => r.data),
+  get: (id: string) => api.get(`/submissions/${id}`).then(r => r.data),
+  create: (payload: { assessmentId: string }) => api.post('/submissions', payload).then(r => r.data),
+  saveAnswers: (id: string, answers: any) => api.post(`/submissions/${id}/answers`, { answers }).then(r => r.data),
+  submit: (id: string) => api.post(`/submissions/${id}/submit`).then(r => r.data),
 };
 
 export const NotificationsApi = {
@@ -96,28 +96,34 @@ export const NotificationsApi = {
   // returns { success: true, data: { notifications: Notification[], nextCursor?: string } }
   listMine: (params?: { limit?: number; after?: string }) =>
     api
-      .get('/api/notifications', { params: { scope: 'me', ...(params || {}) } })
+      .get('/notifications', { params: { scope: 'me', ...(params || {}) } })
       .then(r => r.data),
   // POST /api/notifications/:id/read -> { success: true }
-  markRead: (id: string) => api.post(`/api/notifications/${id}/read`).then(r => r.data),
+  markRead: (id: string) => api.post(`/notifications/${id}/read`).then(r => r.data),
   // Optional bulk endpoint: POST /api/notifications/read { ids: string[] }
-  bulkMarkRead: (ids: string[]) => api.post('/api/notifications/read', { ids }).then(r => r.data),
+  bulkMarkRead: (ids: string[]) => api.post('/notifications/read', { ids }).then(r => r.data),
 };
 
 export const UsersApi = {
   me: () => api.get('/api/auth/me').then(r => r.data),
-  updateProfile: (payload: { name?: string; email?: string }) => api.put('/api/users/profile', payload).then(r => r.data),
-  changePassword: (payload: { currentPassword: string; newPassword: string }) => api.put('/api/users/password', payload).then(r => r.data),
+  updateProfile: (payload: { name?: string; email?: string }) => api.put('/users/profile', payload).then(r => r.data),
+  changePassword: (payload: { currentPassword: string; newPassword: string }) => api.put('/users/password', payload).then(r => r.data),
   list: (params?: { role?: string; page?: number; limit?: number }) =>
-    api.get('/api/users', { params }).then(r => r.data),
+    api.get('/users', { params }).then(r => r.data),
 };
 
 export const GradesApi = {
-  // Expected: GET /api/grades/queue -> { success, data: { items: [...] } }
-  queue: () => api.get('/api/grades/queue').then(r => r.data).catch(() => ({ success: true, data: { items: [] } })),
+  // Implemented via grading-service: GET /grade/queue -> { success, data: { items: [...] } }
+  queue: () => api
+    .get('/grade/queue')
+    .then(r => r.data)
+    .catch(() => ({ success: true, data: { items: [] } })),
 };
 
 export const AnalyticsApi = {
-  // Expected: GET /api/analytics/teacher/overview -> { success, data: { avgScore, completed, pendingGrading } }
-  teacherOverview: () => api.get('/api/analytics/teacher/overview').then(r => r.data).catch(() => ({ success: true, data: { avgScore: null, completed: null, pendingGrading: null } })),
+  // Implemented via grading-service: GET /grade/analytics/teacher/overview
+  teacherOverview: () => api
+    .get('/grade/analytics/teacher/overview')
+    .then(r => r.data)
+    .catch(() => ({ success: true, data: { avgScore: null, completed: null, pendingGrading: null } })),
 };

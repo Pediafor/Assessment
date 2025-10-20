@@ -6,7 +6,7 @@ export function useTeacherAssessments(params?: { status?: string; search?: strin
   return useQuery({
     queryKey: ['teacher-assessments', { status, search, subject }],
     queryFn: async () => {
-      const res = await api.get('/api/assessments', { params: { status, q: search, subject } });
+  const res = await api.get('/assessments', { params: { status, q: search, subject } });
       return res.data?.data?.assessments ?? res.data?.assessments ?? [];
     },
   });
