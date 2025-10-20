@@ -39,8 +39,8 @@ npm run dev
 - ✅ Assessment player: sections, per-section/overall timers, autosave/restore, review modal, forward-only, read-only locked sections, desktop vertical nav
 - ✅ Results: `/student/results` list and `/student/results/[id]` detail wired via TanStack Query
 - ✅ Notifications: `/student/notifications` wired to API with cursor-based pagination (Load more), loading skeleton, mark read; graceful fallback
- - ✅ Notifications: `/student/notifications` wired to API with cursor-based pagination (Load more), loading skeleton, mark read; graceful fallback
- - ✅ Student profile page: `/student/profile` with name/email update and password change
+- ✅ Notifications: `/student/notifications` auto-loads pages via IntersectionObserver with manual "Load more" fallback
+- ✅ Student profile page: `/student/profile` with name/email update and password change (enhanced UI using design system: Card, Input, Button)
 - ✅ Realtime: WebTransport primary with WebSocket fallback; results detail auto-refreshes on grading events
 - ✅ Submitted confirmation page and .well-known DevTools route
 
@@ -55,10 +55,11 @@ npm run dev
 - ✅ Auth pages wired to API (login/register/forgot/reset) with basic tests
 - ✅ Teacher dashboard metrics and grading queue (API-backed when available)
 - ✅ Teacher assessments page filters (status/search/subject) with URL sync
-- ✅ Notifications page uses API client with infinite pagination (`useNotificationsInfinite` + `markRead`) and loading/empty states
+- ✅ Notifications page uses API client with infinite pagination (`useNotificationsInfinite` + `markRead`) and loading/empty states; auto-load via IntersectionObserver + manual Load more fallback
 - ✅ Realtime invalidation hook for assessments/submissions/results events
 - ✅ Scoped root `.gitignore` lib patterns so `frontend/src/lib` is tracked
- - ✅ Assessment submit error banner and control disabling on fatal error
+- ✅ Assessment submit error banner and control disabling on fatal error
+- ✅ Playwright e2e tests for profile and notifications basic UX
 
 ---
 
@@ -1144,9 +1145,14 @@ export function AssessmentForm({ assessment, onSubmit }: AssessmentFormProps) {
 - 📝 Mobile optimization
 - 📝 Performance optimization
 - ✅ Accessibility improvements (landmarks, skip link, page-level skeletons)
-- � Testing and bug fixes (initial a11y tests for dashboard/notifications; expand coverage)
+- ✅ Testing and bug fixes (initial a11y tests + Playwright e2e for profile/notifications)
 - ✅ Autosave retry/backoff and submit protection in assessment player
 - 📝 Documentation
+
+### Next steps
+- Notifications: unify unread badge with list state; add toast feedback for bulk actions
+- Profile: add form-level validation and nicer success/error toasts; integrate design system select for preferences when available
+- Expand Playwright coverage for teacher flows (assessments list, grading queue) and notifications auto-load edge cases
 
 ---
 
