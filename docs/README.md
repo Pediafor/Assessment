@@ -1,4 +1,4 @@
-# Pediafor Assessment Platform - Documentation Index
+# Pediafor Assessment Platform — Documentation Index
 
 [![Platform Status](https://img.shields.io/badge/Platform-Production%20Ready-success)](.)
 [![Test Coverage](https://img.shields.io/badge/Tests-High%20Test%20Coverage-success)](.)
@@ -6,7 +6,7 @@
 [![Events](https://img.shields.io/badge/Events-RabbitMQ%20Powered-orange)](.)
 [![Documentation](https://img.shields.io/badge/Documentation-Complete-brightgreen)](.)
 
-Welcome to the comprehensive documentation for the Pediafor Assessment Platform - a modern, secure, and scalable event-driven microservices-based assessment system built with TypeScript, Express.js, PostgreSQL, React/Next.js, RabbitMQ, and Docker.
+Welcome to the comprehensive documentation for the Pediafor Assessment Platform — a modern, secure, and scalable event-driven microservices-based assessment system built with TypeScript, Express.js, PostgreSQL, React/Next.js, RabbitMQ, and Docker.
 
 ## 📋 Quick Start
 
@@ -18,6 +18,7 @@ Welcome to the comprehensive documentation for the Pediafor Assessment Platform 
 | [🔧 Development Guide](./development.md) | Complete development setup and workflow |
 | [📡 API Reference](./api.md) | Complete API documentation with examples |
 | [🎨 Frontend Guide](../frontend/README.md) | React/Next.js frontend architecture |
+| [🧪 SQL Examples](./sql-examples/README.md) | Development-only SQL snippets |
 
 ## 🏗️ Service Documentation
 
@@ -34,4 +35,6 @@ Welcome to the comprehensive documentation for the Pediafor Assessment Platform 
 
 ---
 
-*Last Updated: October 14, 2025*
+---
+
+Docs Version: 1.3 • Last Updated: October 20, 2025

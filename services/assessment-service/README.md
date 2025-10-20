@@ -209,6 +209,34 @@ npx prisma migrate dev
 npm run dev
 ```
 
+## Smoke test (via Gateway aliases)
+
+```bash
+# Health (direct service when port exposed)
+curl -s http://localhost:4001/health
+
+# Create assessment (Teacher/Admin token required)
+curl -s -X POST http://localhost:3000/assessments \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"title":"Demo Quiz","description":"Quick check"}'
+
+# List
+curl -s http://localhost:3000/assessments -H "Authorization: Bearer $TOKEN"
+```
+
+## Contributing
+
+What makes it special:
+- Rich schema supporting sets, media, and future advanced question types.
+- Role-aware listing logic with pagination and status filtering.
+- Media upload endpoints with sharp-based processing.
+
+Starter issues/ideas:
+- Add import/export (QTI/CSV/JSON) endpoints.
+- Add versioning and draft history for assessments.
+- Extend question types and validation rules.
+
 ---
 
 Docs Version: 1.3 • Last Updated: October 20, 2025

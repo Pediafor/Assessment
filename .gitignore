@@ -15,10 +15,21 @@ build/
 
 # Environment variables
 .env
+.env.*
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
+*.env
+*.env.*
+*.local
+!*.env.example
+
+# Root service env files (legacy)
+assessment.env
+grading.env
+submission.env
+user.env
 
 # Logs
 logs

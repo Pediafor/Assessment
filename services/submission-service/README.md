@@ -160,6 +160,40 @@ npx prisma migrate dev
 npm run dev
 ```
 
+## Smoke test (via Gateway aliases)
+
+```bash
+# Health (direct service when port exposed)
+curl -s http://localhost:4002/health
+
+# Create submission (student token)
+curl -s -X POST http://localhost:3000/submissions \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"assessmentId":"ASSESSMENT_ID"}'
+
+# Save answers
+curl -s -X POST http://localhost:3000/submissions/SUBMISSION_ID/answers \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"answers": {"q1":"A"}}'
+
+# Submit
+curl -s -X POST http://localhost:3000/submissions/SUBMISSION_ID/submit -H "Authorization: Bearer $TOKEN"
+```
+
+## Contributing
+
+What makes it special:
+- Flexible answers JSON with file attachments.
+- Emits events for grading and audit trails.
+- Pagination and teacher filters with sorting.
+
+Starter issues/ideas:
+- Add idempotency keys for autosave operations.
+- Add checksums/signatures for tamper detection.
+- Add bulk export/download for teacher workflows.
+
 ### Notes
 
 - Listing submissions returns an array as `data` plus a `meta` object with pagination:

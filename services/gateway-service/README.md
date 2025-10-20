@@ -53,6 +53,35 @@ cp .env.example .env
 npm run dev
 ```
 
+## Smoke test
+
+Verify the gateway is proxying and auth works (requires running stack):
+
+```bash
+# Health
+curl -s http://localhost:3000/health
+
+# Public register (example payload)
+curl -s -X POST http://localhost:3000/users/register \
+	-H "Content-Type: application/json" \
+	-d '{"email":"test+gw@local","password":"Passw0rd!","firstName":"GW","lastName":"Test"}'
+
+# Protected call (replace TOKEN)
+curl -s http://localhost:3000/users/me -H "Authorization: Bearer TOKEN"
+```
+
+## Contributing
+
+What makes it special:
+- Unified auth enforcement (PASETO v4) and user-context headers for all services.
+- Clean alias routing (non-/api) for human-friendly frontend calls.
+- Dual realtime support (WebSocket/WebTransport) entry point.
+
+Starter issues/ideas:
+- Add rate limiting per route group and adaptive backoff for bursts.
+- Improve error shape normalization across proxied services.
+- Add OpenAPI aggregation endpoint for a combined spec.
+
 ---
 
 Docs Version: 1.3 • Last Updated: October 20, 2025

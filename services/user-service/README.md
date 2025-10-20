@@ -95,6 +95,38 @@ npx prisma migrate dev
 npm run dev
 ```
 
+## Smoke test (via Gateway aliases)
+
+```bash
+# Health (direct service when port exposed)
+curl -s http://localhost:4000/health
+
+# Register
+curl -s -X POST http://localhost:3000/users/register \
+  -H "Content-Type: application/json" \
+  -d '{"email":"student+1@local","password":"Passw0rd!","firstName":"Stu","lastName":"Dent"}'
+
+# Login to get token
+TOKEN=$(curl -s -X POST http://localhost:3000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"student+1@local","password":"Passw0rd!"}' | jq -r .data.accessToken)
+
+# Me
+curl -s http://localhost:3000/users/me -H "Authorization: Bearer $TOKEN"
+```
+
+## Contributing
+
+What makes it special:
+- PASETO v4 token issuance with strict iss/aud/iat/exp validation.
+- Role-aware user listings and students endpoints with search/pagination.
+- Emits user-related events for downstream consumers.
+
+Starter issues/ideas:
+- Add email verification and password reset flows.
+- Enrich user metadata schema (org/classroom fields) and indexes.
+- Harden refresh token rotation with device binding.
+
 ---
 
 Docs Version: 1.3 • Last Updated: October 20, 2025

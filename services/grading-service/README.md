@@ -133,6 +133,34 @@ npx prisma migrate dev
 npm run dev
 ```
 
+## Smoke test (via Gateway aliases)
+
+```bash
+# Health (direct service when port exposed)
+curl -s http://localhost:4003/health
+
+# Teacher queue (requires teacher/admin token)
+curl -s http://localhost:3000/grade/queue -H "Authorization: Bearer $TOKEN"
+
+# Manual grade a question (example; replace IDs)
+curl -s -X PUT http://localhost:3000/grade/submission/SUB_ID/question/Q_ID \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"pointsEarned": 1, "feedback": "Well explained."}'
+```
+
+## Contributing
+
+What makes it special:
+- Hybrid grading model (auto + manual per-question) with recalculation.
+- Teacher analytics and queue endpoints.
+- Event-driven integration with notifications.
+
+Starter issues/ideas:
+- Add rubrics templates and reusable criteria.
+- Add more analytics: distribution, per-tag insights.
+- Add plagiarism hooks for long answers.
+
 ---
 
 Docs Version: 1.3 • Last Updated: October 20, 2025
