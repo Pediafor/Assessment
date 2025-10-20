@@ -63,7 +63,7 @@
 # Clone and start the production-ready backend
 git clone https://github.com/pediafor/assessment.git
 cd assessment
-docker-compose up --build
+docker compose up --build
 
 # 🎉 Backend Ready! Access services:
 # API Gateway: http://localhost:3000
@@ -81,6 +81,7 @@ docker-compose up --build
 - [📡 API Documentation](docs/api.md)
 - [🔔 Notification Service](docs/notification-service.md)
 - [🤝 Contributing Guide](CONTRIBUTING.md)
+ - [🧪 SQL Examples (dev-only)](docs/sql-examples/README.md)
 
 ---
 
@@ -137,4 +138,4 @@ Licensed under the [Apache License 2.0](LICENSE).
 
 ---
 
-*Last Updated: October 14, 2025*
+*Last Updated: October 20, 2025*
