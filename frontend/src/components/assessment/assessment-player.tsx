@@ -36,7 +36,11 @@ export function AssessmentPlayer({ id }: { id: string }) {
   const [showReview, setShowReview] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [submissionId, setSubmissionId] = useState<string | null>(null);
+  const [savingError, setSavingError] = useState<string | null>(null);
+  const [submittingBusy, setSubmittingBusy] = useState(false);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const retryTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const retryAttempts = useRef(0);
 
   const total = flatQuestions.length;
   const current = useMemo(() => flatQuestions[index - 1], [flatQuestions, index]);
@@ -129,9 +133,26 @@ export function AssessmentPlayer({ id }: { id: string }) {
         flags: Array.from(flags),
         lockedSections: Array.from(lockedSections),
       } as const;
-      saveSubmissionProgress(submissionId, payload).catch(() => {
-        // ignore errors; local draft persists
-      });
+      saveSubmissionProgress(submissionId, payload)
+        .then(() => {
+          setSavingError(null);
+          // reset retry backoff on success
+          retryAttempts.current = 0;
+          if (retryTimer.current) { clearTimeout(retryTimer.current); retryTimer.current = null; }
+        })
+        .catch(() => {
+          // best-effort: exponential backoff up to ~30s
+          const attempt = Math.min(retryAttempts.current + 1, 6);
+          retryAttempts.current = attempt;
+          const delay = Math.pow(2, attempt) * 500; // 1s,2s,4s,...
+          setSavingError('Network issue while autosaving. Will retry…');
+          if (retryTimer.current) clearTimeout(retryTimer.current);
+          retryTimer.current = setTimeout(() => {
+            // trigger another save by updating a noop state change
+            // We re-run effect by updating index to itself; skip if unmounted
+            setIndex((v) => v);
+          }, delay);
+        });
     }, 800);
     return () => {
       if (saveTimer.current) clearTimeout(saveTimer.current);
@@ -442,15 +463,31 @@ export function AssessmentPlayer({ id }: { id: string }) {
           </div>
         </div>
 
+        {savingError && (
+          <div className="mt-2 rounded-md border border-amber-300 bg-amber-50 p-2 text-xs text-amber-800" role="alert">
+            {savingError}
+          </div>
+        )}
+
         <AssessmentFooter
           onReview={() => setShowReview(true)}
-          onSubmit={() => {
-            setSubmitted(true);
-            if (submissionId) {
-              submitSubmission(submissionId).catch(() => {});
+          onSubmit={async () => {
+            if (submittingBusy) return;
+            setSubmittingBusy(true);
+            try {
+              setSubmitted(true);
+              if (submissionId) {
+                await submitSubmission(submissionId);
+              }
+              router.push(`/student/assessment/${assessment.id}/submitted`);
+            } catch {
+              setSubmitted(false);
+            } finally {
+              setSubmittingBusy(false);
             }
-            router.push(`/student/assessment/${assessment.id}/submitted`);
           }}
+          disabled={!!savingError}
+          submitting={submittingBusy}
         />
 
         {showReview && (
