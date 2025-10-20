@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { getUserById } from '../services/user.service';
 import { sendEmail } from '../services/email.service';
 import { counters } from '../metrics';
+import prisma from '../prismaClient';
 
 dotenv.config();
 
@@ -21,22 +22,24 @@ type GradingCompletedEvent = z.infer<typeof GradingCompletedEventSchema>;
 export async function consumeGradingCompletedEvent() {
   try {
     const amqpUrl = process.env.AMQP_URL || process.env.RABBITMQ_URL || 'amqp://localhost';
-    const connection = await amqplib.connect(amqpUrl);
-    const channel = await connection.createChannel();
+  const connection = await amqplib.connect(amqpUrl);
+  const channel = await connection.createChannel();
 
     // Ensure fair dispatch and durability
     await channel.prefetch(1);
 
     // Align with platform-wide exchange naming
     const exchange = 'grading.events';
-    const routingKey = 'grading.completed';
+  const routingKey = 'grading.completed';
+  const notifExchange = 'notification.events';
 
     // Dead-letter setup for reliability
     const dlx = 'grading.events.dlx';
     const dlq = 'grading.completed.notification.dlq';
     const queue = 'grading.completed.notification';
 
-    await channel.assertExchange(exchange, 'topic', { durable: true });
+  await channel.assertExchange(exchange, 'topic', { durable: true });
+  await channel.assertExchange(notifExchange, 'topic', { durable: true });
     await channel.assertExchange(dlx, 'topic', { durable: true });
     await channel.assertQueue(dlq, { durable: true });
     // Main queue with DLX and limited requeue by message header attempts
@@ -86,6 +89,21 @@ export async function consumeGradingCompletedEvent() {
           const resultLink = `${baseUrl}/student/results/${event.submissionId}`;
 
           if (user) {
+            // Persist a notification
+            const title = 'Grade Published';
+            const body = `Your assessment ${event.assessmentId} has been graded. Score: ${event.calculatedMarks}/${event.totalMarks} (${event.percentage}%).`;
+            const record = await prisma.notification.create({
+              data: { userId: event.studentId, title, body }
+            });
+
+            // Fire-and-forget: publish notification.created event
+            try {
+              const payload = { id: record.id, userId: record.userId, title: record.title, createdAt: record.createdAt };
+              channel.publish(notifExchange, 'notification.created', Buffer.from(JSON.stringify(payload)), { persistent: true });
+            } catch (e) {
+              console.warn('⚠️ Failed to publish notification.created:', e);
+            }
+
             await sendEmail({
               to: user.email,
               subject: `Your assessment has been graded`,

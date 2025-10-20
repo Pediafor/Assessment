@@ -1,15 +1,18 @@
-FROM node:18-alpine
+FROM node:20-bullseye-slim
 
 WORKDIR /usr/src/app
 
 COPY package*.json ./
 
-RUN npm install
+RUN apt-get update \
+	&& apt-get install -y --no-install-recommends openssl ca-certificates \
+	&& rm -rf /var/lib/apt/lists/* \
+	&& npm ci
 
 COPY . .
 
-RUN npm run build
+RUN npm run build && npx prisma generate
 
 EXPOSE 4005
 
-CMD ["npm", "start"]
+CMD ["sh", "-c", "npx prisma db push && node dist/src/server.js"]

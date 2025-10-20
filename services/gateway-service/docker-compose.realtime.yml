@@ -15,6 +15,8 @@ services:
       - WEBTRANSPORT_SECRET=assessment-platform-secret
       - ALLOWED_ORIGINS=http://localhost:3000,http://localhost:3001
       - PASETO_PUBLIC_KEY=MCowBQYDK2VwAyEAMSnxVl9HDU/a8MTM7ZjVr4stDU0pgXo6IL68tdjxFk0=
+      - RABBITMQ_URL=amqp://admin:pediafor2024@pediafor-rabbitmq:5672/pediafor
+      - RABBITMQ_EXCHANGES=assessment.events,submission.events,grading.events,notification.events
     command: ["npm", "run", "start:realtime"]
     ports:
       - "8080:8080"
