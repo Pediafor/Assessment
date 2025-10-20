@@ -38,13 +38,13 @@ npm run dev
 - ✅ Role-based layouts (student/teacher/admin) with dummy auth toggle
 - ✅ Assessment player: sections, per-section/overall timers, autosave/restore, review modal, forward-only, read-only locked sections, desktop vertical nav
 - ✅ Results: `/student/results` list and `/student/results/[id]` detail wired via TanStack Query
-- ✅ Notifications: `/student/notifications` with loading skeleton; uses `useNotifications` (API-ready)
+- ✅ Notifications: `/student/notifications` wired to API (loading skeleton + mark read; graceful fallback)
 - ✅ Realtime: WebTransport primary with WebSocket fallback; results detail auto-refreshes on grading events
 - ✅ Submitted confirmation page and .well-known DevTools route
 
 ### **What's Coming**
 - 🚧 Student flows polish (additional validations, error states)
-- 🚧 Notifications API endpoint: `GET /api/notifications?scope=me&limit=50&after=<cursor>` returns `{ success, data: { notifications: Notification[], nextCursor? } }`; `POST /api/notifications/:id/read` to mark read.
+- 🚧 Notifications pagination and bulk actions; backend endpoint shape targeted: `GET /api/notifications?scope=me&limit=50&after=<cursor>` returns `{ success, data: { notifications: Notification[], nextCursor? } }`; `POST /api/notifications/:id/read` marks as read
 - 🚧 Results integration and teacher/admin data flows (expanded)
 - 🚧 Testing (Jest/Playwright) and lint/format tooling
 - 🚧 Realtime updates (WebTransport/WebSocket)
@@ -53,6 +53,9 @@ npm run dev
 - ✅ Auth pages wired to API (login/register/forgot/reset) with basic tests
 - ✅ Teacher dashboard metrics and grading queue (API-backed when available)
 - ✅ Teacher assessments page filters (status/search/subject) with URL sync
+- ✅ Notifications page uses API client (`useNotifications` + `markRead`) with loading/empty states
+- ✅ Realtime invalidation hook for assessments/submissions/results events
+- ✅ Scoped root `.gitignore` lib patterns so `frontend/src/lib` is tracked
 
 ---
 
