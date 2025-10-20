@@ -20,6 +20,12 @@ app.use(cors({
   credentials: true
 }));
 
+// Handle CORS preflight for all routes (avoid 404 on OPTIONS)
+app.options('*', cors({
+  origin: process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:3000'],
+  credentials: true
+}));
+
 // Logging middleware
 app.use(morgan('combined'));
 
@@ -69,15 +75,13 @@ app.get('/', (req, res) => {
   });
 });
 
-// Apply authentication middleware to all /api routes
-app.use('/api', authenticateGateway);
-
-// Microservice proxy routes
+// Microservice proxy routes (define targets first)
 const services = {
   user: process.env.USER_SERVICE_URL || 'http://localhost:4000',
   assessment: process.env.ASSESSMENT_SERVICE_URL || 'http://localhost:4001',
   submission: process.env.SUBMISSION_SERVICE_URL || 'http://localhost:4002',
-  grading: process.env.GRADING_SERVICE_URL || 'http://localhost:4003'
+  grading: process.env.GRADING_SERVICE_URL || 'http://localhost:4003',
+  notification: process.env.NOTIFICATION_SERVICE_URL || 'http://localhost:4005'
 };
 
 // Diagnostic: echo route to validate mount path and public route handling
@@ -116,39 +120,47 @@ app.post('/api/auth/login', async (req, res, next) => {
   }
 });
 
-// Route to UserService
+// Route to UserService (public auth routes mounted before auth middleware)
 app.use('/api/auth', createProxyMiddleware({
   target: services.user,
   changeOrigin: true,
-  // After mounting at '/api/auth', req.path is like '/login'. Prepend '/auth'.
-  pathRewrite: (path) => `/auth${path.startsWith('/') ? path : '/'+path}`,
+  // After mounting at '/api/auth', forward to '/auth/*' on user-service
+  pathRewrite: { '^/api/auth': '/auth' },
 }));
 
-app.use('/api/users', createProxyMiddleware({
+// Protected routes: apply auth per-route to avoid mount path side-effects
+app.use('/api/users', authenticateGateway, createProxyMiddleware({
   target: services.user,
   changeOrigin: true,
-  pathRewrite: (path) => `/users${path.startsWith('/') ? path : '/'+path}`,
+  pathRewrite: (path) => `/users${path}`,
 }));
 
-// Route to AssessmentService (future)
-app.use('/api/assessments', createProxyMiddleware({
+// Route to AssessmentService
+app.use('/api/assessments', authenticateGateway, createProxyMiddleware({
   target: services.assessment,
   changeOrigin: true,
-  pathRewrite: (path) => `/assessments${path.startsWith('/') ? path : '/'+path}`,
+  pathRewrite: (path) => `/assessments${path}`,
 }));
 
-// Route to SubmissionService (future)
-app.use('/api/submissions', createProxyMiddleware({
+// Route to SubmissionService (this service expects '/api/submissions' path)
+app.use('/api/submissions', authenticateGateway, createProxyMiddleware({
   target: services.submission,
   changeOrigin: true,
-  pathRewrite: (path) => `/submissions${path.startsWith('/') ? path : '/'+path}`,
+  pathRewrite: (path) => `/api/submissions${path}`,
 }));
 
-// Route to GradingService (future)
-app.use('/api/grading', createProxyMiddleware({
+// Route to GradingService (service exposes '/api/grade')
+app.use('/api/grade', authenticateGateway, createProxyMiddleware({
   target: services.grading,
   changeOrigin: true,
-  pathRewrite: (path) => `/grading${path.startsWith('/') ? path : '/'+path}`,
+  pathRewrite: (path) => `/api/grade${path}`,
+}));
+
+// Notifications REST proxy to notification-service
+app.use('/api/notifications', authenticateGateway, createProxyMiddleware({
+  target: services.notification,
+  changeOrigin: true,
+  pathRewrite: (path) => `/api/notifications${path}`,
 }));
 
 // 404 handler for all unmatched routes

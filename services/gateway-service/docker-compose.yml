@@ -8,16 +8,18 @@ services:
       dockerfile: Dockerfile
     container_name: gateway-service
     restart: unless-stopped
+    env_file:
+      - ./.env
     environment:
       - NODE_ENV=production
       - PORT=3000
-      - PASETO_PUBLIC_KEY=MCowBQYDK2VwAyEAMSnxVl9HDU/a8MTM7ZjVr4stDU0pgXo6IL68tdjxFk0=
       - GATEWAY_SECRET=my-super-secret-gateway-key-for-header-signing
       - ALLOWED_ORIGINS=http://localhost:3000,http://localhost:3001
       - USER_SERVICE_URL=http://host.docker.internal:4000
       - ASSESSMENT_SERVICE_URL=http://host.docker.internal:4001
       - SUBMISSION_SERVICE_URL=http://host.docker.internal:4002
       - GRADING_SERVICE_URL=http://host.docker.internal:4003
+      - NOTIFICATION_SERVICE_URL=http://host.docker.internal:4005
     ports:
       - "3000:3000"
     networks:
