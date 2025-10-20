@@ -26,7 +26,7 @@ export function useTeacherStudents(params?: { page?: number; limit?: number }) {
   return useQuery({
     queryKey: ['teacher-students', params ?? {}],
     queryFn: async () => {
-      const res = await UsersApi.list({ ...(params || {}), role: 'STUDENT' });
+      const res = await api.get('/users/students', { params });
       const data = res?.data ?? res;
       return Array.isArray(data?.users) ? data.users : (Array.isArray(data) ? data : []);
     },

@@ -6,8 +6,8 @@
 [![Accessibility](https://img.shields.io/badge/Accessibility-WCAG%202.1%20AA-green)](.)
 [![Status](https://img.shields.io/badge/Status-In%20Development-orange)](.)
 
-> **✅ Current Status**
-> Frontend scaffold is in place and running with Next.js 15 App Router and React 19. We’ve implemented role-based layouts, API-backed auth flows (login, register, forgot/reset), teacher dashboard basics, and a robust assessment-taking flow (sections, timers, autosave, review, forward-only).
+> **✅ Current Status (Phase 3 in progress)**
+> Frontend runs on Next.js 15 App Router and React 19. Role-based layouts and API-backed auth flows are live. Teacher dashboard now includes metrics, grading queue, and manual grading (rubric) UI. Routing has been normalized so non-auth services use non-/api paths via the gateway aliases.
 
 ---
 
@@ -44,16 +44,19 @@ npm run dev
 - ✅ Realtime: WebTransport primary with WebSocket fallback; results detail auto-refreshes on grading events
 - ✅ Submitted confirmation page and .well-known DevTools route
 
-### **What's Coming**
+### **What's Coming (Phase 3)**
 - 🚧 Student flows polish (additional validations, error states)
 - 🚧 Notifications bulk actions (optimize "mark all read" when backend supports a bulk endpoint); backend endpoint shape targeted: `POST /api/notifications/read` with body `{ ids: string[] }`
 - 🚧 Results integration and teacher/admin data flows (expanded)
+- 🚧 Student management (teacher view: list students, detail)
 - 🚧 Testing (Jest/Playwright) and lint/format tooling
 - 🚧 Realtime updates (WebTransport/WebSocket)
   
 ### **Recently Implemented**
 - ✅ Auth pages wired to API (login/register/forgot/reset) with basic tests
 - ✅ Teacher dashboard metrics and grading queue (API-backed when available)
+- ✅ Manual grading rubric page: `/teacher/grading/[submissionId]` with per-question points and feedback (updates totals)
+- ✅ Non-/api paths for non-auth services via gateway aliases (/users, /assessments, /submissions, /grade, /notifications)
 - ✅ Teacher assessments page filters (status/search/subject) with URL sync
 - ✅ Notifications page uses API client with infinite pagination (`useNotificationsInfinite` + `markRead`) and loading/empty states; auto-load via IntersectionObserver + manual Load more fallback
 - ✅ Realtime invalidation hook for assessments/submissions/results events

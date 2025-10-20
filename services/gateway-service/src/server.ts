@@ -146,7 +146,7 @@ app.use('/api/users', authenticateGateway, createProxyMiddleware({
 app.use('/users', authenticateGateway, createProxyMiddleware({
   target: services.user,
   changeOrigin: true,
-  pathRewrite: (path) => `/users${path}`,
+  pathRewrite: { '^/users': '/users' },
 }));
 
 // Route to AssessmentService
@@ -160,7 +160,7 @@ app.use('/api/assessments', authenticateGateway, createProxyMiddleware({
 app.use('/assessments', authenticateGateway, createProxyMiddleware({
   target: services.assessment,
   changeOrigin: true,
-  pathRewrite: (path) => `/assessments${path}`,
+  pathRewrite: { '^/assessments': '/assessments' },
 }));
 
 // Route to SubmissionService (this service expects '/api/submissions' path)
@@ -174,7 +174,7 @@ app.use('/api/submissions', authenticateGateway, createProxyMiddleware({
 app.use('/submissions', authenticateGateway, createProxyMiddleware({
   target: services.submission,
   changeOrigin: true,
-  pathRewrite: (path) => `/api/submissions${path}`,
+  pathRewrite: { '^/submissions': '/api/submissions' },
 }));
 
 // Route to GradingService (service exposes '/api/grade')
@@ -188,7 +188,7 @@ app.use('/api/grade', authenticateGateway, createProxyMiddleware({
 app.use('/grade', authenticateGateway, createProxyMiddleware({
   target: services.grading,
   changeOrigin: true,
-  pathRewrite: (path) => `/api/grade${path}`,
+  pathRewrite: { '^/grade': '/api/grade' },
 }));
 
 // Back-compat alias: /api/grades -> grading service
@@ -209,7 +209,7 @@ app.use('/api/notifications', authenticateGateway, createProxyMiddleware({
 app.use('/notifications', authenticateGateway, createProxyMiddleware({
   target: services.notification,
   changeOrigin: true,
-  pathRewrite: (path) => `/api/notifications${path}`,
+  pathRewrite: { '^/notifications': '/api/notifications' },
 }));
 
 // 404 handler for all unmatched routes

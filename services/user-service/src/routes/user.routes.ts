@@ -189,6 +189,32 @@ router.get("/", authenticateToken, injectUserContext, requireRole(['ADMIN']), as
   }
 });
 
+// List students (teacher/admin) - Protected: teachers and admins can list students they manage
+router.get("/students", authenticateToken, injectUserContext, requireRole(['TEACHER', 'ADMIN']), async (req, res) => {
+  try {
+    const { page = 1, limit = 10 } = req.query;
+
+    const users = await getAllUsers({
+      page: parseInt(page as string),
+      limit: parseInt(limit as string),
+      role: 'STUDENT'
+    });
+
+    const sanitizedUsers = users.map(user => {
+      const { passwordHash: _, refreshToken: __, ...userResponse } = user;
+      return userResponse;
+    });
+
+    res.json({
+      users: sanitizedUsers,
+      total: sanitizedUsers.length
+    });
+  } catch (error) {
+    console.error("Get students error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 // Quick lookup: is user a member of a course
 router.get("/:id/courses/:courseId/membership", async (req, res) => {
   try {
