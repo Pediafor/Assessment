@@ -38,6 +38,7 @@ export function AssessmentPlayer({ id }: { id: string }) {
   const [submissionId, setSubmissionId] = useState<string | null>(null);
   const [savingError, setSavingError] = useState<string | null>(null);
   const [submittingBusy, setSubmittingBusy] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const retryTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const retryAttempts = useRef(0);
@@ -469,6 +470,12 @@ export function AssessmentPlayer({ id }: { id: string }) {
           </div>
         )}
 
+        {submitError && (
+          <div className="mt-2 rounded-md border border-red-300 bg-red-50 p-2 text-xs text-red-800" role="alert">
+            {submitError}
+          </div>
+        )}
+
         <AssessmentFooter
           onReview={() => setShowReview(true)}
           onSubmit={async () => {
@@ -482,11 +489,12 @@ export function AssessmentPlayer({ id }: { id: string }) {
               router.push(`/student/assessment/${assessment.id}/submitted`);
             } catch {
               setSubmitted(false);
+              setSubmitError('We couldn\'t submit your assessment due to a network or server issue. Your latest answers are saved locally. Please try again.');
             } finally {
               setSubmittingBusy(false);
             }
           }}
-          disabled={!!savingError}
+          disabled={!!savingError || !!submitError}
           submitting={submittingBusy}
         />
 

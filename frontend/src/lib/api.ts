@@ -89,6 +89,8 @@ export const NotificationsApi = {
       .then(r => r.data),
   // POST /api/notifications/:id/read -> { success: true }
   markRead: (id: string) => api.post(`/api/notifications/${id}/read`).then(r => r.data),
+  // Optional bulk endpoint: POST /api/notifications/read { ids: string[] }
+  bulkMarkRead: (ids: string[]) => api.post('/api/notifications/read', { ids }).then(r => r.data),
 };
 
 export const UsersApi = {

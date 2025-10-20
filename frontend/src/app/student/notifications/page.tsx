@@ -2,6 +2,7 @@
 import { useMemo } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useNotificationsInfinite, useMarkNotificationRead } from "@/hooks/useNotifications";
+import { NotificationsApi } from "@/lib/api";
 
 export default function StudentNotifications() {
   const { data, isLoading, hasNextPage, isFetchingNextPage, fetchNextPage } = useNotificationsInfinite({ limit: 50 });
@@ -26,9 +27,10 @@ export default function StudentNotifications() {
           <button
             className="text-xs rounded-md border px-2 py-1 hover:bg-card"
             onClick={() => {
-              // Optimistic: iterate visible IDs and mark read
-              items.forEach((n: any) => {
-                if (!n.read) markRead(n.id);
+              const ids = items.filter((n: any) => !n.read).map((n: any) => n.id);
+              // Try optional bulk endpoint; fallback to per-item
+              NotificationsApi.bulkMarkRead(ids).catch(() => {
+                ids.forEach((id) => markRead(id));
               });
             }}
           >
