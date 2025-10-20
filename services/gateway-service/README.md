@@ -1,8 +1,10 @@
-# Gateway Service - Pediafor Assessment Platform
+# Gateway Service — Pediafor Assessment Platform
 
-[![Status](https://img.shields.io/badge/Status-Production%20Ready-success)](.)
-[![Test Coverage](https://img.shields.io/badge/Tests-High%20Test%20Coverage-success)](.)
-[![Port](https://img.shields.io/badge/Port-3000-blue)](.)
+[![Status](https://img.shields.io/badge/status-production--ready-success)](.)
+[![Port](https://img.shields.io/badge/port-3000-blue)](.)
+[![Auth](https://img.shields.io/badge/auth-PASETO%20v4-green)](.)
+[![Runtime](https://img.shields.io/badge/runtime-Node.js%2018+-brightgreen?logo=nodedotjs)](.)
+[![Lang](https://img.shields.io/badge/lang-TypeScript%205.x-blue?logo=typescript)](.)
 
 ## Overview
 
@@ -30,13 +32,14 @@ The gateway sits between the client applications and the backend microservices, 
 
 ## API Routes
 
-The Gateway Service proxies requests to the following services:
+The Gateway Service proxies requests to the following services (canonical + aliases):
 
-- `/api/auth/*` → **User Service**
-- `/api/users/*` → **User Service**
-- `/api/assessments/*` → **Assessment Service**
-- `/api/submissions/*` → **Submission Service**
-- `/api/grading/*` → **Grading Service**
+- `/api/auth/*` → User Service (public)
+- `/api/users/*` and `/users/*` → User Service (protected); plus public `/users/register`
+- `/api/assessments/*` and `/assessments/*` → Assessment Service (protected)
+- `/api/submissions/*` and `/submissions/*` → Submission Service (protected)
+- `/api/grade/*` and `/grade/*` → Grading Service (protected)
+- `/api/notifications/*` and `/notifications/*` → Notification Service (protected)
 
 ## Development
 
@@ -52,4 +55,4 @@ npm run dev
 
 ---
 
-*Last Updated: October 13, 2025*
+Docs Version: 1.3 • Last Updated: October 20, 2025

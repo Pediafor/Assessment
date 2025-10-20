@@ -1,11 +1,11 @@
-# Pediafor Assessment Platform - API Documentation
+# Pediafor Assessment Platform — API Documentation
 
-[![API Version](https://img.shields.io/badge/API%20Version-v1.0-blue)](.)
-[![Base URL](https://img.shields.io/badge/Base%20URL-api.pediafor.com-gray)](.)
-[![Authentication](https://img.shields.io/badge/Auth-PASETO%20V4%20Tokens-green)](.)
-[![Content Type](https://img.shields.io/badge/Content%20Type-application%2Fjson-blue)](.)
-[![Rate Limit](https://img.shields.io/badge/Rate%20Limit-100%20req%2F15min-yellow)](.)
-[![Status](https://img.shields.io/badge/Status-Production%20Ready-success)](.)
+[![API](https://img.shields.io/badge/api-v1.0-blue)](.)
+[![Base URL](https://img.shields.io/badge/base-url%20via%20gateway%20aliases%20%2F%20api-gray)](.)
+[![Auth](https://img.shields.io/badge/auth-PASETO%20v4-green)](.)
+[![Content Type](https://img.shields.io/badge/content-application%2Fjson-blue)](.)
+[![Rate Limit](https://img.shields.io/badge/rate%20limit-100%20req%2F15min-yellow)](.)
+[![Status](https://img.shields.io/badge/status-production--ready-success)](.)
 
 ## Table of Contents
 
@@ -135,7 +135,7 @@ POST /api/auth/logout
 
 ## User Service API
 
-Base URL: `/api/users`
+Base URL: `/api/users` (aliases available at `/users` via gateway)
 
 ### Get User Profile
 ```http
@@ -228,7 +228,7 @@ Authorization: Bearer v4.public.eyJ...
 
 ## Assessment Service API
 
-Base URL: `/api/assessments`
+Base URL: `/api/assessments` (aliases available at `/assessments`)
 
 ### List Assessments
 ```http
@@ -447,7 +447,7 @@ Content-Type: multipart/form-data
 
 ## Submission Service API
 
-Base URL: `/api/submissions`
+Base URL: `/api/submissions` (aliases available at `/submissions`)
 
 ### Create Submission
 ```http
@@ -617,7 +617,7 @@ Authorization: Bearer v4.public.eyJ...
 
 ## Grading Service API
 
-Base URL: `/api/grade`
+Base URL: `/api/grade` (aliases available at `/grade`)
 
 ### Grade Submission
 ```http
@@ -694,5 +694,7 @@ GET /health
 
 ---
 
-**API Documentation Version**: 1.0 | **Last Updated**: October 13, 2025
+---
+
+Docs Version: 1.3 • Last Updated: October 20, 2025
 **Support**: [api-support@pediafor.com](mailto:api-support@pediafor.com) | **Status Page**: [status.pediafor.com](https://status.pediafor.com)

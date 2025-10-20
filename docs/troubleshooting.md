@@ -1,4 +1,4 @@
-# Pediafor Assessment Platform - Troubleshooting Guide
+# Pediafor Assessment Platform — Troubleshooting Guide
 
 ## Table of Contents
 
@@ -151,4 +151,6 @@ docker-compose logs --tail=50 <service-name>
 
 ---
 
-*Troubleshooting Guide Version**: 1.1 | **Last Updated**: October 13, 2025*
+---
+
+Docs Version: 1.3 • Last Updated: October 20, 2025

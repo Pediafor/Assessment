@@ -1,8 +1,9 @@
-# Grading Service - Pediafor Assessment Platform
+# Grading Service — Pediafor Assessment Platform
 
-[![Status](https://img.shields.io/badge/Status-Production%20Ready-success)](.)
-[![Test Coverage](https://img.shields.io/badge/Tests-High%20Test%20Coverage-success)](.)
-[![Port](https://img.shields.io/badge/Port-4003-blue)](.)
+[![Status](https://img.shields.io/badge/status-production--ready-success)](.)
+[![Port](https://img.shields.io/badge/port-4003-blue)](.)
+[![Runtime](https://img.shields.io/badge/runtime-Node.js%2018+-brightgreen?logo=nodedotjs)](.)
+[![Lang](https://img.shields.io/badge/lang-TypeScript%205.x-blue?logo=typescript)](.)
 
 ## Overview
 
@@ -28,11 +29,16 @@ The service is a standard Node.js application using Express.js, TypeScript, and 
 
 ## API Endpoints
 
-- `POST /`: Grade a submission.
-- `GET /submission/:submissionId`: Get grade by submission ID.
-- `GET /user/:userId`: Get grades by user ID.
-- `GET /assessment/:assessmentId`: Get grades by assessment ID.
-- `GET /my-grades`: Get grades for the current user.
+- `POST /`: Grade a submission
+- `GET /submission/:submissionId`: Get grade by submission ID
+- `GET /user/:userId`: Get grades by user ID
+- `GET /assessment/:assessmentId`: Get grades by assessment ID
+- `GET /my-grades`: Get grades for the current user
+- `GET /queue`: Teacher manual grading queue (TEACHER/ADMIN)
+- `GET /analytics/teacher/overview`: Teacher overview stats (TEACHER/ADMIN)
+- `PUT /submission/:submissionId/question/:questionId`: Manual per-question grading (TEACHER/ADMIN)
+
+Note: Through the API Gateway, protected alias routes are available at `/grade/*`.
 
 ## Database Schema
 
@@ -129,4 +135,4 @@ npm run dev
 
 ---
 
-*Last Updated: October 13, 2025*
+Docs Version: 1.3 • Last Updated: October 20, 2025

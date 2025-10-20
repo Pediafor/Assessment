@@ -1,4 +1,4 @@
-# 🔔 Notification Service
+# 🔔 Notification Service — REST + Events
 
 Event-driven email notifications for grading results.
 
@@ -8,8 +8,11 @@ Event-driven email notifications for grading results.
 - Fetches student details from User Service
 - Sends email via SMTP using Nodemailer
 
-## Endpoints
+## REST Endpoints (via Gateway aliases)
 
+- `GET /notifications?scope=me&limit=50&after=<cursor>` — list my notifications
+- `POST /notifications/:id/read` — mark a notification as read
+- `POST /notifications/read` — bulk mark notifications as read `{ ids: string[] }`
 - `GET /health` — liveness check
 
 ## Environment Variables
@@ -43,3 +46,7 @@ Email includes a direct link to the student's result page using `FRONTEND_URL` a
 
 - Push notifications and in-app messages
 - Retry/DLQ strategy and templated emails
+
+---
+
+Docs Version: 1.3 • Last Updated: October 20, 2025

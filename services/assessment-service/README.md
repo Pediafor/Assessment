@@ -1,8 +1,9 @@
-# Assessment Service - Pediafor Assessment Platform
+# Assessment Service — Pediafor Assessment Platform
 
-[![Status](https://img.shields.io/badge/Status-Production%20Ready-success)](.)
-[![Test Coverage](https://img.shields.io/badge/Tests-High%20Test%20Coverage-success)](.)
-[![Port](https://img.shields.io/badge/Port-4001-blue)](.)
+[![Status](https://img.shields.io/badge/status-production--ready-success)](.)
+[![Port](https://img.shields.io/badge/port-4001-blue)](.)
+[![Runtime](https://img.shields.io/badge/runtime-Node.js%2018+-brightgreen?logo=nodedotjs)](.)
+[![Lang](https://img.shields.io/badge/lang-TypeScript%205.x-blue?logo=typescript)](.)
 
 ## Overview
 
@@ -45,6 +46,8 @@ The service is a standard Node.js application using Express.js, TypeScript, and 
 
 - Students receive only assessments with status `PUBLISHED` regardless of creator. Teachers see their own assessments and may filter by `status`; Admins can view all.
 - The list endpoint returns `{ assessments: Assessment[], meta: { page, limit, total, totalPages } }` inside the `data` field of the standard API response wrapper.
+
+Note: Through the API Gateway, protected alias routes are available at `/assessments/*`.
 
 ### Media Endpoints
 
@@ -208,4 +211,4 @@ npm run dev
 
 ---
 
-*Last Updated: October 13, 2025*
+Docs Version: 1.3 • Last Updated: October 20, 2025

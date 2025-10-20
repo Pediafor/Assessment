@@ -1,6 +1,6 @@
-# Grading Service - Comprehensive Documentation
+# Grading Service — Comprehensive Documentation
 
-[![Status](https://img.shields.io/badge/Status-Production%20Ready-success)](.)
+[![Status](https://img.shields.io/badge/status-production--ready-success)](.)
 [![Test Coverage](https://img.shields.io/badge/Tests-High%20Test%20Coverage-success)](.)
 [![Event Integration](https://img.shields.io/badge/Events-RabbitMQ%20Ready-FF6600?logo=rabbitmq)](.)
 [![Docker](https://img.shields.io/badge/Docker-Ready-blue?logo=docker)](.)
@@ -47,11 +47,14 @@ The service is a standard Node.js application using Express.js, TypeScript, and 
 
 ### Core Endpoints
 
-- `POST /`: Grade a submission.
-- `GET /submission/:submissionId`: Get grade by submission ID.
-- `GET /user/:userId`: Get grades by user ID.
-- `GET /assessment/:assessmentId`: Get grades by assessment ID.
-- `GET /my-grades`: Get grades for the current user.
+- `POST /`: Grade a submission
+- `GET /submission/:submissionId`: Get grade by submission ID
+- `GET /user/:userId`: Get grades by user ID
+- `GET /assessment/:assessmentId`: Get grades by assessment ID
+- `GET /my-grades`: Get grades for the current user
+- `GET /queue`: Teacher manual grading queue (TEACHER/ADMIN)
+- `GET /analytics/teacher/overview`: Teacher overview stats (TEACHER/ADMIN)
+- `PUT /submission/:submissionId/question/:questionId`: Manual per-question grading (TEACHER/ADMIN)
 
 ---
 
@@ -192,4 +195,4 @@ npm test
 
 ---
 
-*Documentation last updated: October 13, 2025*
+Docs Version: 1.3 • Last Updated: October 20, 2025

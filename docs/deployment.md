@@ -1,4 +1,4 @@
-# Pediafor Assessment Platform - Deployment Guide
+# Pediafor Assessment Platform — Deployment Guide
 
 [![Deployment Status](https://img.shields.io/badge/Deployment-All%20Services%20Production%20Ready-success)](.)
 [![Container Runtime](https://img.shields.io/badge/Runtime-Docker-blue?logo=docker)](.)
@@ -7,7 +7,7 @@
 [![Database](https://img.shields.io/badge/Database-PostgreSQL%20per%20Service-336791?logo=postgresql)](.)
 [![Events](https://img.shields.io/badge/Events-RabbitMQ%20Powered-orange?logo=rabbitmq)](.)
 [![Test Coverage](https://img.shields.io/badge/Tests-High%20Test%20Coverage-success)](.)
-[![Last Updated](https://img.shields.io/badge/Updated-October%202025-blue)](.)
+[![Last Updated](https://img.shields.io/badge/Updated-2025--10--20-blue)](.)
 
 ## Table of Contents
 
@@ -220,4 +220,6 @@ services:
 
 ---
 
-*Deployment Guide Version**: 1.2 | **Last Updated**: October 13, 2025*
+---
+
+Docs Version: 1.3 • Last Updated: October 20, 2025

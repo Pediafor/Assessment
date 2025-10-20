@@ -1,8 +1,10 @@
-# User Service - Pediafor Assessment Platform
+# User Service — Pediafor Assessment Platform
 
-[![Status](https://img.shields.io/badge/Status-Production%20Ready-success)](.)
-[![Test Coverage](https://img.shields.io/badge/Tests-High%20Test%20Coverage-success)](.)
-[![Port](https://img.shields.io/badge/Port-4000-blue)](.)
+[![Status](https://img.shields.io/badge/status-production--ready-success)](.)
+[![Port](https://img.shields.io/badge/port-4000-blue)](.)
+[![Auth](https://img.shields.io/badge/auth-PASETO%20v4-green)](.)
+[![Runtime](https://img.shields.io/badge/runtime-Node.js%2018+-brightgreen?logo=nodedotjs)](.)
+[![Lang](https://img.shields.io/badge/lang-TypeScript%205.x-blue?logo=typescript)](.)
 
 ## Overview
 
@@ -42,7 +44,14 @@ The service is a standard Node.js application using Express.js, TypeScript, and 
 - `GET /:id`: Get user by ID.
 - `PUT /:id`: Update user.
 - `DELETE /:id`: Delete user.
-- `GET /`: Get all users.
+- `GET /`: Get paginated users (ADMIN). Supports `page`, `limit`, `role`, `q` (search).
+
+### Teacher/Admin Students Endpoints
+
+- `GET /students`: List students with pagination and search (TEACHER/ADMIN). Query: `page`, `limit`, `q`.
+- `GET /students/:id`: Get a single student detail (sanitized) (TEACHER/ADMIN).
+
+Note: Through the API Gateway, protected alias routes are available at `/users/*` (and public alias for registration at `/users/register`).
 
 ## Database Schema
 
@@ -88,4 +97,4 @@ npm run dev
 
 ---
 
-*Last Updated: October 13, 2025*
+Docs Version: 1.3 • Last Updated: October 20, 2025

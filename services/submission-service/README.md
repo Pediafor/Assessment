@@ -1,8 +1,9 @@
-# Submission Service - Pediafor Assessment Platform
+# Submission Service — Pediafor Assessment Platform
 
-[![Status](https://img.shields.io/badge/Status-Production%20Ready-success)](.)
-[![Test Coverage](https://img.shields.io/badge/Tests-High%20Test%20Coverage-success)](.)
-[![Port](https://img.shields.io/badge/Port-4002-blue)](.)
+[![Status](https://img.shields.io/badge/status-production--ready-success)](.)
+[![Port](https://img.shields.io/badge/port-4002-blue)](.)
+[![Runtime](https://img.shields.io/badge/runtime-Node.js%2018+-brightgreen?logo=nodedotjs)](.)
+[![Lang](https://img.shields.io/badge/lang-TypeScript%205.x-blue?logo=typescript)](.)
 
 ## Overview
 
@@ -169,8 +170,10 @@ npm run dev
     "meta": { "page": 1, "limit": 10, "total": 1 }
   }
   ```
-  Students receive only their own submissions; teachers/admins can filter by assessmentId, studentId, and status.
+  Students receive only their own submissions; teachers/admins can filter by `assessmentId`, `studentId`, `status`, with optional `sortBy` and `sortOrder`.
+
+Note: Through the API Gateway, protected alias routes are available at `/submissions/*`.
 
 ---
 
-*Last Updated: October 13, 2025*
+Docs Version: 1.3 • Last Updated: October 20, 2025

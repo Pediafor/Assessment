@@ -1,6 +1,6 @@
-# User Service - Comprehensive Documentation
+# User Service — Comprehensive Documentation
 
-[![Status](https://img.shields.io/badge/Status-Production%20Ready-success)](.)
+[![Status](https://img.shields.io/badge/status-production--ready-success)](.)
 [![Test Coverage](https://img.shields.io/badge/Tests-High%20Test%20Coverage-success)](.)
 [![Security](https://img.shields.io/badge/Security-Hardened-green)](.)
 [![Port](https://img.shields.io/badge/Port-4000-blue)](.)
@@ -47,7 +47,12 @@ The User Service is the foundational authentication and user management microser
 - `GET /:id`: Retrieve user profile by ID.
 - `PUT /:id`: Update user profile.
 - `DELETE /:id`: Soft delete user account.
-- `GET /`: Get paginated list of users.
+- `GET /`: Get paginated list of users (ADMIN). Query: `page`, `limit`, `role`, `q`.
+
+### Teacher/Admin Students Endpoints
+
+- `GET /students`: List students (TEACHER/ADMIN). Query: `page`, `limit`, `q` (search name/email).
+- `GET /students/:id`: Get a single student detail (TEACHER/ADMIN).
 
 ---
 
@@ -117,4 +122,4 @@ npm test
 
 ---
 
-*Documentation last updated: October 13, 2025*
+Docs Version: 1.3 • Last Updated: October 20, 2025
