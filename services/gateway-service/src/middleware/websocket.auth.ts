@@ -1,4 +1,5 @@
 import { V4 } from 'paseto';
+import crypto from 'crypto';
 
 export interface UserContext {
   id: string;
@@ -20,19 +21,57 @@ interface TokenPayload {
 }
 
 export class WebSocketAuth {
-  private static publicKey: string = process.env.PASETO_PUBLIC_KEY || '';
+  // Raw env var (may be PEM with escaped newlines or base64)
+  private static rawPublicKey: string = process.env.PASETO_PUBLIC_KEY || '';
+  private static keyObject: crypto.KeyObject | null = null;
+
+  private static getPublicKey(): crypto.KeyObject | null {
+    if (this.keyObject) return this.keyObject;
+    const envVal = this.rawPublicKey;
+    if (!envVal) return null;
+
+    try {
+      // Normalize: if looks like PEM, also replace escaped newlines
+      let keyString = envVal;
+      if (envVal.includes('-----BEGIN')) {
+        keyString = envVal.replace(/\\n/g, '\n');
+        this.keyObject = crypto.createPublicKey(keyString);
+        return this.keyObject;
+      }
+
+      // Otherwise assume base64-encoded PEM
+      const decoded = Buffer.from(envVal, 'base64').toString('utf8');
+      const maybePem = decoded.includes('-----BEGIN') ? decoded : envVal;
+      this.keyObject = crypto.createPublicKey(maybePem);
+      return this.keyObject;
+    } catch (e) {
+      console.error('❌ Failed to construct public key from PASETO_PUBLIC_KEY:', (e as Error).message);
+      return null;
+    }
+  }
 
   static async validateToken(token: string): Promise<UserContext | null> {
     try {
-      if (!this.publicKey) {
-        console.error('❌ PASETO_PUBLIC_KEY not configured');
+      const publicKey = this.getPublicKey();
+      if (!publicKey) {
+        console.error('❌ PASETO_PUBLIC_KEY not configured or invalid');
         return null;
       }
 
-      // Verify PASETO token
-      const payload = await V4.verify(token, this.publicKey) as TokenPayload;
+      // Verify PASETO token using KeyObject
+      const payload = await V4.verify(token, publicKey) as TokenPayload & { iss?: string; aud?: string };
       
       if (!payload || typeof payload !== 'object') {
+        return null;
+      }
+
+      // Validate audience and issuer to prevent token confusion
+      if (payload.aud && payload.aud !== 'pediafor-assessment') {
+        console.warn('⚠️ Invalid token audience:', payload.aud);
+        return null;
+      }
+      if (payload.iss && payload.iss !== 'user-service') {
+        console.warn('⚠️ Invalid token issuer:', payload.iss);
         return null;
       }
 
@@ -58,10 +97,20 @@ export class WebSocketAuth {
         return null;
       }
 
-      // Check token expiration
-      if (payload.exp && payload.exp < Math.floor(Date.now() / 1000)) {
-        console.warn('⚠️ Token has expired');
-        return null;
+      // Check token expiration (supports ISO string or numeric seconds/millis)
+      if (payload.exp) {
+        let expMs: number | null = null;
+        if (typeof payload.exp === 'string') {
+          const d = new Date(payload.exp);
+          expMs = isNaN(d.getTime()) ? null : d.getTime();
+        } else if (typeof payload.exp === 'number') {
+          // Heuristic: values < 1e12 are likely seconds, convert to ms
+          expMs = payload.exp < 1e12 ? payload.exp * 1000 : payload.exp;
+        }
+        if (expMs !== null && expMs < Date.now()) {
+          console.warn('⚠️ Token has expired');
+          return null;
+        }
       }
 
       return userContext;
