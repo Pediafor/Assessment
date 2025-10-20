@@ -1,5 +1,5 @@
 "use client";
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useNotificationsInfinite, useMarkNotificationRead } from "@/hooks/useNotifications";
 import { NotificationsApi } from "@/lib/api";
@@ -7,6 +7,7 @@ import { NotificationsApi } from "@/lib/api";
 export default function StudentNotifications() {
   const { data, isLoading, hasNextPage, isFetchingNextPage, fetchNextPage } = useNotificationsInfinite({ limit: 50 });
   const { mutate: markRead } = useMarkNotificationRead();
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
   const items = useMemo(() => {
     const merged = (data?.pages?.flatMap(p => p.items) ?? []) as Array<{ id: string; title: string; message?: string; createdAt: string; read?: boolean }>;
     if (merged.length) return merged;
@@ -18,6 +19,22 @@ export default function StudentNotifications() {
   }, [data]);
 
   const unreadCount = items.filter((n: any) => !n.read).length;
+
+  // Auto-load more when sentinel is visible
+  useEffect(() => {
+    if (!hasNextPage || isFetchingNextPage) return;
+    const el = sentinelRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        if (entry.isIntersecting) {
+          fetchNextPage();
+        }
+      }
+    }, { root: null, rootMargin: '200px 0px', threshold: 0 });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage, items?.length]);
 
   return (
     <div className="space-y-4" role="main" aria-label="Notifications">
@@ -68,6 +85,8 @@ export default function StudentNotifications() {
         <div className="text-sm text-muted">You're all caught up.</div>
       )}
       {/* Pagination controls */}
+      {/* Auto-load sentinel */}
+      <div ref={sentinelRef} aria-hidden className="h-1" />
       {data && (hasNextPage || isFetchingNextPage) ? (
         <div className="flex justify-center pt-2">
           <button
