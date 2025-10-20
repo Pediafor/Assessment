@@ -4,8 +4,14 @@ import { getUserByEmail, storePasswordResetToken, getUserByEmailVerificationToke
 import { sendEmail } from "../utils/email";
 import crypto from "crypto";
 
-export async function issueTokens(userId: string) {
-  const accessToken = await generateAccessToken({ userId });
+export async function issueTokens(userId: string, extras?: { email?: string; role?: string; firstName?: string; lastName?: string; }) {
+  const accessToken = await generateAccessToken({ 
+    userId,
+    email: extras?.email,
+    role: extras?.role,
+    firstName: extras?.firstName,
+    lastName: extras?.lastName,
+  });
   const refreshToken = await generateRefreshToken({ userId });
 
   // Store refresh token in database only
@@ -40,8 +46,14 @@ export async function refreshAccessToken(userId: string) {
     throw new Error("Invalid refresh token");
   }
 
-  // Generate new access token
-  const accessToken = await generateAccessToken({ userId });
+  // Generate new access token (include latest role/email)
+  const accessToken = await generateAccessToken({ 
+    userId,
+    email: user.email,
+    role: user.role,
+    firstName: user.firstName || undefined,
+    lastName: user.lastName || undefined,
+  });
   
   // Optionally rotate refresh token for better security
   const newRefreshToken = await generateRefreshToken({ userId });

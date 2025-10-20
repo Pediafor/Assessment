@@ -3,6 +3,7 @@ import { UserRole } from "@prisma/client";
 import { UserEventPublisher } from "../events/publisher";
 import { sendEmail } from "../utils/email";
 import crypto from "crypto";
+import { hashPassword } from "../utils/hash";
 
 interface CreateUserData {
   email: string;

@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   notification-service:
     build:
@@ -10,16 +8,18 @@ services:
     environment:
       NODE_ENV: production
       PORT: 4005
-      AMQP_URL: amqp://admin:pediafor2024@rabbitmq:5672/pediafor
+      # Use the container name from infra/rabbitmq compose on the shared network
+      AMQP_URL: amqp://admin:pediafor2024@pediafor-rabbitmq:5672/pediafor
+      # Reach user-service over its compose network by service/container name
       USER_SERVICE_URL: http://user-service:4000
-    depends_on:
-      rabbitmq:
-        condition: service_healthy
-      user-service:
-        condition: service_healthy
+    ports:
+      - "4005:4005"
     networks:
       - pediafor-network
+      - user-service-network
 
 networks:
   pediafor-network:
+    external: true
+  user-service-network:
     external: true

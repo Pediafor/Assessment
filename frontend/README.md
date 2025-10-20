@@ -37,11 +37,13 @@ npm run dev
 - ✅ Role-based layouts (student/teacher/admin) with dummy auth toggle
 - ✅ Assessment player: sections, per-section/overall timers, autosave/restore, review modal, forward-only, read-only locked sections, desktop vertical nav
 - ✅ Results: `/student/results` list and `/student/results/[id]` detail wired via TanStack Query
+- ✅ Notifications: `/student/notifications` with loading skeleton; uses `useNotifications` (API-ready)
 - ✅ Realtime: WebTransport primary with WebSocket fallback; results detail auto-refreshes on grading events
 - ✅ Submitted confirmation page and .well-known DevTools route
 
 ### **What's Coming**
 - 🚧 API wiring for auth and student flows (save/submit)
+- 🚧 Notifications API endpoint: `GET /api/notifications?scope=me&limit=50&after=<cursor>` returns `{ success, data: { notifications: Notification[], nextCursor? } }`; `POST /api/notifications/:id/read` to mark read.
 - 🚧 Results integration and teacher/admin data flows
 - 🚧 Testing (Jest/Playwright) and lint/format tooling
 - 🚧 Realtime updates (WebTransport/WebSocket)
@@ -1104,11 +1106,12 @@ export function AssessmentForm({ assessment, onSubmit }: AssessmentFormProps) {
 - 🚧 Authentication system (basic routes scaffolded; API-backed flows next)
 
 ### **Phase 2: Student Experience (Weeks 3-4)**
-- � Student dashboard (initial version implemented)
-- 📝 Assessment listing and filtering (status filter added; search and subject filters next)
-- 📝 Assessment taking interface
-- 📝 Results viewing (in progress via Query + realtime)
-- 📝 Profile management
+- ✅ Student dashboard (implemented; loading skeletons added)
+- ✅ Assessment listing and filtering (status, subject, debounced search; URL sync)
+- ✅ Notifications page with loading skeleton and unread badge in sidebar
+- 📝 Assessment taking interface (implemented with sample data, autosave, timers)
+- ✅ Results viewing (list/detail via Query + realtime)
+- 📝 Profile management (basic form; wiring upcoming)
 
 ### **Phase 3: Teacher Experience (Weeks 5-6)**
 - 📝 Teacher dashboard
@@ -1127,8 +1130,8 @@ export function AssessmentForm({ assessment, onSubmit }: AssessmentFormProps) {
 ### **Phase 5: Polish & Optimization (Weeks 9-10)**
 - 📝 Mobile optimization
 - 📝 Performance optimization
-- 📝 Accessibility improvements
-- 📝 Testing and bug fixes
+- ✅ Accessibility improvements (landmarks, skip link, page-level skeletons)
+- 📝 Testing and bug fixes (a11y tests added for dashboard and notifications)
 - 📝 Documentation
 
 ---

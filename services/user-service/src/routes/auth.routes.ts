@@ -1,7 +1,8 @@
 import express from "express";
-import { issueTokens, refreshAccessToken } from "../services/auth.service";
-import { getUserByEmail, updateLastLogin, removeRefreshToken } from "../services/user.service";
+import { issueTokens, refreshAccessToken, initiatePasswordReset, verifyEmail } from "../services/auth.service";
+import { getUserByEmail, updateLastLogin, removeRefreshToken, resetPassword, getUserById } from "../services/user.service";
 import { verifyPassword } from "../utils/hash";
+import { authenticateToken } from "../middleware/auth.middleware";
 
 const router = express.Router();
 
@@ -34,16 +35,24 @@ router.post("/login", async (req, res) => {
     }
 
     // Issue tokens (only access token returned, refresh token stored in DB)
-    const tokens = await issueTokens(user.id);
+    const tokens = await issueTokens(user.id, {
+      email: user.email,
+      role: user.role,
+      firstName: user.firstName || undefined,
+      lastName: user.lastName || undefined,
+    });
 
     // Update last login
     await updateLastLogin(user.id);
 
     // Set httpOnly cookie with user session for refresh token access
+    // In local dev (different ports), allow cookie to be sent across origins used by Next/Gateway
+    // Use SameSite=None so the gateway refresh endpoint can read it; secure only in production.
+    const isProd = process.env.NODE_ENV === 'production';
     res.cookie('sessionId', user.id, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      secure: isProd,
+      sameSite: isProd ? 'strict' : 'none',
       maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
     });
 
@@ -121,6 +130,29 @@ router.post("/logout", async (req, res) => {
     res.status(500).json({
       error: "Internal server error"
     });
+  }
+});
+
+// Get current authenticated user
+router.get("/me", authenticateToken, async (req, res) => {
+  try {
+    // authenticateToken sets req.user
+    const authUser = req.user;
+    if (!authUser) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
+    // Fetch fresh user record to return up-to-date info (and exclude sensitive fields)
+    const user = await getUserById(authUser.id);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const { passwordHash: _pw, refreshToken: _rt, ...userInfo } = user as any;
+    return res.json({ user: userInfo });
+  } catch (error) {
+    console.error("/auth/me error:", error);
+    return res.status(500).json({ error: "Internal server error" });
   }
 });
 

@@ -1,13 +1,51 @@
 "use client";
 import Link from "next/link";
 import { useAssessmentsQuery } from "@/hooks/useSubmissions";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { AssessmentListItem } from "@/lib/services/assessments";
+const SUBJECT_OPTIONS = (process.env.NEXT_PUBLIC_SUBJECTS || 'Math,Science,English,History,Computer Science')
+  .split(',')
+  .map(s => s.trim())
+  .filter(Boolean);
+
 export default function StudentAssessments() {
-  const [status, setStatus] = useState<string>('PUBLISHED');
-  const [subject, setSubject] = useState<string>('');
-  const [search, setSearch] = useState<string>('');
-  const { data: fetched, isLoading, isError, error } = useAssessmentsQuery({ status, subject, search });
+  const router = useRouter();
+  const pathname = usePathname();
+  const params = useSearchParams();
+  const [status, setStatus] = useState<string>(params.get('status') || 'PUBLISHED');
+  const [subject, setSubject] = useState<string>(params.get('subject') || '');
+  const [search, setSearch] = useState<string>(params.get('q') || '');
+
+  // Debounce search input
+  const debouncedSearch = useMemo(() => {
+    let t: any;
+    return (value: string, cb: (v: string) => void) => {
+      clearTimeout(t);
+      t = setTimeout(() => cb(value), 300);
+    };
+  }, []);
+
+  const [effectiveSearch, setEffectiveSearch] = useState<string>(search);
+  useEffect(() => {
+    setEffectiveSearch(search);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  useEffect(() => {
+    debouncedSearch(search, setEffectiveSearch);
+  }, [search, debouncedSearch]);
+
+  // Sync URL
+  useEffect(() => {
+    const next = new URLSearchParams();
+    if (status) next.set('status', status);
+    if (subject) next.set('subject', subject);
+    if (effectiveSearch) next.set('q', effectiveSearch);
+    const qs = next.toString();
+    router.replace(`${pathname}${qs ? `?${qs}` : ''}` as any);
+  }, [status, subject, effectiveSearch, router, pathname]);
+
+  const { data: fetched, isLoading, isError, error } = useAssessmentsQuery({ status, subject, search: effectiveSearch });
   const data: AssessmentListItem[] = (fetched && fetched.length)
     ? fetched
     : [
@@ -26,8 +64,8 @@ export default function StudentAssessments() {
   };
   if (isLoading) return <div>Loading assessments…</div>;
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-3">
+    <div className="space-y-4" role="main" aria-label="Assessments list">
+      <div className="flex flex-wrap items-center gap-3" role="search" aria-label="Filter assessments">
         <div className="flex items-center gap-2">
           <label className="text-sm">Status</label>
           <select
@@ -42,12 +80,16 @@ export default function StudentAssessments() {
         </div>
         <div className="flex items-center gap-2">
           <label className="text-sm">Subject</label>
-          <input
+          <select
             className="border rounded-md px-2 py-1 text-sm bg-background"
-            placeholder="e.g., Math"
             value={subject}
             onChange={(e) => setSubject(e.target.value)}
-          />
+          >
+            <option value="">All</option>
+            {SUBJECT_OPTIONS.map((opt) => (
+              <option key={opt.toLowerCase()} value={opt.toLowerCase()}>{opt}</option>
+            ))}
+          </select>
         </div>
         <div className="flex items-center gap-2">
           <label className="text-sm">Search</label>

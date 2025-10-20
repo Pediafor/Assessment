@@ -5,7 +5,9 @@ export function Skeleton({ className, ...props }: React.HTMLAttributes<HTMLDivEl
   return (
     <div
       className={cn(
-        "animate-pulse rounded-md bg-[color-mix(in_oklab,white_80%,transparent)] dark:bg-[color-mix(in_oklab,black_50%,transparent)]",
+        // Visible in both light and dark themes
+        // Use neutral backgrounds so the pulse is perceptible on white too
+        "animate-pulse rounded-md bg-gray-200 dark:bg-gray-700",
         className
       )}
       aria-busy

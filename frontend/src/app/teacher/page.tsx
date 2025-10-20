@@ -1,6 +1,6 @@
 export default function TeacherHome() {
   return (
-    <div className="space-y-6">
+    <div role="main" aria-label="Teacher dashboard" className="space-y-6">
       <section>
         <h2 className="text-xl font-semibold mb-2">My Assessments</h2>
         <div className="rounded-md border p-4 text-sm text-muted">Create, edit or assign assessments from the Assessments tab.</div>

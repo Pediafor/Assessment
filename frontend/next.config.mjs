@@ -15,6 +15,12 @@ const nextConfig = {
   },
   async rewrites() {
     return [
+      // Temporary: auth endpoints go directly to user-service until gateway rebuild with proper pathRewrite
+      {
+        source: '/api/auth/:path*',
+        destination: 'http://localhost:4000/auth/:path*',
+      },
+      // Everything else goes to the gateway
       {
         source: '/api/:path*',
         destination: 'http://localhost:3000/api/:path*',

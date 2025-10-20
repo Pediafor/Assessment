@@ -3,7 +3,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { Route } from "next";
 
-type Item = { label: string; href: Route; icon?: React.ElementType; exact?: boolean };
+type Item = { label: string; href: Route; icon?: React.ElementType; exact?: boolean; badgeCount?: number };
 
 export function Sidebar({ items }: { items: Item[] }) {
   const pathname = usePathname();
@@ -24,7 +24,14 @@ export function Sidebar({ items }: { items: Item[] }) {
               }
             >
               {it.icon ? <it.icon size={16} /> : null}
-              <span>{it.label}</span>
+              <span className="flex-1 flex items-center justify-between">
+                <span>{it.label}</span>
+                {typeof it.badgeCount === 'number' && it.badgeCount > 0 ? (
+                  <span className="ml-2 inline-flex min-w-5 h-5 items-center justify-center rounded-full bg-amber-500/20 text-amber-700 text-[11px] px-1">
+                    {it.badgeCount > 99 ? '99+' : it.badgeCount}
+                  </span>
+                ) : null}
+              </span>
             </Link>
           );
         })}

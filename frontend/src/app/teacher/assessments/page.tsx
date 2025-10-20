@@ -1,10 +1,15 @@
+"use client";
+import { useTeacherAssessments } from '@/hooks/useTeacher';
+
 export default function TeacherAssessments() {
-  const items = [
+  const { data: fetched = [], isLoading } = useTeacherAssessments({});
+  const fallback = [
     { id: "ENG-101", title: "English Vocabulary Quiz", questions: 20, assigned: 32, status: "Draft" },
     { id: "MTH-201", title: "Algebra Midterm", questions: 35, assigned: 2, status: "Scheduled" },
     { id: "SCI-110", title: "Physics Basics", questions: 15, assigned: 30, status: "Published" },
     { id: "HIS-201", title: "World History Essay", questions: 1, assigned: 25, status: "Closed" },
   ];
+  const items = (Array.isArray(fetched) && fetched.length ? fetched : fallback) as any[];
   const badge = (s: string) => {
     const map: Record<string, string> = {
       Draft: "bg-gray-100 text-gray-700",
@@ -14,8 +19,9 @@ export default function TeacherAssessments() {
     };
     return <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs ${map[s] || "bg-gray-100 text-gray-700"}`}>{s}</span>;
   };
+  if (isLoading) return <div>Loading…</div>;
   return (
-    <div className="space-y-4">
+    <div role="main" aria-label="Teacher assessments" className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-semibold">Assessments</h2>
         <button className="rounded-md border px-3 py-2 text-sm hover:bg-card">Create Assessment</button>

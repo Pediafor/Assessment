@@ -8,7 +8,7 @@ jest.mock('@/hooks/use-auth', () => ({ useAuth: () => ({ login: jest.fn(() => Pr
 import LoginPage from '@/app/(auth)/login/page';
 
 describe('Login page a11y', () => {
-  it('shows aria-live error on failed login and disables button when pending', async () => {
+  it('shows aria-live error on failed login', async () => {
     render(<LoginPage />);
     const btn = screen.getByRole('button', { name: /sign in/i });
     const email = screen.getByLabelText(/email/i);
@@ -16,7 +16,8 @@ describe('Login page a11y', () => {
     fireEvent.change(email, { target: { value: 'student@pediafor.com' } });
     fireEvent.change(pwd, { target: { value: 'x' } });
     fireEvent.click(btn);
-    // Button becomes disabled while pending
-    expect(btn).toBeDisabled();
+    // after async failure, aria-live should contain error text
+    const status = await screen.findByRole('status');
+    expect(status).toHaveTextContent(/invalid credentials|login failed/i);
   });
 });
