@@ -19,7 +19,10 @@ declare global {
 }
 
 // PASETO public key for token verification (shared with UserService)
-const PUBLIC_KEY = process.env.PASETO_PUBLIC_KEY!;
+const PUBLIC_KEY_ENV = process.env.PASETO_PUBLIC_KEY!;
+const PUBLIC_KEY = PUBLIC_KEY_ENV.startsWith('-----BEGIN') 
+  ? PUBLIC_KEY_ENV 
+  : Buffer.from(PUBLIC_KEY_ENV, 'base64').toString('utf8');
 const GATEWAY_SECRET = process.env.GATEWAY_SECRET || 'gateway-secret-key-change-in-production';
 
 // Helper to create public key object from string

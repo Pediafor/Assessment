@@ -80,48 +80,75 @@ const services = {
   grading: process.env.GRADING_SERVICE_URL || 'http://localhost:4003'
 };
 
+// Diagnostic: echo route to validate mount path and public route handling
+app.post('/api/auth/echo', (req, res) => {
+  res.json({ ok: true, receivedPath: req.path, body: req.body });
+});
+
+// Temporary direct handler for auth login to ensure correct forwarding
+app.post('/api/auth/login', async (req, res, next) => {
+  try {
+    const http = await import('node:http');
+    const targetUrl = new URL(`${services.user}/auth/login`);
+    const body = JSON.stringify(req.body);
+    const options = {
+      method: 'POST',
+      hostname: targetUrl.hostname,
+      port: targetUrl.port || 80,
+      path: targetUrl.pathname,
+      headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body) }
+    } as any;
+    const request = (http as any).request(options, (proxyRes: any) => {
+      let data = '';
+      proxyRes.on('data', (chunk: any) => data += chunk);
+      proxyRes.on('end', () => {
+        res.status(proxyRes.statusCode || 500);
+        const ct = proxyRes.headers['content-type'] || 'application/json';
+        res.set('content-type', Array.isArray(ct) ? ct[0] : ct);
+        return res.send(data);
+      });
+    });
+    request.on('error', (err: any) => next(err));
+    request.write(body);
+    request.end();
+  } catch (e) {
+    return next(e);
+  }
+});
+
 // Route to UserService
 app.use('/api/auth', createProxyMiddleware({
   target: services.user,
   changeOrigin: true,
-  pathRewrite: {
-    '^/api/auth': '/auth'
-  }
+  // After mounting at '/api/auth', req.path is like '/login'. Prepend '/auth'.
+  pathRewrite: (path) => `/auth${path.startsWith('/') ? path : '/'+path}`,
 }));
 
 app.use('/api/users', createProxyMiddleware({
   target: services.user,
   changeOrigin: true,
-  pathRewrite: {
-    '^/api/users': '/users'
-  }
+  pathRewrite: (path) => `/users${path.startsWith('/') ? path : '/'+path}`,
 }));
 
 // Route to AssessmentService (future)
 app.use('/api/assessments', createProxyMiddleware({
   target: services.assessment,
   changeOrigin: true,
-  pathRewrite: {
-    '^/api/assessments': '/assessments'
-  }
+  pathRewrite: (path) => `/assessments${path.startsWith('/') ? path : '/'+path}`,
 }));
 
 // Route to SubmissionService (future)
 app.use('/api/submissions', createProxyMiddleware({
   target: services.submission,
   changeOrigin: true,
-  pathRewrite: {
-    '^/api/submissions': '/submissions'
-  }
+  pathRewrite: (path) => `/submissions${path.startsWith('/') ? path : '/'+path}`,
 }));
 
 // Route to GradingService (future)
 app.use('/api/grading', createProxyMiddleware({
   target: services.grading,
   changeOrigin: true,
-  pathRewrite: {
-    '^/api/grading': '/grading'
-  }
+  pathRewrite: (path) => `/grading${path.startsWith('/') ? path : '/'+path}`,
 }));
 
 // 404 handler for all unmatched routes
