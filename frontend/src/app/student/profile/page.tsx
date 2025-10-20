@@ -1,8 +1,10 @@
 "use client";
 import { useEffect, useState } from "react";
-import { UsersApi } from "@/lib/api";
 import { RoleGuard } from "@/components/role-guard";
 import { useChangePassword, useProfile, useUpdateProfile } from "@/hooks/useProfile";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 export default function StudentProfilePage() {
   const { data: me } = useProfile();
@@ -22,7 +24,7 @@ export default function StudentProfilePage() {
 
   return (
     <RoleGuard allow="student">
-      <main role="main" aria-label="Student profile" className="max-w-xl space-y-4">
+      <main role="main" aria-label="Student profile" className="max-w-2xl space-y-6">
         <h2 className="text-xl font-semibold">Profile</h2>
         {status ? (
           <div
@@ -37,57 +39,69 @@ export default function StudentProfilePage() {
             {status.msg}
           </div>
         ) : null}
-        <label className="block text-sm">
-          <span className="mb-1 block">Name</span>
-          <input
-            className="w-full rounded-md border px-3 py-2"
-            placeholder="Your name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
-        </label>
-        <label className="block text-sm">
-          <span className="mb-1 block">Email</span>
-          <input
-            className="w-full rounded-md border px-3 py-2"
-            placeholder="you@example.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-        </label>
-        <div className="pt-2">
-          <button
-            className="rounded-md border px-3 py-2 text-sm hover:bg-card disabled:opacity-50"
-            disabled={isPending}
-            onClick={async () => {
-              setStatus(null);
-              try {
-                await updateProfile({ name: name || undefined, email: email || undefined });
-                setStatus({ type: "success", msg: "Profile updated" });
-              } catch (e) {
-                setStatus({ type: "error", msg: "Failed to update profile. Please try again." });
-              }
-            }}
-          >
-            {isPending ? 'Saving…' : 'Save changes'}
-          </button>
-        </div>
-        <div className="pt-6">
-          <h3 className="text-lg font-semibold mb-2">Change Password</h3>
-          <div className="grid gap-2 max-w-md">
-            <input id="pwd-current" className="rounded-md border px-3 py-2" type="password" placeholder="Current password" />
-            <input id="pwd-new" className="rounded-md border px-3 py-2" type="password" placeholder="New password" />
-            <input id="pwd-confirm" className="rounded-md border px-3 py-2" type="password" placeholder="Confirm new password" />
-            <div>
-              <button
-                className="rounded-md border px-3 py-2 text-sm hover:bg-card disabled:opacity-50"
+
+        <Card>
+          <CardHeader className="text-base font-medium">Account information</CardHeader>
+          <CardContent className="grid gap-4">
+            <label className="block text-sm">
+              <span className="mb-1 block">Name</span>
+              <Input
+                placeholder="Your name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+              />
+            </label>
+            <label className="block text-sm">
+              <span className="mb-1 block">Email</span>
+              <Input
+                placeholder="you@example.com"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+            </label>
+            <div className="pt-2">
+              <Button
+                variant="primary"
+                size="md"
+                disabled={isPending}
+                onClick={async () => {
+                  setStatus(null);
+                  try {
+                    await updateProfile({ name: name || undefined, email: email || undefined });
+                    setStatus({ type: "success", msg: "Profile updated" });
+                  } catch (e) {
+                    setStatus({ type: "error", msg: "Failed to update profile. Please try again." });
+                  }
+                }}
+              >
+                {isPending ? "Saving…" : "Save changes"}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="text-base font-medium">Change password</CardHeader>
+          <CardContent className="grid gap-3 max-w-md">
+            <Input id="pwd-current" type="password" placeholder="Current password" />
+            <Input id="pwd-new" type="password" placeholder="New password" />
+            <Input id="pwd-confirm" type="password" placeholder="Confirm new password" />
+            <div className="pt-1">
+              <Button
+                variant="secondary"
+                size="md"
                 disabled={changing}
                 onClick={async () => {
                   setStatus(null);
                   const current = (document.getElementById('pwd-current') as HTMLInputElement)?.value || '';
                   const next = (document.getElementById('pwd-new') as HTMLInputElement)?.value || '';
                   const confirm = (document.getElementById('pwd-confirm') as HTMLInputElement)?.value || '';
-                  if (!next || next !== confirm) {
+                  if (!next) {
+                    setStatus({ type: 'error', msg: 'New password is required' });
+                    return;
+                  }
+                  if (next !== confirm) {
                     setStatus({ type: 'error', msg: 'Passwords do not match' });
                     return;
                   }
@@ -99,11 +113,11 @@ export default function StudentProfilePage() {
                   }
                 }}
               >
-                {changing ? 'Updating…' : 'Update password'}
-              </button>
+                {changing ? "Updating…" : "Update password"}
+              </Button>
             </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       </main>
     </RoleGuard>
   );
