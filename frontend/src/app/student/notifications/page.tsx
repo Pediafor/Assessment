@@ -1,14 +1,20 @@
 "use client";
+import { useMemo } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useNotifications, useMarkNotificationRead } from "@/hooks/useNotifications";
+import { useNotificationsInfinite, useMarkNotificationRead } from "@/hooks/useNotifications";
 
 export default function StudentNotifications() {
-  const { data, isLoading } = useNotifications({ limit: 50 });
+  const { data, isLoading, hasNextPage, isFetchingNextPage, fetchNextPage } = useNotificationsInfinite({ limit: 50 });
   const { mutate: markRead } = useMarkNotificationRead();
-  const items = (data && data.length ? data : [
-    { id: "n1", type: "reminder", title: "Assessment due soon", message: "Math Quiz due tomorrow", createdAt: new Date().toISOString() },
-    { id: "n2", type: "grade", title: "Grading completed", message: "Science Midterm graded", createdAt: new Date(Date.now() - 86400000).toISOString() },
-  ]) as Array<{ id: string; title: string; message?: string; createdAt: string }>;
+  const items = useMemo(() => {
+    const merged = (data?.pages?.flatMap(p => p.items) ?? []) as Array<{ id: string; title: string; message?: string; createdAt: string; read?: boolean }>;
+    if (merged.length) return merged;
+    // graceful fallback demo data
+    return [
+      { id: "n1", type: "reminder", title: "Assessment due soon", message: "Math Quiz due tomorrow", createdAt: new Date().toISOString() },
+      { id: "n2", type: "grade", title: "Grading completed", message: "Science Midterm graded", createdAt: new Date(Date.now() - 86400000).toISOString() },
+    ];
+  }, [data]);
 
   const unreadCount = items.filter((n: any) => !n.read).length;
 
@@ -59,6 +65,18 @@ export default function StudentNotifications() {
       ) : (
         <div className="text-sm text-muted">You're all caught up.</div>
       )}
+      {/* Pagination controls */}
+      {data && (hasNextPage || isFetchingNextPage) ? (
+        <div className="flex justify-center pt-2">
+          <button
+            disabled={!hasNextPage || isFetchingNextPage}
+            onClick={() => fetchNextPage()}
+            className="rounded-md border px-3 py-1.5 text-sm hover:bg-card disabled:opacity-50"
+          >
+            {isFetchingNextPage ? 'Loading…' : hasNextPage ? 'Load more' : 'No more'}
+          </button>
+        </div>
+      ) : null}
     </div>
   );
 }

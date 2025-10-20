@@ -1,5 +1,5 @@
 "use client";
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
 import { NotificationsApi } from '@/lib/api';
 
 export type NotificationItem = {
@@ -34,5 +34,44 @@ export function useMarkNotificationRead() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['notifications'] });
     },
+  });
+}
+
+// --- Infinite pagination variant ---
+type NotificationsResponseShape =
+  | NotificationItem[]
+  | {
+      success?: boolean;
+      data?: { notifications?: NotificationItem[]; nextCursor?: string } | NotificationItem[];
+      notifications?: NotificationItem[];
+      nextCursor?: string;
+    };
+
+function normalizeNotifications(res: any): { items: NotificationItem[]; nextCursor?: string } {
+  const root = res?.data ?? res;
+  // Direct array
+  if (Array.isArray(root)) return { items: root as NotificationItem[] };
+  // { data: { notifications, nextCursor } }
+  if (root?.data && typeof root.data === 'object') {
+    const d = root.data as any;
+    if (Array.isArray(d)) return { items: d as NotificationItem[] };
+    if (Array.isArray(d.notifications)) return { items: d.notifications as NotificationItem[], nextCursor: d.nextCursor };
+  }
+  // { notifications, nextCursor }
+  if (Array.isArray(root?.notifications)) return { items: root.notifications as NotificationItem[], nextCursor: root.nextCursor };
+  return { items: [] };
+}
+
+export function useNotificationsInfinite(params?: { limit?: number }) {
+  const limit = params?.limit ?? 50;
+  return useInfiniteQuery({
+    queryKey: ['notifications', 'infinite', limit],
+    initialPageParam: undefined as string | undefined,
+    queryFn: async ({ pageParam }) => {
+      const res: NotificationsResponseShape = await NotificationsApi.listMine({ limit, after: pageParam });
+      return normalizeNotifications(res);
+    },
+    getNextPageParam: (lastPage) => lastPage.nextCursor,
+    staleTime: 30_000,
   });
 }
