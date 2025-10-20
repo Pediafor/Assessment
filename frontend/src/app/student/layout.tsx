@@ -4,13 +4,14 @@ import type { Route } from "next";
 import { RoleGuard } from "@/components/role-guard";
 import { LayoutDashboard, BookOpen, User, Bell } from "lucide-react";
 import { usePathname } from "next/navigation";
-import { useNotifications } from "@/hooks/useNotifications";
+import { useNotificationsInfinite } from "@/hooks/useNotifications";
 
 export default function StudentLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isAssessment = pathname?.startsWith("/student/assessment/") ?? false;
-  const { data: notifs } = useNotifications({ limit: 50 });
-  const unread = (notifs || []).filter((n: any) => !n.read).length;
+  const { data: notifPages } = useNotificationsInfinite({ limit: 50 });
+  const all = (notifPages?.pages || []).flatMap((p: any) => p.items || []);
+  const unread = all.filter((n: any) => !n.read).length;
   const items = [
     { label: "Dashboard", href: "/student" as Route, icon: LayoutDashboard, exact: true },
     { label: "Assessments", href: "/student/assessments" as Route, icon: BookOpen },

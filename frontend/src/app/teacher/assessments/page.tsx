@@ -50,7 +50,7 @@ export default function TeacherAssessments() {
             <option value="CLOSED">Closed</option>
           </select>
           <button onClick={applyFilters} className="rounded-md border px-3 py-2 text-sm hover:bg-card">Apply</button>
-          <button className="rounded-md border px-3 py-2 text-sm hover:bg-card">Create Assessment</button>
+          <a href="/teacher/assessments/create" className="rounded-md border px-3 py-2 text-sm hover:bg-card">Create Assessment</a>
         </div>
       </div>
       <div className="rounded-md border overflow-x-auto">

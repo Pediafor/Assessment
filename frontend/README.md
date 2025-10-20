@@ -40,7 +40,7 @@ npm run dev
 - ✅ Results: `/student/results` list and `/student/results/[id]` detail wired via TanStack Query
 - ✅ Notifications: `/student/notifications` wired to API with cursor-based pagination (Load more), loading skeleton, mark read; graceful fallback
 - ✅ Notifications: `/student/notifications` auto-loads pages via IntersectionObserver with manual "Load more" fallback
-- ✅ Student profile page: `/student/profile` with name/email update and password change (enhanced UI using design system: Card, Input, Button)
+- ✅ Student profile page: `/student/profile` with name/email update and password change (enhanced UI using design system: Card, Input, Button; now with form validation and toasts)
 - ✅ Realtime: WebTransport primary with WebSocket fallback; results detail auto-refreshes on grading events
 - ✅ Submitted confirmation page and .well-known DevTools route
 
@@ -60,6 +60,9 @@ npm run dev
 - ✅ Scoped root `.gitignore` lib patterns so `frontend/src/lib` is tracked
 - ✅ Assessment submit error banner and control disabling on fatal error
 - ✅ Playwright e2e tests for profile and notifications basic UX
+- ✅ Global toast system wired; bulk mark-read shows success/failure
+- ✅ Notifications sidebar badge synced with list state
+- ✅ Teacher "Create Assessment" scaffold page
 
 ---
 
@@ -1124,12 +1127,12 @@ export function AssessmentForm({ assessment, onSubmit }: AssessmentFormProps) {
 - ✅ Notifications page wired to API (list + mark-read) with loading skeleton and unread badge in sidebar
 - ✅ Assessment taking interface (autosave, timers, review, forward-only; server draft best-effort)
 - ✅ Results viewing (list/detail via Query + realtime)
-- 📝 Profile management (basic form; wiring upcoming)
+- ✅ Profile management (validated forms, success/error toasts)
 
 ### **Phase 3: Teacher Experience (Weeks 5-6)**
 - ✅ Teacher dashboard (basics: overview metrics, grading queue)
 - ✅ Assessments list (filters: status/search/subject)
-- 📝 Assessment builder
+- 📝 Assessment builder (scaffold created for create flow)
 - 📝 Student management
 - 📝 Grading interface
 - 📝 Analytics dashboard
@@ -1150,9 +1153,10 @@ export function AssessmentForm({ assessment, onSubmit }: AssessmentFormProps) {
 - 📝 Documentation
 
 ### Next steps
-- Notifications: unify unread badge with list state; add toast feedback for bulk actions
-- Profile: add form-level validation and nicer success/error toasts; integrate design system select for preferences when available
-- Expand Playwright coverage for teacher flows (assessments list, grading queue) and notifications auto-load edge cases
+- Profile: preferences UI (design system Select) and toast on update
+- Notifications: list virtualization for large lists; unread badge real-time updates via realtime events
+- Teacher: expand create/edit assessment builder; add grading queue e2e
+- Expand Playwright coverage for teacher flows and notifications edge cases
 
 ---
 

@@ -3,10 +3,15 @@ import { useEffect, useMemo, useRef } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useNotificationsInfinite, useMarkNotificationRead } from "@/hooks/useNotifications";
 import { NotificationsApi } from "@/lib/api";
+import { useToast } from "@/components/ui/toast";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function StudentNotifications() {
   const { data, isLoading, hasNextPage, isFetchingNextPage, fetchNextPage } = useNotificationsInfinite({ limit: 50 });
   const { mutate: markRead } = useMarkNotificationRead();
+  const { success, error } = useToast();
+  let qc: ReturnType<typeof useQueryClient> | null = null;
+  try { qc = useQueryClient(); } catch { qc = null; }
   const sentinelRef = useRef<HTMLDivElement | null>(null);
   const items = useMemo(() => {
     const merged = (data?.pages?.flatMap(p => p.items) ?? []) as Array<{ id: string; title: string; message?: string; createdAt: string; read?: boolean }>;
@@ -43,12 +48,17 @@ export default function StudentNotifications() {
         {unreadCount > 0 ? (
           <button
             className="text-xs rounded-md border px-2 py-1 hover:bg-card"
-            onClick={() => {
+            onClick={async () => {
               const ids = items.filter((n: any) => !n.read).map((n: any) => n.id);
-              // Try optional bulk endpoint; fallback to per-item
-              NotificationsApi.bulkMarkRead(ids).catch(() => {
+              try {
+                await NotificationsApi.bulkMarkRead(ids);
+                success("Marked all as read");
+              } catch {
                 ids.forEach((id) => markRead(id));
-              });
+                error("Bulk mark-read not available, applied per-item");
+              } finally {
+                qc?.invalidateQueries({ queryKey: ['notifications'] });
+              }
             }}
           >
             Mark all as read
