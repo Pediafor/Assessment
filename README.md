@@ -45,8 +45,8 @@
 
 ### 👩‍🏫 **For Teachers**
 - **Assessment Builder**: Rich assessment creation with media support
-- **Automated Grading**: Backend grading service operational
-- **Class Management**: Role-based access with student progress monitoring
+- **Automated + Manual Grading**: Hybrid grading with rubric UI, per-question scoring, teacher queue, and overview analytics
+- **Student Management**: Searchable/paginated roster, student detail page with recent submissions
 - **Real-time Analytics**: Backend analytics service operational
 
 ### 🏢 **For Administrators**
@@ -70,6 +70,25 @@ docker compose up --build
 # RabbitMQ Management: http://localhost:15672
 ```
 
+### 🔎 Quick Smoke Tests
+
+Use these to sanity-check your environment (replace TOKEN with a real access token after login):
+
+```bash
+# Gateway health
+curl -s http://localhost:3000/health
+
+# Public register (example)
+curl -s -X POST http://localhost:3000/users/register \
+	-H "Content-Type: application/json" \
+	-d '{"email":"demo+gw@local","password":"Passw0rd!","firstName":"Demo","lastName":"User"}'
+
+# Protected example (requires TOKEN)
+curl -s http://localhost:3000/users/me -H "Authorization: Bearer TOKEN"
+```
+
+For per-service smoke tests, see the individual service READMEs in `services/*/README.md`.
+
 ---
 
 ## 📖 Documentation
@@ -81,7 +100,7 @@ docker compose up --build
 - [📡 API Documentation](docs/api.md)
 - [🔔 Notification Service](docs/notification-service.md)
 - [🤝 Contributing Guide](CONTRIBUTING.md)
- - [🧪 SQL Examples (dev-only)](docs/sql-examples/README.md)
+- [🧪 SQL Examples (dev-only)](docs/sql-examples/README.md)
 
 ---
 
@@ -114,7 +133,7 @@ docker compose up --build
 | **Automated Grading** | ✅ Implemented | MCQ, True/False |
 | **Event-Driven Architecture** | ✅ Implemented | RabbitMQ, events for all services |
 | **Email Notifications** | ✅ Implemented | Notification Service consumes grading.completed and emails students |
-| **Real-time Notifications** | 🟡 Partially Implemented | WebSocket/WebTransport server is in place |
+| **Real-time Notifications** | ✅ Implemented | Event-driven notifications with gateway and realtime fanout |
 | **Frontend** | 🟡 In Development | Basic structure and some components are ready |
 
 ---
