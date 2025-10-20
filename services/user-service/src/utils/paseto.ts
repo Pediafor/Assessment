@@ -2,8 +2,18 @@ import { V4 } from "paseto";
 import crypto from "crypto";
 
 // Ensure you have your V4 keys in .env
-const PRIVATE_KEY = process.env.PASETO_PRIVATE_KEY!;
-const PUBLIC_KEY = process.env.PASETO_PUBLIC_KEY!;
+const PRIVATE_KEY_ENV = process.env.PASETO_PRIVATE_KEY!;
+const PRIVATE_KEY = PRIVATE_KEY_ENV.startsWith('-----BEGIN') 
+  ? PRIVATE_KEY_ENV 
+  : Buffer.from(PRIVATE_KEY_ENV, 'base64').toString('utf8');
+
+const PUBLIC_KEY_ENV = process.env.PASETO_PUBLIC_KEY!;
+const PUBLIC_KEY = PUBLIC_KEY_ENV.startsWith('-----BEGIN') 
+  ? PUBLIC_KEY_ENV 
+  : Buffer.from(PUBLIC_KEY_ENV, 'base64').toString('utf8');
+
+console.log('PRIVATE_KEY starts with:', PRIVATE_KEY.substring(0, 20));
+console.log('PUBLIC_KEY starts with:', PUBLIC_KEY.substring(0, 20));
 
 // Helper to convert time string to milliseconds
 function parseTimeToMs(timeStr: string): number {
