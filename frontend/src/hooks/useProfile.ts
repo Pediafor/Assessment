@@ -2,15 +2,19 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { UsersApi } from '@/lib/api';
 
-export type Profile = { id: string; name?: string; email?: string; role?: string };
+export type Profile = { id: string; name?: string; email?: string; role?: string } | null;
 
 export function useProfile() {
   return useQuery({
     queryKey: ['me'],
     queryFn: async () => {
-      const res = await UsersApi.me();
-      const data = res?.data ?? res;
-      return data as Profile;
+      try {
+        const res = await UsersApi.me();
+        const data = (res as any)?.data ?? res;
+        return (data ?? null) as Profile;
+      } catch {
+        return null as Profile;
+      }
     },
     staleTime: 60_000,
   });

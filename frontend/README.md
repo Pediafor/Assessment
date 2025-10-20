@@ -39,6 +39,8 @@ npm run dev
 - ✅ Assessment player: sections, per-section/overall timers, autosave/restore, review modal, forward-only, read-only locked sections, desktop vertical nav
 - ✅ Results: `/student/results` list and `/student/results/[id]` detail wired via TanStack Query
 - ✅ Notifications: `/student/notifications` wired to API with cursor-based pagination (Load more), loading skeleton, mark read; graceful fallback
+ - ✅ Notifications: `/student/notifications` wired to API with cursor-based pagination (Load more), loading skeleton, mark read; graceful fallback
+ - ✅ Student profile page: `/student/profile` with name/email update and password change
 - ✅ Realtime: WebTransport primary with WebSocket fallback; results detail auto-refreshes on grading events
 - ✅ Submitted confirmation page and .well-known DevTools route
 
@@ -56,6 +58,7 @@ npm run dev
 - ✅ Notifications page uses API client with infinite pagination (`useNotificationsInfinite` + `markRead`) and loading/empty states
 - ✅ Realtime invalidation hook for assessments/submissions/results events
 - ✅ Scoped root `.gitignore` lib patterns so `frontend/src/lib` is tracked
+ - ✅ Assessment submit error banner and control disabling on fatal error
 
 ---
 

@@ -1,13 +1,24 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { UsersApi } from "@/lib/api";
 import { RoleGuard } from "@/components/role-guard";
+import { useChangePassword, useProfile, useUpdateProfile } from "@/hooks/useProfile";
 
 export default function StudentProfilePage() {
+  const { data: me } = useProfile();
+  const { mutateAsync: updateProfile, isPending } = useUpdateProfile() as any;
+  const { mutateAsync: changePassword, isPending: changing } = useChangePassword() as any;
+
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<null | { type: "success" | "error"; msg: string }>(null);
-  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    if (me) {
+      setName((me as any)?.name || "");
+      setEmail((me as any)?.email || "");
+    }
+  }, [me]);
 
   return (
     <RoleGuard allow="student">
@@ -47,22 +58,51 @@ export default function StudentProfilePage() {
         <div className="pt-2">
           <button
             className="rounded-md border px-3 py-2 text-sm hover:bg-card disabled:opacity-50"
-            disabled={busy}
+            disabled={isPending}
             onClick={async () => {
-              setBusy(true);
               setStatus(null);
               try {
-                await UsersApi.updateProfile({ name: name || undefined, email: email || undefined });
+                await updateProfile({ name: name || undefined, email: email || undefined });
                 setStatus({ type: "success", msg: "Profile updated" });
               } catch (e) {
                 setStatus({ type: "error", msg: "Failed to update profile. Please try again." });
-              } finally {
-                setBusy(false);
               }
             }}
           >
-            Save changes
+            {isPending ? 'Saving…' : 'Save changes'}
           </button>
+        </div>
+        <div className="pt-6">
+          <h3 className="text-lg font-semibold mb-2">Change Password</h3>
+          <div className="grid gap-2 max-w-md">
+            <input id="pwd-current" className="rounded-md border px-3 py-2" type="password" placeholder="Current password" />
+            <input id="pwd-new" className="rounded-md border px-3 py-2" type="password" placeholder="New password" />
+            <input id="pwd-confirm" className="rounded-md border px-3 py-2" type="password" placeholder="Confirm new password" />
+            <div>
+              <button
+                className="rounded-md border px-3 py-2 text-sm hover:bg-card disabled:opacity-50"
+                disabled={changing}
+                onClick={async () => {
+                  setStatus(null);
+                  const current = (document.getElementById('pwd-current') as HTMLInputElement)?.value || '';
+                  const next = (document.getElementById('pwd-new') as HTMLInputElement)?.value || '';
+                  const confirm = (document.getElementById('pwd-confirm') as HTMLInputElement)?.value || '';
+                  if (!next || next !== confirm) {
+                    setStatus({ type: 'error', msg: 'Passwords do not match' });
+                    return;
+                  }
+                  try {
+                    await changePassword({ currentPassword: current, newPassword: next });
+                    setStatus({ type: 'success', msg: 'Password updated' });
+                  } catch {
+                    setStatus({ type: 'error', msg: 'Failed to update password' });
+                  }
+                }}
+              >
+                {changing ? 'Updating…' : 'Update password'}
+              </button>
+            </div>
+          </div>
         </div>
       </main>
     </RoleGuard>
