@@ -1,12 +1,11 @@
 # Pediafor Assessment Platform - Complete System Docker Compose
 # This file orchestrates all services for integrated testing
 
-version: '3.8'
-
 networks:
   pediafor-network:
     name: pediafor-network
     driver: bridge
+    external: true
 
 volumes:
   rabbitmq_data:
@@ -145,19 +144,29 @@ services:
       dockerfile: Dockerfile
     container_name: user-service
     restart: unless-stopped
+    env_file:
+      - .env
     environment:
       NODE_ENV: production
       PORT: 4000
       DATABASE_URL: postgresql://userservice_user:userservice_password@user-db:5432/userservice_db
       RABBITMQ_URL: amqp://admin:pediafor2024@rabbitmq:5672/pediafor
-      PASETO_PRIVATE_KEY: ${PASETO_PRIVATE_KEY}
-      PASETO_PUBLIC_KEY: ${PASETO_PUBLIC_KEY}
+      PASETO_PRIVATE_KEY: |
+        -----BEGIN PRIVATE KEY-----
+        MC4CAQAwBQYDK2VwBCIEIAfJrIwORRPMGecAAZmjF21sobOsKzTjZVjkGYBL3O7N
+        -----END PRIVATE KEY-----
+      PASETO_PUBLIC_KEY: |
+        -----BEGIN PUBLIC KEY-----
+        MCowBQYDK2VwAyEA9glqm92jNw4pnhOAaaIQh3SgYMy2um69HuYAtzBglGE=
+        -----END PUBLIC KEY-----
 
     depends_on:
       user-db:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
+    ports:
+      - "4000:4000"
     networks:
       - pediafor-network
     healthcheck:
@@ -170,7 +179,7 @@ services:
   gateway-service:
     build:
       context: ./services/gateway-service
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.fallback
     container_name: gateway-service
     restart: unless-stopped
     environment:
@@ -181,7 +190,10 @@ services:
       ASSESSMENT_SERVICE_URL: http://assessment-service:4001
       SUBMISSION_SERVICE_URL: http://submission-service:4002
       GRADING_SERVICE_URL: http://grading-service:4003
-      PASETO_PUBLIC_KEY: ${PASETO_PUBLIC_KEY}
+      PASETO_PUBLIC_KEY: |
+        -----BEGIN PUBLIC KEY-----
+        MCowBQYDK2VwAyEA9glqm92jNw4pnhOAaaIQh3SgYMy2um69HuYAtzBglGE=
+        -----END PUBLIC KEY-----
       RABBITMQ_URL: amqp://admin:pediafor2024@rabbitmq:5672/pediafor
     ports:
       - "3000:3000"
@@ -209,7 +221,10 @@ services:
       NODE_ENV: production
       PORT: 8080
       RABBITMQ_URL: amqp://admin:pediafor2024@rabbitmq:5672/pediafor
-      PASETO_PUBLIC_KEY: ${PASETO_PUBLIC_KEY}
+      PASETO_PUBLIC_KEY: |
+        -----BEGIN PUBLIC KEY-----
+        MCowBQYDK2VwAyEA9glqm92jNw4pnhOAaaIQh3SgYMy2um69HuYAtzBglGE=
+        -----END PUBLIC KEY-----
       REALTIME_ENABLE_WEBSOCKET: "true"
       REALTIME_ENABLE_WEBTRANSPORT: "true"
       WEBTRANSPORT_SECRET: "assessment-platform-secret"
@@ -221,7 +236,7 @@ services:
         condition: service_healthy
     networks:
       - pediafor-network
-    command: ["npm", "run", "realtime:prod"]
+    command: ["npm", "run", "start:realtime"]
     healthcheck:
       test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/health"] 
       interval: 30s
@@ -322,7 +337,7 @@ services:
       EMAIL_PORT: 587
       EMAIL_USER: user
       EMAIL_PASS: pass
-    EMAIL_FROM: '"Pediafor" <noreply@pediafor.local>'
+      EMAIL_FROM: '"Pediafor" <noreply@pediafor.local>'
     depends_on:
       rabbitmq:
         condition: service_healthy
