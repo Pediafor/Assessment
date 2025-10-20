@@ -1,0 +1,1 @@
+SELECT email, "passwordHash" FROM "User" WHERE email = 'student1@pediafor.com';
