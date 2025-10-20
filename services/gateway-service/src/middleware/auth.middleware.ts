@@ -19,31 +19,47 @@ declare global {
 }
 
 // PASETO public key for token verification (shared with UserService)
-const PUBLIC_KEY_ENV = process.env.PASETO_PUBLIC_KEY!;
-const PUBLIC_KEY = PUBLIC_KEY_ENV.startsWith('-----BEGIN') 
-  ? PUBLIC_KEY_ENV 
-  : Buffer.from(PUBLIC_KEY_ENV, 'base64').toString('utf8');
+// Accepts either PEM (-----BEGIN PUBLIC KEY-----) or base64-encoded DER (SPKI)
+const RAW_PUBLIC_KEY = process.env.PASETO_PUBLIC_KEY || '';
+let PUBLIC_KEY_OBJECT: crypto.KeyObject | null = null;
 const GATEWAY_SECRET = process.env.GATEWAY_SECRET || 'gateway-secret-key-change-in-production';
 
 // Helper to create public key object from string
-function createPublicKey(keyString: string) {
+function getPublicKeyObject(): crypto.KeyObject {
+  if (PUBLIC_KEY_OBJECT) return PUBLIC_KEY_OBJECT;
+
+  if (!RAW_PUBLIC_KEY) {
+    throw new Error('PASETO_PUBLIC_KEY not set in gateway');
+  }
+
   try {
-    return crypto.createPublicKey(keyString);
-  } catch {
-    const keyBuffer = Buffer.from(keyString, 'base64');
-    return crypto.createPublicKey({
-      key: keyBuffer,
-      format: 'der',
-      type: 'spki'
-    });
+    // If looks like PEM, normalize escaped newlines
+    if (RAW_PUBLIC_KEY.includes('BEGIN PUBLIC KEY')) {
+      const pem = RAW_PUBLIC_KEY.replace(/\\n/g, '\n');
+      PUBLIC_KEY_OBJECT = crypto.createPublicKey(pem);
+      return PUBLIC_KEY_OBJECT;
+    }
+
+    // Try base64 decode; it may be PEM text or raw DER SPKI
+    const decoded = Buffer.from(RAW_PUBLIC_KEY, 'base64');
+    const asUtf8 = decoded.toString('utf8');
+    if (asUtf8.includes('BEGIN PUBLIC KEY')) {
+      PUBLIC_KEY_OBJECT = crypto.createPublicKey(asUtf8);
+      return PUBLIC_KEY_OBJECT;
+    }
+    // Otherwise assume decoded bytes are DER SPKI
+    PUBLIC_KEY_OBJECT = crypto.createPublicKey({ key: decoded, format: 'der', type: 'spki' });
+    return PUBLIC_KEY_OBJECT;
+  } catch (e) {
+    // Provide actionable error
+    const msg = e instanceof Error ? e.message : String(e);
+    throw new Error(`Failed to construct PASETO public key: ${msg}`);
   }
 }
 
 // Verify PASETO token using public key
 async function verifyAccessToken(token: string) {
-  if (!PUBLIC_KEY) throw new Error('PASETO_PUBLIC_KEY not set in gateway');
-  
-  const publicKey = createPublicKey(PUBLIC_KEY);
+  const publicKey = getPublicKeyObject();
   const payload = await V4.verify(token, publicKey) as any;
   
   // Check expiration

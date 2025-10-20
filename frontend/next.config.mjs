@@ -15,15 +15,11 @@ const nextConfig = {
   },
   async rewrites() {
     return [
-      // Temporary: auth endpoints go directly to user-service until gateway rebuild with proper pathRewrite
-      {
-        source: '/api/auth/:path*',
-        destination: 'http://localhost:4000/auth/:path*',
-      },
-      // Everything else goes to the gateway
+      // All API requests go to the gateway on the host machine
+      // Note: inside the container, use host.docker.internal to reach host ports
       {
         source: '/api/:path*',
-        destination: 'http://localhost:3000/api/:path*',
+        destination: 'http://host.docker.internal:3000/api/:path*',
       },
     ];
   },

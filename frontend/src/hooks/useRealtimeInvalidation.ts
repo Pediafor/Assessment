@@ -1,15 +1,18 @@
 "use client";
 import { useEffect } from 'react';
+import { getToken } from '@/lib/auth';
 import { useQueryClient } from '@tanstack/react-query';
 
 export function useRealtimeInvalidation() {
   const qc = useQueryClient();
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    const url = (process.env.NEXT_PUBLIC_REALTIME_URL || 'ws://localhost:8080/realtime').replace(/\/$/, '');
+  const url = (process.env.NEXT_PUBLIC_REALTIME_URL || 'ws://localhost:8080/realtime').replace(/\/$/, '');
     let ws: WebSocket | null = null;
     try {
-      ws = new WebSocket(url);
+  const token = getToken();
+  const connectUrl = token ? `${url}?token=${encodeURIComponent(token)}` : url;
+  ws = new WebSocket(connectUrl);
     } catch {
       return;
     }

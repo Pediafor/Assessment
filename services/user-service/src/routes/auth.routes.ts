@@ -48,11 +48,15 @@ router.post("/login", async (req, res) => {
     // Set httpOnly cookie with user session for refresh token access
     // In local dev (different ports), allow cookie to be sent across origins used by Next/Gateway
     // Use SameSite=None so the gateway refresh endpoint can read it; secure only in production.
+    const devCookies = process.env.DEV_COOKIES === 'true';
     const isProd = process.env.NODE_ENV === 'production';
+    // In local dev containers, force cross-site compatible cookies
+    const cookieSecure = devCookies ? false : isProd;
+    const cookieSameSite: any = devCookies ? 'none' : (isProd ? 'strict' : 'lax');
     res.cookie('sessionId', user.id, {
       httpOnly: true,
-      secure: isProd,
-      sameSite: isProd ? 'strict' : 'none',
+      secure: cookieSecure,
+      sameSite: cookieSameSite,
       maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
     });
 

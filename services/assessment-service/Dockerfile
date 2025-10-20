@@ -9,6 +9,9 @@ RUN apk add --no-cache curl openssl
 # Copy package files
 COPY package*.json ./
 
+# Copy Prisma schema early so any install/postinstall can find it
+COPY prisma ./prisma
+
 # Install all dependencies (including dev dependencies for build)
 RUN npm ci
 
@@ -32,6 +35,8 @@ RUN apk add --no-cache curl openssl openssl-dev
 # Copy package files
 COPY package*.json ./
 
+# Ensure prisma schema exists before production install/postinstall
+COPY prisma ./prisma
 # Install only production dependencies
 RUN npm ci --only=production
 

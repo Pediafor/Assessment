@@ -1,8 +1,19 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { setToken, clearToken } from './auth';
 
-// Prefer hitting Next.js local path and let rewrites proxy to gateway to avoid CORS in dev
-const baseURL = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_GATEWAY_URL || '/api';
+// Build a normalized baseURL so that request paths like '/api/...'
+// don't accidentally become '/api/api/...'
+function normalizeBaseURL(raw?: string) {
+  if (!raw) return '';
+  let url = raw.trim();
+  // remove trailing slash
+  if (url.endsWith('/')) url = url.slice(0, -1);
+  // strip a trailing '/api' (with or without trailing slash)
+  if (url.toLowerCase().endsWith('/api')) url = url.slice(0, -4);
+  return url;
+}
+
+const baseURL = normalizeBaseURL(process.env.NEXT_PUBLIC_API_URL) || normalizeBaseURL(process.env.NEXT_PUBLIC_GATEWAY_URL) || '';
 
 export const api = axios.create({
   baseURL,

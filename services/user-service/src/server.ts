@@ -1,8 +1,9 @@
-import app from "./app";
+// Load environment variables before importing anything that might read them
 import { config } from "dotenv";
-import { initializeRabbitMQ } from "./config/rabbitmq";
+config(); // load .env early
 
-config(); // load .env
+import app from "./app";
+import { initializeRabbitMQ } from "./config/rabbitmq";
 
 const PORT = process.env.PORT || 4000;
 

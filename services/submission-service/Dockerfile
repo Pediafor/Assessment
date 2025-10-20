@@ -12,9 +12,14 @@ WORKDIR /app
 
 # Copy package files first for better Docker layer caching
 COPY package*.json ./
+
+# Copy Prisma schema before install so postinstall can find it
+COPY prisma ./prisma
+
+# Install production deps; allow postinstall to run prisma generate with schema present
 RUN npm ci --only=production
 
-# Copy source code
+# Copy remaining source code
 COPY . .
 
 # Build the TypeScript application

@@ -1,19 +1,18 @@
 import { V4 } from "paseto";
 import crypto from "crypto";
 
-// Ensure you have your V4 keys in .env
-const PRIVATE_KEY_ENV = process.env.PASETO_PRIVATE_KEY!;
-const PRIVATE_KEY = PRIVATE_KEY_ENV.startsWith('-----BEGIN') 
-  ? PRIVATE_KEY_ENV 
-  : Buffer.from(PRIVATE_KEY_ENV, 'base64').toString('utf8');
+// Resolve keys lazily at call time to avoid failing on import and leaking secrets
+function getPrivateKeyPem(): string {
+  const env = process.env.PASETO_PRIVATE_KEY;
+  if (!env) throw new Error("PASETO_PRIVATE_KEY not set");
+  return env.startsWith('-----BEGIN') ? env : Buffer.from(env, 'base64').toString('utf8');
+}
 
-const PUBLIC_KEY_ENV = process.env.PASETO_PUBLIC_KEY!;
-const PUBLIC_KEY = PUBLIC_KEY_ENV.startsWith('-----BEGIN') 
-  ? PUBLIC_KEY_ENV 
-  : Buffer.from(PUBLIC_KEY_ENV, 'base64').toString('utf8');
-
-console.log('PRIVATE_KEY starts with:', PRIVATE_KEY.substring(0, 20));
-console.log('PUBLIC_KEY starts with:', PUBLIC_KEY.substring(0, 20));
+function getPublicKeyPem(): string {
+  const env = process.env.PASETO_PUBLIC_KEY;
+  if (!env) throw new Error("PASETO_PUBLIC_KEY not set");
+  return env.startsWith('-----BEGIN') ? env : Buffer.from(env, 'base64').toString('utf8');
+}
 
 // Helper to convert time string to milliseconds
 function parseTimeToMs(timeStr: string): number {
@@ -59,7 +58,7 @@ function createPublicKey(keyString: string) {
 
 // Sign an access token using the private key
 export async function signAccessToken(payload: Record<string, unknown>, expiresIn = "15m") {
-  if (!PRIVATE_KEY) throw new Error("PASETO_PRIVATE_KEY not set");
+  const PRIVATE_KEY = getPrivateKeyPem();
   
   const now = new Date();
   const expiration = new Date(now.getTime() + parseTimeToMs(expiresIn));
@@ -78,8 +77,7 @@ export async function signAccessToken(payload: Record<string, unknown>, expiresI
 
 // Verify an access token using the public key
 export async function verifyAccessToken(token: string) {
-  if (!PUBLIC_KEY) throw new Error("PASETO_PUBLIC_KEY not set");
-  
+  const PUBLIC_KEY = getPublicKeyPem();
   const publicKey = createPublicKey(PUBLIC_KEY);
   const payload = await V4.verify(token, publicKey) as any;
   

@@ -1,0 +1,15 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Start all services (Docker)",
+			"type": "shell",
+			"command": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts\\windows\\start-all-services.ps1",
+			"args": [
+				"-Build"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		}
+	]
+}

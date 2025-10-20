@@ -39,14 +39,18 @@ services:
       - NODE_ENV=production
       - PORT=${PORT:-4000}
       - DATABASE_URL=postgresql://${POSTGRES_USER:-userservice}:${POSTGRES_PASSWORD:-userpass123}@user-db:5432/${POSTGRES_DB:-user_service_db}
+      - RABBITMQ_URL=amqp://admin:pediafor2024@pediafor-rabbitmq:5672/pediafor
       - PASETO_PRIVATE_KEY=${PASETO_PRIVATE_KEY}
       - PASETO_PUBLIC_KEY=${PASETO_PUBLIC_KEY}
       - JWT_SECRET=${JWT_SECRET}
       - BCRYPT_ROUNDS=${BCRYPT_ROUNDS:-12}
+      - SEED_DEV=${SEED_DEV:-true}
+      - DEV_COOKIES=${DEV_COOKIES:-true}
     env_file:
       - ./.env
     networks:
       - user-service-network
+      - pediafor-network
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:${PORT:-4000}/health || exit 1"]
       interval: 30s
@@ -61,3 +65,6 @@ networks:
   user-service-network:
     driver: bridge
     name: user-service-network
+  pediafor-network:
+    external: true
+    name: pediafor-network
