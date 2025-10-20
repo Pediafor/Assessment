@@ -7,8 +7,9 @@ WORKDIR /app
 # Copy package.json and package-lock.json
 COPY package*.json ./
 
-# Install ALL dependencies (including dev dependencies for building)
-RUN npm install
+# Install ALL dependencies (including dev dependencies for building) without running scripts
+# This avoids building optional native deps (e.g., webtransport quiche) during build
+RUN npm ci --ignore-scripts
 
 # Copy TypeScript configuration and source code
 COPY tsconfig.json ./
@@ -26,8 +27,8 @@ WORKDIR /app
 # Use package files for production
 COPY package*.json ./
 
-# Install production dependencies
-RUN npm install --only=production && npm cache clean --force
+# Install production dependencies without running scripts
+RUN npm ci --only=production --ignore-scripts && npm cache clean --force
 
 # Copy built application from build stage
 COPY --from=build /app/dist ./dist
