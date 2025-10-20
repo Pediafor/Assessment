@@ -8,6 +8,10 @@ import TeacherStudents from '@/app/teacher/students/page';
 import TeacherReports from '@/app/teacher/reports/page';
 
 jest.mock('next/link', () => ({ __esModule: true, default: ({ children, ...props }: any) => <a {...props}>{children}</a> }));
+jest.mock('next/navigation', () => ({
+  useRouter: () => ({ push: jest.fn(), replace: jest.fn(), prefetch: jest.fn() }),
+  useSearchParams: () => new URLSearchParams(''),
+}));
 jest.mock('@/hooks/useTeacher', () => ({
   useTeacherAssessments: () => ({ data: [{ id: 'A-1', title: 'Sample', questions: 10, assigned: 5, status: 'Draft' }], isLoading: false }),
   useGradingQueue: () => ({ data: [{ id: 'Q-1', student: 'Jane', assessment: 'Quiz', submitted: '2025-10-10', status: 'New' }], isLoading: false }),

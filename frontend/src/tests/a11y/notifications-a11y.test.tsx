@@ -4,7 +4,13 @@ import NotificationsPage from '@/app/student/notifications/page';
 
 jest.mock('next/link', () => ({ __esModule: true, default: ({ children, ...props }: any) => <a {...props}>{children}</a> }));
 jest.mock('@/hooks/useNotifications', () => ({
-  useNotifications: () => ({ data: [], isLoading: false }),
+  useNotificationsInfinite: () => ({
+    data: { pages: [{ items: [] }] },
+    isLoading: false,
+    hasNextPage: false,
+    isFetchingNextPage: false,
+    fetchNextPage: jest.fn(),
+  }),
   useMarkNotificationRead: () => ({ mutate: jest.fn() }),
 }));
 

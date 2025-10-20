@@ -7,6 +7,13 @@ import ForgotPasswordPage from '@/app/(auth)/forgot-password/page';
 jest.mock('next/navigation', () => ({ useRouter: () => ({ push: jest.fn(), replace: jest.fn() }), useSearchParams: () => new URLSearchParams('?token=abc') }));
 jest.mock('@/components/auth-provider', () => ({
   AuthProvider: ({ children }: any) => <>{children}</>,
+  useAuthContext: () => ({
+    role: null,
+    loading: false,
+    login: jest.fn(async () => {}),
+    logout: jest.fn(() => {}),
+    dashboardPath: '/',
+  }),
 }));
 
 jest.mock('@/lib/auth-api', () => ({
