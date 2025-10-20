@@ -1112,18 +1112,19 @@ export function AssessmentForm({ assessment, onSubmit }: AssessmentFormProps) {
 - ✅ Testing scaffold (Jest) and initial hook test
 - ✅ Base UI components (Button, Input, Card, Badge, Skeleton, Spinner, Empty)
 - ✅ Theme system (dark/light with semantic tokens)
-- 🚧 Authentication system (basic routes scaffolded; API-backed flows next)
+- ✅ Authentication system (API-backed login/register/forgot/reset)
 
 ### **Phase 2: Student Experience (Weeks 3-4)**
 - ✅ Student dashboard (implemented; loading skeletons added)
 - ✅ Assessment listing and filtering (status, subject, debounced search; URL sync)
-- ✅ Notifications page with loading skeleton and unread badge in sidebar
-- 📝 Assessment taking interface (implemented with sample data, autosave, timers)
+- ✅ Notifications page wired to API (list + mark-read) with loading skeleton and unread badge in sidebar
+- ✅ Assessment taking interface (autosave, timers, review, forward-only; server draft best-effort)
 - ✅ Results viewing (list/detail via Query + realtime)
 - 📝 Profile management (basic form; wiring upcoming)
 
 ### **Phase 3: Teacher Experience (Weeks 5-6)**
-- 📝 Teacher dashboard
+- ✅ Teacher dashboard (basics: overview metrics, grading queue)
+- ✅ Assessments list (filters: status/search/subject)
 - 📝 Assessment builder
 - 📝 Student management
 - 📝 Grading interface
@@ -1140,7 +1141,8 @@ export function AssessmentForm({ assessment, onSubmit }: AssessmentFormProps) {
 - 📝 Mobile optimization
 - 📝 Performance optimization
 - ✅ Accessibility improvements (landmarks, skip link, page-level skeletons)
-- 📝 Testing and bug fixes (a11y tests added for dashboard and notifications)
+- � Testing and bug fixes (initial a11y tests for dashboard/notifications; expand coverage)
+- ✅ Autosave retry/backoff and submit protection in assessment player
 - 📝 Documentation
 
 ---
