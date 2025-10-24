@@ -3,6 +3,7 @@ FROM node:18-slim
 
 # Install OpenSSL and other required packages for Prisma
 RUN apt-get update && apt-get install -y \
+    curl \
     openssl \
     libssl-dev \
     ca-certificates \
