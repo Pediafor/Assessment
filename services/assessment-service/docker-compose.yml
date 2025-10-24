@@ -39,8 +39,10 @@ services:
       - NODE_ENV=production
       - PORT=4001
       - DATABASE_URL=postgresql://${POSTGRES_USER:-assessmentservice}:${POSTGRES_PASSWORD:-assessmentpass123}@assessment-db:5432/${POSTGRES_DB:-assessment_service_db}
+      - RABBITMQ_URL=amqp://admin:pediafor2024@pediafor-rabbitmq:5672/pediafor
     networks:
       - assessment-service-network
+      - pediafor-network
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:4001/health || exit 1"]
       interval: 30s
@@ -55,3 +57,6 @@ networks:
   assessment-service-network:
     driver: bridge
     name: assessment-service-network
+  pediafor-network:
+    external: true
+    name: pediafor-network
