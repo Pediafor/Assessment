@@ -18,6 +18,8 @@ FROM node:18-alpine AS prod
 
 WORKDIR /usr/src/app
 
+RUN apk add --no-cache curl
+
 COPY package*.json ./
 RUN npm ci --omit=dev
 
