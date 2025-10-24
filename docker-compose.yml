@@ -13,6 +13,7 @@ volumes:
   assessment_db_data:
   submission_db_data:
   grading_db_data:
+  notification_db_data:
   redis_data:
 
 services:
@@ -133,6 +134,26 @@ services:
       - pediafor-network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U gradingservice_user -d gradingservice_db"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  notification-db:
+    image: postgres:15-alpine
+    container_name: notification-service-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: notificationservice_user
+      POSTGRES_PASSWORD: notificationservice_password
+      POSTGRES_DB: notificationservice_db
+    ports:
+      - "5436:5432"
+    volumes:
+      - notification_db_data:/var/lib/postgresql/data
+    networks:
+      - pediafor-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U notificationservice_user -d notificationservice_db"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -336,10 +357,13 @@ services:
       EMAIL_USER: user
       EMAIL_PASS: pass
       EMAIL_FROM: '"Pediafor" <noreply@pediafor.local>'
+      DATABASE_URL: postgresql://notificationservice_user:notificationservice_password@notification-db:5432/notificationservice_db?schema=public
     depends_on:
       rabbitmq:
         condition: service_healthy
       user-service:
+        condition: service_healthy
+      notification-db:
         condition: service_healthy
     networks:
       - pediafor-network

@@ -5,6 +5,7 @@ Event-driven email notifications for grading results.
 ## Overview
 
 - Consumes `grading.completed` events from RabbitMQ
+- Persists notifications in PostgreSQL via Prisma
 - Fetches student details from User Service
 - Sends email via SMTP using Nodemailer
 
@@ -20,6 +21,7 @@ Event-driven email notifications for grading results.
 - `PORT` (default: 4005)
 - `AMQP_URL` (e.g., amqp://rabbitmq:5672)
 - `USER_SERVICE_URL` (e.g., http://user-service:4000)
+- `DATABASE_URL` (e.g., postgresql://notificationservice_user:notificationservice_password@localhost:5436/notificationservice_db?schema=public)
 - `FRONTEND_URL` (e.g., http://localhost:3000)
 - `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_USER`, `EMAIL_PASS`, `EMAIL_FROM`
 
@@ -33,9 +35,10 @@ Email includes a direct link to the student's result page using `FRONTEND_URL` a
 
 ## Local Development (Docker-backed)
 
-1. Ensure RabbitMQ and User Service are running (docker-compose up)
+1. Ensure RabbitMQ, User Service, and Notification DB (`notification-db`) are running
 2. Configure `.env` using `.env.example`
-3. Start service
+3. Run `npx prisma migrate dev`
+4. Start service
 
 ## Operations
 
@@ -49,4 +52,4 @@ Email includes a direct link to the student's result page using `FRONTEND_URL` a
 
 ---
 
-Docs Version: 1.3 • Last Updated: October 20, 2025
+Docs Version: 1.3 • Last Updated: October 24, 2025

@@ -1,4 +1,24 @@
 services:
+  notification-db:
+    image: postgres:15-alpine
+    container_name: notification-service-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: notificationservice_user
+      POSTGRES_PASSWORD: notificationservice_password
+      POSTGRES_DB: notificationservice_db
+    ports:
+      - "5436:5432"
+    volumes:
+      - notification_db_data:/var/lib/postgresql/data
+    networks:
+      - pediafor-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U notificationservice_user -d notificationservice_db"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
   notification-service:
     build:
       context: .
@@ -12,15 +32,22 @@ services:
       AMQP_URL: amqp://admin:pediafor2024@pediafor-rabbitmq:5672/pediafor
       # Reach user-service over its compose network by service/container name
       USER_SERVICE_URL: http://user-service:4000
+      DATABASE_URL: postgresql://notificationservice_user:notificationservice_password@notification-db:5432/notificationservice_db?schema=public
       ALLOW_SIMULATE: "true"
     ports:
       - "4005:4005"
     networks:
       - pediafor-network
       - user-service-network
+    depends_on:
+      notification-db:
+        condition: service_healthy
 
 networks:
   pediafor-network:
     external: true
   user-service-network:
     external: true
+
+volumes:
+  notification_db_data:

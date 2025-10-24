@@ -15,7 +15,7 @@ The Notification Service delivers student-facing notifications and email alerts.
 - Event-driven creation on `grading.completed` with student fan-out
 - REST API for listing and marking notifications as read (bulk + single)
 - Realtime-friendly: service publishes `notification.created` for downstream realtime fanout
-- SQLite/Prisma-backed persistence (dev) with easy migration to Postgres
+- PostgreSQL + Prisma-backed persistence with migrations
 
 ## API Endpoints (via Gateway aliases)
 
@@ -34,6 +34,7 @@ The Notification Service delivers student-facing notifications and email alerts.
 - `PORT` (default: 4005)
 - `AMQP_URL` (e.g., amqp://rabbitmq:5672)
 - `USER_SERVICE_URL` (e.g., http://user-service:4000)
+- `DATABASE_URL` (e.g., postgresql://notificationservice_user:notificationservice_password@localhost:5436/notificationservice_db?schema=public)
 - `FRONTEND_URL` (e.g., http://localhost:3000)
 - `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_USER`, `EMAIL_PASS`, `EMAIL_FROM` (SMTP)
 
@@ -43,7 +44,9 @@ The Notification Service delivers student-facing notifications and email alerts.
 cd services/notification-service
 npm install
 cp .env.example .env
-# Configure AMQP_URL, USER_SERVICE_URL, FRONTEND_URL, SMTP creds
+# Configure DATABASE_URL, AMQP_URL, USER_SERVICE_URL, FRONTEND_URL, SMTP creds
+docker compose up -d notification-db
+npx prisma migrate dev
 npm run dev
 ```
 
@@ -65,7 +68,7 @@ curl -s -X POST http://localhost:3000/notifications/NOTIF_ID/read -H "Authorizat
 What makes it special:
 - Event-driven persistence from grading events with student fan-out.
 - REST + event publishing for realtime fanout.
-- SQLite dev store for portability (easy to switch to Postgres).
+- PostgreSQL-backed storage with migrations for reliable operations.
 
 Starter issues/ideas:
 - Add per-channel preferences and digest scheduling.
@@ -74,4 +77,4 @@ Starter issues/ideas:
 
 ---
 
-Docs Version: 1.3 • Last Updated: October 20, 2025
+Docs Version: 1.3 • Last Updated: October 24, 2025
