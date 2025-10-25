@@ -204,7 +204,7 @@ npm install
 cp .env.example .env
 
 # Database setup
-npx prisma migrate dev
+npx prisma db push
 npx prisma generate
 
 # Start development server

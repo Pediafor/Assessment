@@ -39,6 +39,7 @@ model Submission {
   @@index([assessmentId])
   @@index([userId])
   @@index([status])
+  @@index([submittedAt])
 }
 
 model SubmissionFile {
@@ -61,18 +62,21 @@ model SubmissionFile {
   
   @@map("submission_files")
   @@index([submissionId])
+  @@index([questionId])
 }
 
 model Grade {
   id           String      @id @default(cuid())
   submissionId String
-  questionId   String?
+  questionId   String
   score        Float
   maxScore     Float
+  gradedBy     String
+  gradingType  GradingType @default(MANUAL)
   feedback     String?
-  gradedBy     String?
-  gradingType  GradingType @default(AUTO)
-  
+  rubricData   Json?
+  gradedAt     DateTime @default(now())
+  publishedAt  DateTime?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   
@@ -82,11 +86,14 @@ model Grade {
   @@map("grades")
   @@index([submissionId])
   @@index([questionId])
+  @@index([gradedBy])
+  @@unique([submissionId, questionId])
 }
 
 model AttemptLog {
   id           String        @id @default(cuid())
   submissionId String
+  userId       String
   action       AttemptAction
   data         Json?
   ipAddress    String?
@@ -97,9 +104,11 @@ model AttemptLog {
   // Relations
   submission   Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
   
-  @@map("attempt_logs")
+  @@map("submission_attempts")
   @@index([submissionId])
   @@index([createdAt])
+  @@index([userId])
+  @@index([action])
 }
 
 enum SubmissionStatus {

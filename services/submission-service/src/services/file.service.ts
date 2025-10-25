@@ -56,6 +56,7 @@ export class FileService {
     await prisma.attemptLog.create({
       data: {
         submissionId: fileData.submissionId,
+        userId: user.id,
         action: 'FILE_ADDED',
         data: {
           fileName: fileData.fileName,
@@ -162,6 +163,7 @@ export class FileService {
     await prisma.attemptLog.create({
       data: {
         submissionId: file.submissionId,
+        userId: user.id,
         action: 'FILE_REMOVED',
         data: {
           fileName: file.fileName,
