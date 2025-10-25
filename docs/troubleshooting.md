@@ -125,18 +125,18 @@ docker-compose logs --tail=50 <service-name>
   docker-compose restart <database-container-name>
   ```
 
-### **Prisma Migration Issues**
+### **Prisma Schema Sync Issues**
 
-- **Symptoms**: "Migration failed" errors, schema drift warnings.
+- **Symptoms**: Schema drift warnings, models missing in database tables.
 - **Diagnostics**:
   ```bash
   cd services/<service-name>
-  npx prisma migrate status
+  npx prisma validate
   ```
 - **Solutions**:
   ```bash
   cd services/<service-name>
-  npx prisma migrate dev
+  npx prisma db push
   ```
 
 ---

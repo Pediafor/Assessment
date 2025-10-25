@@ -148,7 +148,7 @@ Database schemas are managed with Prisma. The schema for each service is located
 When you make changes to the schema, you need to create a new migration:
 ```bash
 cd services/<service-name>
-npx prisma migrate dev --name <migration-name>
+npx prisma db push
 ```
 
 ---
