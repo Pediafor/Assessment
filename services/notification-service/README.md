@@ -15,7 +15,7 @@ The Notification Service delivers student-facing notifications and email alerts.
 - Event-driven creation on `grading.completed` with student fan-out
 - REST API for listing and marking notifications as read (bulk + single)
 - Realtime-friendly: service publishes `notification.created` for downstream realtime fanout
-- PostgreSQL + Prisma-backed persistence with migrations
+- PostgreSQL + Prisma-backed persistence (schema-driven via `prisma db push`)
 
 ## API Endpoints (via Gateway aliases)
 
@@ -46,7 +46,7 @@ npm install
 cp .env.example .env
 # Configure DATABASE_URL, AMQP_URL, USER_SERVICE_URL, FRONTEND_URL, SMTP creds
 docker compose up -d notification-db
-npx prisma migrate dev
+npx prisma db push
 npm run dev
 ```
 

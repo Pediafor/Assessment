@@ -37,7 +37,7 @@ Email includes a direct link to the student's result page using `FRONTEND_URL` a
 
 1. Ensure RabbitMQ, User Service, and Notification DB (`notification-db`) are running
 2. Configure `.env` using `.env.example`
-3. Run `npx prisma migrate dev`
+3. Run `npx prisma db push`
 4. Start service
 
 ## Operations
