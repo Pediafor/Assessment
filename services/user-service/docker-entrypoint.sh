@@ -8,8 +8,8 @@ if [ -z "$DATABASE_URL" ]; then
 fi
 
 # Run Prisma migrations (or deploy existing)
-echo "Applying Prisma migrations..."
-./node_modules/.bin/prisma migrate deploy
+echo "Syncing Prisma schema..."
+./node_modules/.bin/prisma db push
 
 # Optional: generate client (safe if already generated)
 ./node_modules/.bin/prisma generate || true

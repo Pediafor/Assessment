@@ -91,7 +91,7 @@ npm install
 cp .env.example .env
 # Update .env with your database connection string and PASETO keys
 docker-compose up -d user-db
-npx prisma migrate dev
+npx prisma db push
 npm run dev
 ```
 
