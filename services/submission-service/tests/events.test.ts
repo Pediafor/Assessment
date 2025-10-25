@@ -13,6 +13,7 @@ describe('SubmissionService Event Publishing', () => {
   let mockEventPublisher: any;
   let mockRabbitMQ: any;
   let mockStudent: UserContext;
+  let mockTeacher: UserContext;
 
   const generateUniqueAssessmentId = (prefix: string = 'event-test') => {
     return `${prefix}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
@@ -27,6 +28,14 @@ describe('SubmissionService Event Publishing', () => {
       role: 'STUDENT',
       firstName: 'John',
       lastName: 'Event'
+    };
+
+    mockTeacher = {
+      id: 'teacher-event-123',
+      email: 'teacher-event@test.com',
+      role: 'TEACHER',
+      firstName: 'Jane',
+      lastName: 'Publisher'
     };
 
     // Setup mocks
@@ -230,7 +239,7 @@ describe('SubmissionService Event Publishing', () => {
           answers: { q1: 'answer1', q2: ['option1', 'option2'] },
           maxScore: 100
         },
-        mockStudent
+        mockTeacher
       );
 
       // Mock the event publisher

@@ -158,7 +158,10 @@ export class SubmissionService {
       const eventPublisher = getSubmissionEventPublisher();
       await eventPublisher.ensureConnection();
 
-      if (data.status && data.status !== previousStatus) {
+      const updatedFields = Object.keys(data);
+      const hasStatusChange = !!data.status && data.status !== previousStatus;
+
+      if (hasStatusChange) {
         const eventData = {
           submissionId: updatedSubmission.id,
           assessmentId: updatedSubmission.assessmentId,
@@ -181,10 +184,30 @@ export class SubmissionService {
           await eventPublisher.publishSubmissionUpdated({
             ...eventData,
             previousStatus,
-            updatedFields: Object.keys(data)
+            updatedFields
           }, metadata);
           console.log(`🔄 Published submission.updated event for submission ${submissionId}`);
         }
+      } else if (updatedFields.length > 0) {
+        const eventData = {
+          submissionId: updatedSubmission.id,
+          assessmentId: updatedSubmission.assessmentId,
+          studentId: updatedSubmission.userId,
+          status: updatedSubmission.status as any,
+          previousStatus,
+          totalMarks: updatedSubmission.maxScore || undefined,
+          submittedAt: updatedSubmission.submittedAt?.toISOString(),
+          answers: Array.isArray(updatedSubmission.answers) ? updatedSubmission.answers : [],
+          updatedFields
+        };
+
+        const metadata = {
+          userId: user.id,
+          correlationId: `submission-update-${updatedSubmission.id}-${Date.now()}`
+        };
+
+        await eventPublisher.publishSubmissionUpdated(eventData, metadata);
+        console.log(`� Published submission.updated event for submission ${submissionId}`);
       }
     } catch (error) {
       console.error('⚠️ Failed to publish submission event:', error);
