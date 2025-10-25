@@ -74,8 +74,8 @@ docker-compose up user-db -d
 # Generate Prisma client
 npx prisma generate
 
-# Run database migrations
-npx prisma migrate dev --name init
+# Sync Prisma schema
+npx prisma db push
 
 # Run all tests
 npm test
