@@ -1,8 +1,5 @@
-import { getSubmissionEventPublisher } from '../src/events/publisher';
-import { getRabbitMQConnection } from '../src/config/rabbitmq';
-
-// Mock dependencies
-jest.mock('../src/config/rabbitmq');
+import { getSubmissionEventPublisher, resetSubmissionEventPublisher } from '../src/events/publisher';
+import { setRabbitMQMock, resetRabbitMQConnection } from '../src/config/rabbitmq';
 
 describe('Event Integration Tests', () => {
   let mockRabbitMQ: any;
@@ -19,11 +16,16 @@ describe('Event Integration Tests', () => {
       close: jest.fn()
     };
 
-    // Mock the getRabbitMQConnection
-    const getRabbitMQConnectionMock = getRabbitMQConnection as jest.MockedFunction<typeof getRabbitMQConnection>;
-    getRabbitMQConnectionMock.mockReturnValue(mockRabbitMQ);
-
+    resetRabbitMQConnection();
+    setRabbitMQMock(mockRabbitMQ);
+    resetSubmissionEventPublisher();
     eventPublisher = getSubmissionEventPublisher();
+  });
+
+  afterEach(() => {
+    setRabbitMQMock(true);
+    resetRabbitMQConnection();
+    resetSubmissionEventPublisher();
   });
 
   describe('End-to-End Event Flow', () => {

@@ -34,10 +34,13 @@ describe('Submission Routes', () => {
     'x-user-last-name': 'User'
   };
 
+  const generateAssessmentId = (prefix: string) =>
+    `${prefix}-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`;
+
   describe('POST /api/submissions', () => {
     it('should create a new submission for student', async () => {
       const submissionData = {
-        assessmentId: 'assessment-route-test-1',
+        assessmentId: generateAssessmentId('assessment-route-test'),
         autoSave: false
       };
 
@@ -98,13 +101,15 @@ describe('Submission Routes', () => {
 
     beforeEach(async () => {
       // Create a test submission
+      const assessmentId = generateAssessmentId('assessment-get-route-test');
       const response = await request(app)
         .post('/api/submissions')
         .set(mockStudentHeaders)
         .send({
-          assessmentId: 'assessment-get-route-test',
+          assessmentId,
           autoSave: false
-        });
+        })
+        .expect(201);
 
       testSubmissionId = response.body.data.id;
     });
@@ -154,23 +159,31 @@ describe('Submission Routes', () => {
   });
 
   describe('GET /api/submissions', () => {
+    let listAssessmentId1: string;
+    let listAssessmentId2: string;
+
     beforeEach(async () => {
       // Create multiple test submissions
-      await request(app)
-        .post('/api/submissions')
-        .set(mockStudentHeaders)
-        .send({
-          assessmentId: 'assessment-list-route-1',
-          autoSave: false
-        });
+      listAssessmentId1 = generateAssessmentId('assessment-list-route-1');
+      listAssessmentId2 = generateAssessmentId('assessment-list-route-2');
 
       await request(app)
         .post('/api/submissions')
         .set(mockStudentHeaders)
         .send({
-          assessmentId: 'assessment-list-route-2',
+          assessmentId: listAssessmentId1,
           autoSave: false
-        });
+        })
+        .expect(201);
+
+      await request(app)
+        .post('/api/submissions')
+        .set(mockStudentHeaders)
+        .send({
+          assessmentId: listAssessmentId2,
+          autoSave: false
+        })
+        .expect(201);
     });
 
     it('should get submissions for student', async () => {
@@ -211,13 +224,13 @@ describe('Submission Routes', () => {
 
     it('should filter by assessment ID', async () => {
       const response = await request(app)
-        .get('/api/submissions?assessmentId=assessment-list-route-1')
+        .get(`/api/submissions?assessmentId=${listAssessmentId1}`)
         .set(mockTeacherHeaders)
         .expect(200);
 
       expect(response.body.success).toBe(true);
       response.body.data.forEach((submission: any) => {
-        expect(submission.assessmentId).toBe('assessment-list-route-1');
+        expect(submission.assessmentId).toBe(listAssessmentId1);
       });
     });
 
@@ -240,13 +253,15 @@ describe('Submission Routes', () => {
     let testSubmissionId: string;
 
     beforeEach(async () => {
+      const assessmentId = generateAssessmentId('assessment-answers-test');
       const response = await request(app)
         .post('/api/submissions')
         .set(mockStudentHeaders)
         .send({
-          assessmentId: 'assessment-answers-test',
+          assessmentId,
           autoSave: false
-        });
+        })
+        .expect(201);
 
       testSubmissionId = response.body.data.id;
     });
@@ -291,13 +306,15 @@ describe('Submission Routes', () => {
     let testSubmissionId: string;
 
     beforeEach(async () => {
+      const assessmentId = generateAssessmentId('assessment-submit-test');
       const response = await request(app)
         .post('/api/submissions')
         .set(mockStudentHeaders)
         .send({
-          assessmentId: 'assessment-submit-test',
+          assessmentId,
           autoSave: false
-        });
+        })
+        .expect(201);
 
       testSubmissionId = response.body.data.id;
     });
@@ -340,13 +357,15 @@ describe('Submission Routes', () => {
     let testSubmissionId: string;
 
     beforeEach(async () => {
+      const assessmentId = generateAssessmentId('assessment-update-test');
       const response = await request(app)
         .post('/api/submissions')
         .set(mockStudentHeaders)
         .send({
-          assessmentId: 'assessment-update-test',
+          assessmentId,
           autoSave: false
-        });
+        })
+        .expect(201);
 
       testSubmissionId = response.body.data.id;
     });
@@ -410,17 +429,19 @@ describe('Submission Routes', () => {
   });
 
   describe('GET /api/submissions/stats/:assessmentId', () => {
-    const statsAssessmentId = 'assessment-stats-route-test';
+    let statsAssessmentId: string;
 
     beforeEach(async () => {
       // Create submissions for stats testing
+      statsAssessmentId = generateAssessmentId('assessment-stats-route-test');
       const response1 = await request(app)
         .post('/api/submissions')
         .set(mockStudentHeaders)
         .send({
           assessmentId: statsAssessmentId,
           autoSave: false
-        });
+        })
+        .expect(201);
 
       const anotherStudentHeaders = {
         'x-user-id': 'student-stats-2',
@@ -436,7 +457,8 @@ describe('Submission Routes', () => {
         .send({
           assessmentId: statsAssessmentId,
           autoSave: false
-        });
+        })
+        .expect(201);
 
       // Submit one submission
       await request(app)
@@ -469,13 +491,15 @@ describe('Submission Routes', () => {
     let testSubmissionId: string;
 
     beforeEach(async () => {
+      const assessmentId = generateAssessmentId('assessment-delete-route-test');
       const response = await request(app)
         .post('/api/submissions')
         .set(mockStudentHeaders)
         .send({
-          assessmentId: 'assessment-delete-route-test',
+          assessmentId,
           autoSave: false
-        });
+        })
+        .expect(201);
 
       testSubmissionId = response.body.data.id;
     });

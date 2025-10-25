@@ -1,6 +1,17 @@
 import amqp from 'amqplib';
 
-class RabbitMQConnection {
+const isTestEnv = process.env.NODE_ENV === 'test';
+let mockRabbitMQEnabled = isTestEnv && process.env.MOCK_RABBITMQ !== 'false';
+
+export interface RabbitMQClient {
+  connect(): Promise<void>;
+  publish(exchange: string, routingKey: string, message: any): Promise<boolean>;
+  subscribe(queueName: string, callback: (message: any) => Promise<void>): Promise<void>;
+  close(): Promise<void>;
+  isConnected(): boolean;
+}
+
+class RabbitMQConnection implements RabbitMQClient {
   private connection: any = null;
   private channel: any = null;
   private url: string;
@@ -197,14 +208,74 @@ class RabbitMQConnection {
   }
 }
 
-// Singleton instance
-let rabbitMQInstance: RabbitMQConnection | null = null;
+// Simple in-memory mock used when real RabbitMQ is not available (e.g., tests)
+class MockRabbitMQConnection implements RabbitMQClient {
+  private connected = false;
 
-export const getRabbitMQConnection = (): RabbitMQConnection => {
+  async connect(): Promise<void> {
+    this.connected = true;
+  }
+
+  async publish(exchange: string, routingKey: string, message: any): Promise<boolean> {
+    if (!this.connected) {
+      throw new Error('RabbitMQ not connected');
+    }
+    return true;
+  }
+
+  async subscribe(queueName: string, callback: (message: any) => Promise<void>): Promise<void> {
+    if (!this.connected) {
+      throw new Error('RabbitMQ not connected');
+    }
+    // Intentionally left as a no-op in mock implementation
+    void queueName;
+    void callback;
+  }
+
+  async close(): Promise<void> {
+    this.connected = false;
+  }
+
+  isConnected(): boolean {
+    return this.connected;
+  }
+}
+type RabbitMQConnectionLike = RabbitMQClient;
+
+let injectedRabbitMQ: RabbitMQConnectionLike | null = null;
+let rabbitMQInstance: RabbitMQConnectionLike | null = null;
+
+const createRabbitInstance = (): RabbitMQConnectionLike => {
+  if (injectedRabbitMQ) {
+    return injectedRabbitMQ;
+  }
+  return mockRabbitMQEnabled ? new MockRabbitMQConnection() : new RabbitMQConnection();
+};
+
+export const setRabbitMQMock = (mock: boolean | RabbitMQConnectionLike): void => {
+  if (typeof mock === 'boolean') {
+    injectedRabbitMQ = null;
+    mockRabbitMQEnabled = mock;
+    rabbitMQInstance = null;
+    return;
+  }
+
+  injectedRabbitMQ = mock;
+  rabbitMQInstance = mock;
+  mockRabbitMQEnabled = true;
+};
+
+export const resetRabbitMQConnection = (): void => {
+  rabbitMQInstance = null;
+};
+
+export const getRabbitMQConnection = (): RabbitMQConnectionLike => {
   if (!rabbitMQInstance) {
-    rabbitMQInstance = new RabbitMQConnection();
+    rabbitMQInstance = createRabbitInstance();
   }
   return rabbitMQInstance;
 };
+
+export { MockRabbitMQConnection };
 
 export default RabbitMQConnection;

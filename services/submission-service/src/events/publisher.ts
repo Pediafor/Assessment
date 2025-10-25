@@ -9,6 +9,7 @@ class SubmissionEventPublisher {
     metadata?: Partial<EventMetadata>
   ): Promise<void> {
     try {
+      await this.ensureConnection();
       const event = createSubmissionEvent('submission.submitted', submissionData, metadata);
       
       await this.rabbitMQ.publish('submission.events', 'submission.submitted', event);
@@ -25,6 +26,7 @@ class SubmissionEventPublisher {
     metadata?: Partial<EventMetadata>
   ): Promise<void> {
     try {
+      await this.ensureConnection();
       const event = createSubmissionEvent('submission.updated', submissionData, metadata);
       
       await this.rabbitMQ.publish('submission.events', 'submission.updated', event);
@@ -46,6 +48,7 @@ class SubmissionEventPublisher {
     metadata?: Partial<EventMetadata>
   ): Promise<void> {
     try {
+      await this.ensureConnection();
       const event = createSubmissionEvent('submission.graded', submissionData, metadata);
       
       await this.rabbitMQ.publish('submission.events', 'submission.graded', event);
@@ -72,6 +75,10 @@ export const getSubmissionEventPublisher = (): SubmissionEventPublisher => {
     publisherInstance = new SubmissionEventPublisher();
   }
   return publisherInstance;
+};
+
+export const resetSubmissionEventPublisher = (): void => {
+  publisherInstance = null;
 };
 
 export default SubmissionEventPublisher;

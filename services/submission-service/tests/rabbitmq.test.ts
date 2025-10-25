@@ -1,11 +1,9 @@
-import { getRabbitMQConnection } from '../src/config/rabbitmq';
-import { getSubmissionEventPublisher } from '../src/events/publisher';
+import amqp from 'amqplib';
+import { getRabbitMQConnection, setRabbitMQMock, resetRabbitMQConnection } from '../src/config/rabbitmq';
+import { getSubmissionEventPublisher, resetSubmissionEventPublisher } from '../src/events/publisher';
 import { createSubmissionEvent } from '../src/events/types';
 
-// Mock amqplib
-jest.mock('amqplib', () => ({
-  connect: jest.fn()
-}));
+let connectSpy: jest.SpyInstance;
 
 describe('RabbitMQ Configuration', () => {
   let mockChannel: any;
@@ -13,6 +11,10 @@ describe('RabbitMQ Configuration', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+
+    setRabbitMQMock(false);
+    resetRabbitMQConnection();
+    resetSubmissionEventPublisher();
 
     mockChannel = {
       assertExchange: jest.fn(),
@@ -32,8 +34,15 @@ describe('RabbitMQ Configuration', () => {
     };
 
     // Mock amqplib connect
-    const amqp = require('amqplib');
-    amqp.connect.mockResolvedValue(mockConnection);
+    connectSpy = jest.spyOn(amqp, 'connect').mockResolvedValue(mockConnection);
+  });
+
+  afterEach(() => {
+    resetRabbitMQConnection();
+    setRabbitMQMock(true);
+    if (connectSpy) {
+      connectSpy.mockRestore();
+    }
   });
 
   describe('RabbitMQ Connection', () => {
@@ -220,13 +229,16 @@ describe('Submission Event Publisher', () => {
       publish: jest.fn().mockResolvedValue(true)
     };
 
-    // Mock the getRabbitMQConnection to return our mock
-    jest.doMock('../src/config/rabbitmq', () => ({
-      getRabbitMQConnection: () => mockRabbitMQ
-    }));
-
-    const { getSubmissionEventPublisher } = require('../src/events/publisher');
+    resetRabbitMQConnection();
+    setRabbitMQMock(mockRabbitMQ);
+    resetSubmissionEventPublisher();
     eventPublisher = getSubmissionEventPublisher();
+  });
+
+  afterEach(() => {
+    setRabbitMQMock(true);
+    resetRabbitMQConnection();
+    resetSubmissionEventPublisher();
   });
 
   describe('Event Publishing Methods', () => {

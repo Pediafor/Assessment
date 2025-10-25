@@ -4,21 +4,20 @@ declare global {
   var testPrisma: typeof prisma;
 }
 
-beforeAll(async () => {
-  // Clean up database before all tests  
-  await prisma.attemptLog.deleteMany({});
-  await prisma.grade.deleteMany({});
-  await prisma.submissionFile.deleteMany({});
-  await prisma.submission.deleteMany({});
+afterAll(async () => {
+  await prisma.$disconnect();
 });
 
-afterAll(async () => {
-  // Clean up database after all tests
-  await prisma.attemptLog.deleteMany({});
-  await prisma.grade.deleteMany({});
-  await prisma.submissionFile.deleteMany({});
-  await prisma.submission.deleteMany({});
-  await prisma.$disconnect();
+beforeEach(async () => {
+  const { setRabbitMQMock, resetRabbitMQConnection } = await import('../src/config/rabbitmq');
+  setRabbitMQMock(true);
+  resetRabbitMQConnection();
+});
+
+afterEach(async () => {
+  const { setRabbitMQMock, resetRabbitMQConnection } = await import('../src/config/rabbitmq');
+  setRabbitMQMock(true);
+  resetRabbitMQConnection();
 });
 
 // Don't do automatic cleanup between tests
