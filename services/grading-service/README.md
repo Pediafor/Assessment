@@ -129,7 +129,7 @@ npm install
 cp .env.example .env
 # Update .env with your database connection string
 docker-compose up -d grading-db
-npx prisma migrate dev
+npx prisma db push
 npm run dev
 ```
 
