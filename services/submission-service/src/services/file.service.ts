@@ -52,20 +52,24 @@ export class FileService {
       }
     });
 
-    // Log the file upload attempt
-    await prisma.attemptLog.create({
-      data: {
-        submissionId: fileData.submissionId,
-        userId: user.id,
-        action: 'FILE_ADDED',
+    // Log the file upload attempt (best-effort)
+    try {
+      await prisma.attemptLog.create({
         data: {
-          fileName: fileData.fileName,
-          originalName: fileData.originalName,
-          fileSize: fileData.fileSize,
-          mimeType: fileData.mimeType
+          submissionId: fileData.submissionId,
+          userId: user.id,
+          action: 'FILE_ADDED',
+          data: {
+            fileName: fileData.fileName,
+            originalName: fileData.originalName,
+            fileSize: fileData.fileSize,
+            mimeType: fileData.mimeType
+          }
         }
-      }
-    });
+      });
+    } catch (error) {
+      console.warn('Failed to record file upload attempt log:', error instanceof Error ? error : { error });
+    }
 
     return submissionFile;
   }
@@ -150,7 +154,7 @@ export class FileService {
         fs.unlinkSync(file.filePath);
       }
     } catch (error) {
-      console.error('Error deleting physical file:', error);
+      console.error('Error deleting physical file:', error instanceof Error ? error : { error });
       // Continue with database deletion even if physical file deletion fails
     }
 
@@ -159,19 +163,23 @@ export class FileService {
       where: { id: fileId }
     });
 
-    // Log the file deletion
-    await prisma.attemptLog.create({
-      data: {
-        submissionId: file.submissionId,
-        userId: user.id,
-        action: 'FILE_REMOVED',
+    // Log the file deletion (best-effort)
+    try {
+      await prisma.attemptLog.create({
         data: {
-          fileName: file.fileName,
-          originalName: file.originalName,
-          fileSize: file.fileSize
+          submissionId: file.submissionId,
+          userId: user.id,
+          action: 'FILE_REMOVED',
+          data: {
+            fileName: file.fileName,
+            originalName: file.originalName,
+            fileSize: file.fileSize
+          }
         }
-      }
-    });
+      });
+    } catch (error) {
+      console.warn('Failed to record file removal attempt log:', error instanceof Error ? error : { error });
+    }
 
     return {
       success: true,
@@ -203,24 +211,31 @@ export class FileService {
   async getFileStats(submissionId: string, user: UserContext) {
     const files = await this.getSubmissionFiles(submissionId, user);
 
-  const totalSize = files.reduce((sum: number, file: { fileSize: number }) => sum + file.fileSize, 0);
-  const fileTypes = files.reduce((types: Record<string, number>, file: { originalName: string }) => {
-      const ext = path.extname(file.originalName).toLowerCase();
-      types[ext] = (types[ext] || 0) + 1;
-      return types;
-    }, {} as Record<string, number>);
+    const { totalSize, fileTypes } = files.reduce(
+      (acc, file: { originalName: string; fileSize: number }) => {
+        acc.totalSize += file.fileSize;
+        const ext = path.extname(file.originalName ?? '').toLowerCase() || 'unknown';
+        acc.fileTypes[ext] = (acc.fileTypes[ext] || 0) + 1;
+        return acc;
+      },
+      { totalSize: 0, fileTypes: {} as Record<string, number> }
+    );
 
-    return {
-      totalFiles: files.length,
-      totalSize,
-      fileTypes,
-  files: files.map((file: { id: string; originalName: string; fileSize: number; mimeType: string; createdAt: Date }) => ({
+    const summarizedFiles = files.map(
+      (file: { id: string; originalName: string; fileSize: number; mimeType: string; createdAt: Date }) => ({
         id: file.id,
         originalName: file.originalName,
         fileSize: file.fileSize,
         mimeType: file.mimeType,
         createdAt: file.createdAt
-      }))
+      })
+    );
+
+    return {
+      totalFiles: files.length,
+      totalSize,
+      fileTypes,
+      files: summarizedFiles
     };
   }
 }
